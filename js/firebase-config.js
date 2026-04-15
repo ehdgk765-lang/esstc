@@ -1,12 +1,12 @@
 // firebase-config.js - Firebase 초기화
 const firebaseConfig = {
-  apiKey: "AIzaSyAddLnhSCdiUcyVqY8S0GHxrBqmBfp-CcY",
-  authDomain: "happy-tennis-life.firebaseapp.com",
-  projectId: "happy-tennis-life",
-  storageBucket: "happy-tennis-life.firebasestorage.app",
-  messagingSenderId: "914688098524",
-  appId: "1:914688098524:web:2a25c832fe0ec196cf3419",
-  measurementId: "G-BT1WSEC6Q0"
+  apiKey: "AIzaSyCidOLd9fk5PCAMk9ou40JkkgimqynT8cY",
+  authDomain: "esstc-ca95e.firebaseapp.com",
+  projectId: "esstc-ca95e",
+  storageBucket: "esstc-ca95e.firebasestorage.app",
+  messagingSenderId: "243973826269",
+  appId: "1:243973826269:web:e8a1e60bbcf3c024309d34",
+  measurementId: "G-5YS4K4DV1F"
 };
 
 firebase.initializeApp(firebaseConfig);
