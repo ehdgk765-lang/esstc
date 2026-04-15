@@ -1,0 +1,755 @@
+/* style.css - 커스텀 스타일 */
+
+/* 기본 설정 */
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* iOS에서 input 확대 방지 (16px 이상이면 확대 안 됨) */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* safe-area 대응 (노치 폰) */
+body {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+header {
+  width: 100%;
+  padding-top: env(safe-area-inset-top, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* 탭 네비게이션 */
+.tab-active {
+  color: #16a34a !important;
+  border-bottom-color: #16a34a !important;
+  font-weight: 700;
+  background: linear-gradient(to top, rgba(22, 163, 74, 0.06), transparent);
+}
+
+[data-tab] {
+  min-height: 44px; /* 최소 터치 영역 */
+}
+
+/* 토너먼트 브래킷 */
+.bracket-container {
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.bracket {
+  padding: 16px 0;
+}
+
+.bracket-round {
+  padding: 0 4px;
+}
+
+.bracket-match {
+  transition: transform 0.15s ease;
+}
+
+.bracket-match:hover .match-card {
+  transform: translateY(-1px);
+}
+
+.bracket-connector {
+  position: relative;
+}
+
+/* 브래킷 스크롤 힌트 (그라데이션) */
+.bracket-scroll-hint {
+  position: relative;
+}
+.bracket-scroll-hint::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(to right, transparent, rgba(249,250,251,0.9));
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.3s;
+}
+.bracket-scroll-hint.scrolled-end::after {
+  opacity: 0;
+}
+
+/* 스코어 입력 모달 */
+.score-input::-webkit-inner-spin-button,
+.score-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.score-input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* 스크롤바 스타일 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 포맷 선택 라디오 */
+.format-option input:checked + div {
+  border-color: #16a34a;
+  background-color: #f0fdf4;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#main-content > * {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* 모달 배경 애니메이션 */
+#score-modal {
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* 검색형 드롭다운 */
+.searchable-dropdown {
+  animation: fadeIn 0.1s ease-out;
+}
+.searchable-dropdown .search-option:first-child {
+  border-radius: 8px 8px 0 0;
+}
+.searchable-dropdown .search-option:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+/* 대진표 시간표 그리드 */
+.schedule-grid {
+  gap: 8px;
+}
+
+.schedule-match-card {
+  min-height: 80px;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
+  /* 대진표: 모바일에서 1열로 */
+  .schedule-grid {
+    grid-template-columns: 1fr !important;
+  }
+  /* 브래킷 축소 */
+  .bracket-round {
+    min-width: 150px !important;
+  }
+  .match-player {
+    padding: 6px 8px !important;
+  }
+  .match-player span {
+    max-width: 90px;
+    font-size: 12px !important;
+  }
+
+  /* 리그 매치 행: 모바일에서 세로 배치 */
+  .league-match-mobile {
+    flex-direction: column !important;
+    gap: 4px;
+    padding: 12px !important;
+  }
+  .league-match-mobile .league-p1,
+  .league-match-mobile .league-p2 {
+    justify-content: center !important;
+    text-align: center;
+  }
+  .league-match-mobile .league-score {
+    min-width: auto !important;
+    margin: 4px 0 !important;
+  }
+
+  /* 복식 팀 폼: 세로 스택 */
+  #team-form {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  #team-form > .flex-1 {
+    width: 100%;
+  }
+  #team-form > button {
+    align-self: stretch !important;
+    width: 100%;
+  }
+
+  /* 팀 엔트리 */
+  .team-entry {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* 모달 작은 화면 대응 */
+  #score-modal > div {
+    margin: 8px;
+    padding: 16px !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* 순위표 글자 크기 */
+  .standings-table th,
+  .standings-table td {
+    padding: 6px 4px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* 매우 작은 화면 (320px) */
+@media (max-width: 380px) {
+  .bracket-round {
+    min-width: 130px !important;
+  }
+  .match-player span {
+    max-width: 70px;
+    font-size: 11px !important;
+  }
+  [data-tab] {
+    font-size: 12px !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+}
+
+/* ─── Dark Mode ─── */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a) !important;
+  color: #e2e8f0 !important;
+}
+
+/* 헤더 */
+html.dark header {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-color: rgba(51, 65, 85, 0.5) !important;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3) !important;
+}
+html.dark header h1 {
+  background-image: linear-gradient(to right, #4ade80, #34d399) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+/* 탭 */
+html.dark .tab-active {
+  color: #4ade80 !important;
+  border-bottom-color: #4ade80 !important;
+  background: linear-gradient(to top, rgba(74, 222, 128, 0.08), transparent) !important;
+}
+html.dark [data-tab] {
+  color: #64748b;
+}
+html.dark [data-tab]:hover {
+  color: #94a3b8;
+}
+
+/* 배경 오버라이드 */
+html.dark .bg-white {
+  background-color: #1e293b !important;
+}
+html.dark .bg-white\/80 {
+  background-color: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.5) !important;
+}
+html.dark .bg-white\/95 {
+  background-color: rgba(30, 41, 59, 0.95) !important;
+  border-color: rgba(51, 65, 85, 0.5) !important;
+}
+html.dark .bg-gray-50 {
+  background-color: #0f172a !important;
+}
+html.dark .bg-gray-100 {
+  background-color: #1e293b !important;
+}
+html.dark .bg-gray-50\/50 {
+  background-color: rgba(30, 41, 59, 0.5) !important;
+}
+
+/* 글래스 카드 다크 모드 */
+html.dark .tournament-card {
+  background-color: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.5) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+html.dark .tournament-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  border-color: rgba(74, 222, 128, 0.3) !important;
+}
+html.dark .shadow-green-50\/30 {
+  --tw-shadow-color: transparent !important;
+}
+html.dark .shadow-green-200\/50 {
+  --tw-shadow-color: rgba(22, 163, 74, 0.15) !important;
+}
+html.dark .border-white\/60 {
+  border-color: rgba(51, 65, 85, 0.5) !important;
+}
+
+/* 텍스트 오버라이드 */
+html.dark .text-gray-800 {
+  color: #e2e8f0 !important;
+}
+html.dark .text-gray-700 {
+  color: #cbd5e1 !important;
+}
+html.dark .text-gray-600 {
+  color: #94a3b8 !important;
+}
+html.dark .text-gray-500 {
+  color: #64748b !important;
+}
+html.dark .text-gray-400 {
+  color: #475569 !important;
+}
+html.dark .text-gray-300 {
+  color: #475569 !important;
+}
+html.dark .text-green-700 {
+  color: #4ade80 !important;
+}
+
+/* 테두리 오버라이드 */
+html.dark .border-gray-200 {
+  border-color: #334155 !important;
+}
+html.dark .border-gray-100 {
+  border-color: #1e293b !important;
+}
+html.dark .border-gray-50 {
+  border-color: #1e293b !important;
+}
+html.dark .border-t {
+  border-color: #334155 !important;
+}
+html.dark .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b !important;
+}
+html.dark .divide-gray-50 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b !important;
+}
+
+/* 폼 요소 */
+html.dark input[type="text"],
+html.dark input[type="number"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark select,
+html.dark textarea {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+html.dark input[type="text"]::placeholder,
+html.dark input[type="email"]::placeholder,
+html.dark input[type="password"]::placeholder,
+html.dark textarea::placeholder {
+  color: #475569 !important;
+}
+html.dark input[type="text"]:focus,
+html.dark input[type="email"]:focus,
+html.dark input[type="password"]:focus,
+html.dark select:focus {
+  border-color: #22c55e !important;
+}
+
+/* 로그인 페이지 */
+html.dark #auth-container {
+  background-color: #0f172a !important;
+}
+
+/* 카드 호버 */
+html.dark .hover\:bg-gray-50:hover {
+  background-color: #334155 !important;
+}
+html.dark .hover\:shadow-md:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4) !important;
+}
+html.dark .hover\:border-green-300:hover {
+  border-color: #4ade80 !important;
+}
+
+/* 라운드/배지 - 색상 톤 다운 */
+html.dark .bg-green-50 {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+}
+html.dark .bg-green-100 {
+  background-color: rgba(34, 197, 94, 0.15) !important;
+}
+html.dark .bg-yellow-50 {
+  background-color: rgba(234, 179, 8, 0.1) !important;
+}
+html.dark .bg-yellow-100 {
+  background-color: rgba(234, 179, 8, 0.15) !important;
+}
+html.dark .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+html.dark .bg-pink-100 {
+  background-color: rgba(236, 72, 153, 0.15) !important;
+}
+html.dark .bg-purple-100 {
+  background-color: rgba(168, 85, 247, 0.15) !important;
+}
+html.dark .bg-orange-100 {
+  background-color: rgba(249, 115, 22, 0.15) !important;
+}
+html.dark .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* 포맷 선택 라디오 (다크) */
+html.dark .format-option input:checked + div {
+  border-color: #22c55e;
+  background-color: rgba(34, 197, 94, 0.1);
+}
+html.dark .peer:checked ~ .peer-checked\:border-green-500 {
+  border-color: #22c55e !important;
+}
+html.dark .peer:checked ~ .peer-checked\:bg-green-50 {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+}
+
+/* 스코어 모달 */
+html.dark #score-modal > div {
+  background-color: rgba(30, 41, 59, 0.97) !important;
+  border-color: rgba(51, 65, 85, 0.5) !important;
+}
+html.dark #score-modal h3 {
+  color: #e2e8f0;
+}
+/* 팀1 표시 (초록) */
+html.dark #score-modal .bg-green-50 {
+  background-color: rgba(22, 163, 74, 0.15) !important;
+}
+html.dark #score-modal .text-green-700 {
+  color: #4ade80 !important;
+}
+html.dark #score-modal .text-green-600 {
+  color: #4ade80 !important;
+}
+/* 팀2 표시 (파랑) */
+html.dark #score-modal .bg-blue-50 {
+  background-color: rgba(37, 99, 235, 0.15) !important;
+}
+html.dark #score-modal .text-blue-700 {
+  color: #60a5fa !important;
+}
+html.dark #score-modal .text-blue-600 {
+  color: #60a5fa !important;
+}
+/* 스코어 입력란 - 팀1 (초록) */
+html.dark #score-modal input[data-player="0"] {
+  background-color: rgba(22, 163, 74, 0.12) !important;
+  border-color: #166534 !important;
+  color: #4ade80 !important;
+}
+html.dark #score-modal input[data-player="0"]:focus {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3) !important;
+}
+/* 스코어 입력란 - 팀2 (파랑) */
+html.dark #score-modal input[data-player="1"] {
+  background-color: rgba(37, 99, 235, 0.12) !important;
+  border-color: #1e40af !important;
+  color: #60a5fa !important;
+}
+html.dark #score-modal input[data-player="1"]:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+}
+/* 세트 라벨, vs, 콜론 */
+html.dark #score-modal .text-gray-500 {
+  color: #94a3b8 !important;
+}
+html.dark #score-modal .text-gray-400 {
+  color: #64748b !important;
+}
+html.dark #score-modal .text-gray-300 {
+  color: #475569 !important;
+}
+/* 버튼 */
+html.dark #score-modal #score-cancel {
+  background-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+html.dark #score-modal #score-cancel:hover {
+  background-color: #475569 !important;
+}
+/* 드래그 핸들 */
+html.dark #score-modal .bg-gray-300 {
+  background-color: #475569 !important;
+}
+/* NTRP 뱃지 */
+html.dark #score-modal .text-yellow-600 {
+  color: #fbbf24 !important;
+}
+
+/* 대진표 매치 카드 */
+html.dark .schedule-match-card {
+  background-color: #1e293b !important;
+}
+html.dark .border-green-200 {
+  border-color: #166534 !important;
+}
+
+/* 선수 교환 선택 */
+html.dark .swap-player:hover {
+  background-color: rgba(234, 179, 8, 0.15) !important;
+}
+
+/* 브래킷 스크롤 힌트 */
+html.dark .bracket-scroll-hint::after {
+  background: linear-gradient(to right, transparent, rgba(15, 23, 42, 0.9));
+}
+
+/* 스크롤바 */
+html.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* 테마 토글 버튼 */
+#theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  transition: background-color 0.2s;
+}
+#theme-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+html.dark #theme-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+#theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 프리뷰 영역 */
+html.dark #preview-info {
+  background-color: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+/* 서브탭 */
+html.dark .sub-tab {
+  background-color: #334155;
+  color: #94a3b8;
+}
+html.dark .sub-tab:hover {
+  background-color: #475569;
+}
+html.dark .sub-tab.bg-green-600,
+html.dark .sub-tab[class*="bg-green-600"] {
+  background-color: #16a34a !important;
+  color: white !important;
+}
+
+/* 커스텀 대진표 선수 선택 모달 */
+html.dark .cb-player-picker > div {
+  background-color: #1e293b !important;
+  color: #e2e8f0;
+}
+html.dark .cb-player-picker .cb-pick-option:hover:not(.opacity-40) {
+  background-color: #334155 !important;
+}
+html.dark .cb-player-picker input[type="text"] {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+html.dark .cb-player-picker .cb-picker-cancel {
+  background-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+/* 대진 추가 모달 */
+html.dark .add-match-modal > div {
+  background-color: #1e293b !important;
+  color: #e2e8f0;
+}
+html.dark .add-match-modal select,
+html.dark .add-match-modal input[type="text"] {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+html.dark .add-match-modal .am-player-slot {
+  border-color: #475569 !important;
+}
+html.dark .add-match-modal .am-player-slot:hover {
+  background-color: #334155 !important;
+}
+html.dark .add-match-modal .am-cancel {
+  background-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+html.dark .add-match-modal label div {
+  border-color: #475569;
+}
+
+/* 대진 추가 선수 피커 */
+html.dark .am-player-picker > div {
+  background-color: #1e293b !important;
+  color: #e2e8f0;
+}
+html.dark .am-player-picker .amp-option:hover:not(.opacity-40) {
+  background-color: #334155 !important;
+}
+html.dark .am-player-picker input[type="text"] {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+html.dark .am-player-picker .amp-cancel {
+  background-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+/* 경기 종류 변경 모달 */
+html.dark .change-gametype-modal > div {
+  background-color: #1e293b !important;
+  color: #e2e8f0;
+}
+html.dark .change-gametype-modal .cgt-option {
+  border-color: #475569 !important;
+  color: #e2e8f0;
+}
+html.dark .change-gametype-modal .cgt-option:hover {
+  border-color: #64748b !important;
+}
+html.dark .change-gametype-modal .cgt-cancel {
+  background-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+/* 로고 배경 */
+.auth-logo-bg {
+  background: url('tennis-smile-2.png') center/96px 96px no-repeat;
+  -webkit-mask-image: radial-gradient(circle, #000 55%, transparent 80%);
+  mask-image: radial-gradient(circle, #000 55%, transparent 80%);
+  mix-blend-mode: multiply;
+}
+.header-logo-bg {
+  background: url('tennis-smile-2.png') center/24px 24px no-repeat;
+  -webkit-mask-image: radial-gradient(circle, #000 50%, transparent 80%);
+  mask-image: radial-gradient(circle, #000 50%, transparent 80%);
+  mix-blend-mode: multiply;
+}
+/* 다크모드: mask로 흰 배경 페이드 + box-shadow 은은한 글로우 */
+html.dark .auth-logo-bg {
+  mix-blend-mode: normal;
+  -webkit-mask-image: radial-gradient(circle, #000 40%, transparent 72%);
+  mask-image: radial-gradient(circle, #000 40%, transparent 72%);
+  box-shadow: 0 0 24px 10px rgba(255, 255, 255, 0.1);
+}
+html.dark .header-logo-bg {
+  mix-blend-mode: normal;
+  -webkit-mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+  mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+  box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.1);
+}
+/* 기기 다크모드 대응: html.dark 미적용 시에도 동일 스타일 보장 */
+@media (prefers-color-scheme: dark) {
+  .auth-logo-bg {
+    mix-blend-mode: normal;
+    -webkit-mask-image: radial-gradient(circle, #000 40%, transparent 72%);
+    mask-image: radial-gradient(circle, #000 40%, transparent 72%);
+    box-shadow: 0 0 24px 10px rgba(255, 255, 255, 0.1);
+  }
+  .header-logo-bg {
+    mix-blend-mode: normal;
+    -webkit-mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+    mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+    box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* 로그인 페이지 다크 모드 */
+html.dark #auth-container {
+  background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a) !important;
+}
+html.dark #auth-container h1 {
+  background-image: linear-gradient(to right, #4ade80, #34d399) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+html.dark #auth-container p.text-gray-400,
+html.dark #auth-container .text-gray-400 {
+  color: #64748b !important;
+}
+html.dark #auth-container .bg-white\/80 {
+  background-color: rgba(30, 41, 59, 0.8) !important;
+  border-color: rgba(71, 85, 105, 0.4) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+}
+html.dark #auth-container input {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+html.dark #auth-container input:focus {
+  background-color: #1e293b !important;
+}
+html.dark #auth-container label {
+  color: #94a3b8 !important;
+}
+html.dark #auth-container .shadow-green-200 {
+  --tw-shadow-color: rgba(22, 163, 74, 0.15) !important;
+}
+html.dark #auth-container .shadow-green-100\/50 {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+}
+html.dark #auth-theme-toggle {
+  background-color: rgba(51, 65, 85, 0.5) !important;
+  border-color: rgba(71, 85, 105, 0.5) !important;
+}
+html.dark #auth-theme-toggle:hover {
+  background-color: rgba(71, 85, 105, 0.6) !important;
+}
