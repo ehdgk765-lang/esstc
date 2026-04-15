@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" id="meta-theme-color">
+  <title>Happy-Tennis-Life</title>
+  <script>
+    // 페이지 렌더 전 테마 적용 (깜빡임 방지)
+    (function() {
+      const saved = localStorage.getItem('theme');
+      var deviceDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      // 기기 다크모드 활성 시 항상 다크 적용 (삼성 인터넷 어둡게 보기 배경색 통일)
+      if (deviceDark || saved === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+      // 기기 다크모드 변경 시 자동 동기화
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        deviceDark = e.matches;
+        if (e.matches) {
+          document.documentElement.classList.add('dark');
+        } else if (localStorage.getItem('theme') !== 'dark') {
+          document.documentElement.classList.remove('dark');
+        }
+      });
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <!-- Libraries -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gradient-to-br from-green-50 via-emerald-50/30 to-gray-50 min-h-screen">
+
+  <!-- 로그인 페이지 -->
+  <div id="auth-container" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div class="text-center text-gray-400">로딩 중...</div>
+  </div>
+
+  <!-- 앱 -->
+  <div id="app-container" style="display:none">
+    <!-- 헤더 -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-green-100/60 sticky top-0 z-40 shadow-sm shadow-green-100/30">
+      <div class="max-w-4xl mx-auto px-4">
+        <div class="flex items-center justify-between py-3">
+          <button id="logout-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-green-50 transition" title="로그아웃" aria-label="로그아웃">
+            <svg class="w-[18px] h-[18px] text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
+          <h1 class="text-lg font-extrabold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent flex items-center gap-1.5">
+            <span class="header-logo-bg inline-flex w-7 h-7 rounded-lg flex-shrink-0"></span>
+            <span>Happy Tennis Life</span>
+          </h1>
+          <button id="theme-toggle" title="테마 전환" aria-label="테마 전환">
+            <svg id="icon-sun" class="text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <svg id="icon-moon" class="text-yellow-400" style="display:none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+          </button>
+        </div>
+        <!-- 탭 네비게이션 -->
+        <nav class="flex -mb-px gap-0.5">
+          <button data-tab="players"
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-600 active:bg-green-50/50 rounded-t-lg">
+            선수 관리
+          </button>
+          <button data-tab="create"
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-600 active:bg-green-50/50 rounded-t-lg">
+            대회 만들기
+          </button>
+          <button data-tab="schedule"
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-600 active:bg-green-50/50 rounded-t-lg">
+            대진표 만들기
+          </button>
+          <button data-tab="active"
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-600 active:bg-green-50/50 rounded-t-lg">
+            진행 중
+          </button>
+          <button data-tab="history"
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-600 active:bg-green-50/50 rounded-t-lg">
+            기록
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main id="main-content" class="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    </main>
+  </div>
+
+  <!-- JS 모듈 (의존성 순서대로) -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/results.js"></script>
+  <script src="js/players.js"></script>
+  <script src="js/tournament.js"></script>
+  <script src="js/league.js"></script>
+  <script src="js/schedule.js"></script>
+  <script src="js/custom-bracket.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    // 테마 토글 로직
+    (function() {
+      const toggle = document.getElementById('theme-toggle');
+      const iconSun = document.getElementById('icon-sun');
+      const iconMoon = document.getElementById('icon-moon');
+      const metaColor = document.getElementById('meta-theme-color');
+
+      function applyIcons(isDark) {
+        iconSun.style.display = isDark ? 'none' : 'block';
+        iconMoon.style.display = isDark ? 'block' : 'none';
+        metaColor.content = isDark ? '#1e293b' : '#ffffff';
+      }
+
+      // 초기 아이콘 상태
+      applyIcons(document.documentElement.classList.contains('dark'));
+
+      toggle.addEventListener('click', function() {
+        // 기기 다크모드 시 라이트 전환 방지 (삼성 인터넷 어둡게 보기 배경색 통일)
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) return;
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        applyIcons(isDark);
+      });
+
+      // 기기 다크모드 변경 시 아이콘도 동기화
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        applyIcons(e.matches || document.documentElement.classList.contains('dark'));
+      });
+    })();
+
+    // 로그아웃 버튼
+    document.getElementById('logout-btn').addEventListener('click', function() {
+      Auth.logout();
+    });
+
+    // 앱 시작 (Auth가 제어)
+    document.addEventListener('DOMContentLoaded', function() {
+      Auth.init();
+    });
+  </script>
+</body>
+</html>
