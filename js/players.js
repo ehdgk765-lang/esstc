@@ -17,7 +17,7 @@ const Players = {
             <div class="flex gap-2 overflow-hidden">
               <input type="text" id="player-name-input"
                 class="min-w-0 flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base"
-                placeholder="이름 입력" maxlength="20" style="flex:1 1 0;min-width:0">
+                placeholder="이름 입력 / 검색" maxlength="20" style="flex:1 1 0;min-width:0">
               <select id="player-gender-select"
                 class="px-2 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm font-medium bg-white flex-shrink-0">
                 <option value="M">남</option>
@@ -63,7 +63,7 @@ const Players = {
             ${players.length === 0
               ? '<p class="text-gray-400 text-center py-8">등록된 멤버가 없습니다.</p>'
               : players.map((p, i) => `
-                <div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition">
+                <div class="player-item flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition${i >= 10 ? ' hidden' : ''}" data-name="${this.escapeAttr(p.name)}">
                   <div class="flex items-center gap-3 min-w-0">
                     <input type="checkbox" class="player-select-cb w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500 cursor-pointer flex-shrink-0" data-id="${p.id}">
                     <span class="w-7 h-7 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">${i + 1}</span>
@@ -78,6 +78,15 @@ const Players = {
                 </div>
               `).join('')}
           </div>
+          ${players.length > 10 ? `
+          <div class="px-4 py-3 border-t border-gray-100">
+            <button id="show-more-players" class="w-full py-2.5 text-sm font-medium text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-xl transition flex items-center justify-center gap-1.5">
+              <span>더보기</span>
+              <span class="text-xs text-gray-400" id="show-more-count">(${players.length - 10}명 더)</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+          </div>
+          ` : ''}
         </div>
       </div>`;
 
@@ -111,6 +120,45 @@ const Players = {
     input.onkeydown = (e) => {
       if (e.key === 'Enter') addPlayer();
     };
+
+    // 실시간 검색 필터
+    const allItems = container.querySelectorAll('.player-item');
+    const showMoreWrap = container.querySelector('#show-more-players')?.parentElement;
+    const PAGE_SIZE = 10;
+
+    input.addEventListener('input', () => {
+      const query = input.value.trim().toLowerCase();
+
+      if (!query) {
+        // 검색어 없으면 원래 페이지네이션 복원
+        allItems.forEach((el, i) => {
+          el.classList.toggle('hidden', i >= PAGE_SIZE);
+          el.classList.remove('search-hidden');
+        });
+        if (showMoreWrap) {
+          const hiddenCount = container.querySelectorAll('.player-item.hidden').length;
+          if (hiddenCount > 0) {
+            showMoreWrap.style.display = '';
+            const countEl = container.querySelector('#show-more-count');
+            if (countEl) countEl.textContent = `(${hiddenCount}명 더)`;
+          } else {
+            showMoreWrap.style.display = 'none';
+          }
+        }
+        updateSelectionUI();
+        return;
+      }
+
+      // 검색 모드: 이름에 검색어 포함된 항목만 표시
+      if (showMoreWrap) showMoreWrap.style.display = 'none';
+      allItems.forEach(el => {
+        const name = (el.dataset.name || '').toLowerCase();
+        const match = name.includes(query);
+        el.classList.toggle('hidden', !match);
+        el.classList.toggle('search-hidden', !match);
+      });
+      updateSelectionUI();
+    });
 
     container.querySelectorAll('.gender-toggle-btn').forEach(btn => {
       btn.onclick = () => {
@@ -155,7 +203,9 @@ const Players = {
     const updateSelectionUI = () => {
       const checked = container.querySelectorAll('.player-select-cb:checked');
       const count = checked.length;
-      const total = playerCbs.length;
+      const visibleCbs = Array.from(playerCbs).filter(cb => !cb.closest('.player-item.hidden'));
+      const visibleChecked = visibleCbs.filter(cb => cb.checked).length;
+      const visibleTotal = visibleCbs.length;
 
       if (count > 0) {
         deleteSelectedBtn.classList.remove('hidden');
@@ -167,15 +217,17 @@ const Players = {
       }
 
       if (selectAllCb) {
-        selectAllCb.checked = total > 0 && count === total;
-        selectAllCb.indeterminate = count > 0 && count < total;
+        selectAllCb.checked = visibleTotal > 0 && visibleChecked === visibleTotal;
+        selectAllCb.indeterminate = visibleChecked > 0 && visibleChecked < visibleTotal;
       }
     };
 
     if (selectAllCb) {
       selectAllCb.onchange = () => {
         const isChecked = selectAllCb.checked;
-        playerCbs.forEach(cb => { cb.checked = isChecked; });
+        playerCbs.forEach(cb => {
+          if (!cb.closest('.player-item.hidden')) cb.checked = isChecked;
+        });
         updateSelectionUI();
       };
     }
@@ -190,6 +242,24 @@ const Players = {
         const players = Storage.getPlayers().filter(p => !checkedIds.includes(p.id));
         Storage.savePlayers(players);
         this.render(container);
+      };
+    }
+
+    // 더보기 버튼
+    const showMoreBtn = container.querySelector('#show-more-players');
+    if (showMoreBtn) {
+      showMoreBtn.onclick = () => {
+        const items = container.querySelectorAll('.player-item.hidden:not(.search-hidden)');
+        const toShow = Array.from(items).slice(0, PAGE_SIZE);
+        toShow.forEach(el => el.classList.remove('hidden'));
+
+        const remaining = container.querySelectorAll('.player-item.hidden:not(.search-hidden)').length;
+        if (remaining === 0) {
+          showMoreBtn.parentElement.style.display = 'none';
+        } else {
+          container.querySelector('#show-more-count').textContent = `(${remaining}명 더)`;
+        }
+        updateSelectionUI();
       };
     }
 
@@ -273,5 +343,9 @@ const Players = {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  },
+
+  escapeAttr(text) {
+    return String(text || '').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   },
 };

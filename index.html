@@ -80,6 +80,13 @@
             </svg>
             <span>일정 보기</span>
           </button>
+          <button id="menu-settings" class="menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-green-50 hover:text-green-700 transition hidden">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span>설정</span>
+          </button>
         </nav>
         <!-- 하단: 로그아웃 -->
         <div class="border-t border-gray-100 pt-3">
@@ -117,11 +124,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
               </svg>
             </button>
-            <button id="logout-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-green-50 transition" title="로그아웃" aria-label="로그아웃">
+            <!--<button id="logout-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-green-50 transition" title="로그아웃" aria-label="로그아웃">
               <svg class="w-[18px] h-[18px] text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
               </svg>
-            </button>
+            </button>-->
           </div>
         </div>
         <!-- 탭 네비게이션 -->
@@ -232,6 +239,12 @@
         App.showCalendar();
       });
 
+      // 메뉴: 설정
+      document.getElementById('menu-settings').addEventListener('click', function() {
+        closeMenu();
+        App.showSettings();
+      });
+
       // 메뉴 내 로그아웃
       document.getElementById('menu-logout').addEventListener('click', function() {
         closeMenu();
@@ -240,9 +253,9 @@
     })();
 
     // 로그아웃 버튼 (헤더)
-    document.getElementById('logout-btn').addEventListener('click', function() {
-      Auth.logout();
-    });
+    // document.getElementById('logout-btn').addEventListener('click', function() {
+    //   Auth.logout();
+    // });
 
     // 앱 시작 (Auth가 제어)
     document.addEventListener('DOMContentLoaded', function() {

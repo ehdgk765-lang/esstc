@@ -11,6 +11,8 @@ const Calendar = {
     { value: 'red', label: '빨강', bg: 'bg-red-100', dot: 'bg-red-500', text: 'text-red-700' },
     { value: 'yellow', label: '노랑', bg: 'bg-yellow-100', dot: 'bg-yellow-500', text: 'text-yellow-700' },
     { value: 'purple', label: '보라', bg: 'bg-purple-100', dot: 'bg-purple-500', text: 'text-purple-700' },
+    { value: 'pink', label: '분홍', bg: 'bg-pink-100', dot: 'bg-pink-400', text: 'text-pink-700' },
+    { value: 'orange', label: '주황', bg: 'bg-orange-100', dot: 'bg-orange-400', text: 'text-orange-700' },
   ],
 
   _getColor(value) {
@@ -192,7 +194,7 @@ const Calendar = {
                   '<div class="w-1 self-stretch rounded-full ' + color.dot + ' flex-shrink-0 mt-0.5"></div>' +
                   '<div class="flex-1 min-w-0">' +
                     '<div class="font-semibold text-sm ' + color.text + '">' + this._escapeHtml(ev.title) + '</div>' +
-                    (ev.time ? '<div class="text-xs text-gray-500 mt-0.5">' + ev.time + '</div>' : '') +
+                    (this._formatTimeRange(ev) ? '<div class="text-xs text-gray-500 mt-0.5">' + this._formatTimeRange(ev) + '</div>' : '') +
                     (ev.description ? '<div class="text-xs text-gray-500 mt-1">' + this._escapeHtml(ev.description) + '</div>' : '') +
                     attendInfo +
                     namesList +
@@ -282,6 +284,10 @@ const Calendar = {
           alert('참석 인원이 마감되었습니다.');
           return;
         }
+        if (result && result.conflict) {
+          alert('같은 시간에 이미 참석 중인 일정이 있습니다.\n("' + result.title + '")');
+          return;
+        }
         self.render(self._container);
       });
     });
@@ -313,7 +319,31 @@ const Calendar = {
   _showEventModal(existingEvent) {
     var self = this;
     var isEdit = !!existingEvent;
-    var ev = existingEvent || { title: '', date: this._selectedDate, time: '', description: '', color: 'green', maxParticipants: 0 };
+    var ev = existingEvent || { title: '', date: this._selectedDate, startTime: '', endTime: '', description: '', color: 'green', maxParticipants: 0 };
+    // 구버전 호환: time 필드만 있는 경우
+    if (ev.time && !ev.startTime) { ev.startTime = ev.time; ev.endTime = ''; }
+
+    // 시간 파싱
+    var startH = '', startM = '00', endH = '', endM = '00';
+    if (ev.startTime) { var sp = ev.startTime.split(':'); startH = sp[0] || ''; startM = sp[1] || '00'; }
+    if (ev.endTime) { var ep = ev.endTime.split(':'); endH = ep[0] || ''; endM = ep[1] || '00'; }
+
+    // 시 옵션 생성
+    var startHOpts = '<option value="">시</option>';
+    var endHOpts = '<option value="">시</option>';
+    for (var h = 5; h <= 23; h++) {
+      var hv = (h < 10 ? '0' : '') + h;
+      startHOpts += '<option value="' + hv + '"' + (hv === startH ? ' selected' : '') + '>' + hv + '</option>';
+      endHOpts += '<option value="' + hv + '"' + (hv === endH ? ' selected' : '') + '>' + hv + '</option>';
+    }
+
+    // 코트 옵션 생성
+    var courts = Storage.getCourts();
+    var courtOptions = '<option value="">선택</option>';
+    for (var ci = 0; ci < courts.length; ci++) {
+      var selected = ev.title === courts[ci].name ? ' selected' : '';
+      courtOptions += '<option value="' + this._escapeAttr(courts[ci].name) + '"' + selected + '>' + this._escapeHtml(courts[ci].name) + '</option>';
+    }
 
     // 색상 옵션 HTML
     var colorOptions = '';
@@ -339,15 +369,48 @@ const Calendar = {
           '<label class="block text-sm font-medium text-gray-600 mb-1">제목</label>' +
           '<input type="text" id="event-title" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500 transition" placeholder="일정 제목" value="' + this._escapeAttr(ev.title) + '">' +
         '</div>' +
+        // 코트 선택
+        (courts.length > 0 ?
+        '<div>' +
+          '<label class="block text-sm font-medium text-gray-600 mb-1">코트</label>' +
+          '<select id="event-court-select" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500 transition bg-white">' + courtOptions + '</select>' +
+        '</div>' : '') +
         // 날짜
         '<div>' +
           '<label class="block text-sm font-medium text-gray-600 mb-1">날짜</label>' +
           '<input type="date" id="event-date" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500 transition" value="' + ev.date + '">' +
         '</div>' +
-        // 시간
+        // 시간 범위
         '<div>' +
-          '<label class="block text-sm font-medium text-gray-600 mb-1">시간 (선택)</label>' +
-          '<input type="time" id="event-time" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500 transition" value="' + (ev.time || '') + '">' +
+          '<label class="block text-sm font-medium text-gray-600 mb-1.5">시간 (선택)</label>' +
+          '<div class="space-y-2">' +
+            '<div class="flex items-center gap-1.5">' +
+              '<span class="text-xs text-gray-400 w-7 flex-shrink-0">시작</span>' +
+              '<select id="event-start-hour" class="px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500 transition bg-white">' + startHOpts + '</select>' +
+              '<span class="text-gray-300 text-sm">:</span>' +
+              '<input type="number" id="event-start-min" class="w-14 px-2 py-2 border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:border-green-500 transition" min="0" max="59" placeholder="00" value="' + (ev.startTime ? startM : '') + '">' +
+              '<button type="button" class="min-quick-btn px-2.5 py-2 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:bg-green-50 transition" data-target="event-start-min" data-val="00">:00</button>' +
+              '<button type="button" class="min-quick-btn px-2.5 py-2 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:bg-green-50 transition" data-target="event-start-min" data-val="30">:30</button>' +
+            '</div>' +
+            '<div class="flex items-center gap-1.5">' +
+              '<span class="text-xs text-gray-400 w-7 flex-shrink-0">종료</span>' +
+              '<select id="event-end-hour" class="px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500 transition bg-white">' + endHOpts + '</select>' +
+              '<span class="text-gray-300 text-sm">:</span>' +
+              '<input type="number" id="event-end-min" class="w-14 px-2 py-2 border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:border-green-500 transition" min="0" max="59" placeholder="00" value="' + (ev.endTime ? endM : '') + '">' +
+              '<button type="button" class="min-quick-btn px-2.5 py-2 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:bg-green-50 transition" data-target="event-end-min" data-val="00">:00</button>' +
+              '<button type="button" class="min-quick-btn px-2.5 py-2 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:bg-green-50 transition" data-target="event-end-min" data-val="30">:30</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="flex flex-wrap gap-1.5 mt-2" id="time-presets">' +
+            '<button type="button" class="time-preset-btn px-2.5 py-1 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:text-green-600 hover:bg-green-50 transition" data-start="06:00" data-end="08:00">06~08</button>' +
+            '<button type="button" class="time-preset-btn px-2.5 py-1 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:text-green-600 hover:bg-green-50 transition" data-start="08:00" data-end="10:00">08~10</button>' +
+            '<button type="button" class="time-preset-btn px-2.5 py-1 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:text-green-600 hover:bg-green-50 transition" data-start="10:00" data-end="12:00">10~12</button>' +
+            '<button type="button" class="time-preset-btn px-2.5 py-1 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:text-green-600 hover:bg-green-50 transition" data-start="12:00" data-end="14:00">12~14</button>' +
+            '<button type="button" class="time-preset-btn px-2.5 py-1 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:text-green-600 hover:bg-green-50 transition" data-start="14:00" data-end="16:00">14~16</button>' +
+            '<button type="button" class="time-preset-btn px-2.5 py-1 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:text-green-600 hover:bg-green-50 transition" data-start="16:00" data-end="18:00">16~18</button>' +
+            '<button type="button" class="time-preset-btn px-2.5 py-1 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:text-green-600 hover:bg-green-50 transition" data-start="18:00" data-end="20:00">18~20</button>' +
+            '<button type="button" class="time-preset-btn px-2.5 py-1 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:text-green-600 hover:bg-green-50 transition" data-start="20:00" data-end="22:00">20~22</button>' +
+          '</div>' +
         '</div>' +
         // 인원 제한
         '<div>' +
@@ -378,6 +441,74 @@ const Calendar = {
       document.getElementById('event-title').focus();
     }, 100);
 
+    // 코트 선택 → 제목에 반영
+    var courtSelect = document.getElementById('event-court-select');
+    if (courtSelect) {
+      courtSelect.addEventListener('change', function() {
+        if (this.value) {
+          document.getElementById('event-title').value = this.value;
+        }
+      });
+    }
+
+    // 분 하이라이트 갱신 헬퍼
+    var activeMinCls = ['border-green-500', 'bg-green-50', 'text-green-600'];
+    function refreshMinBtns() {
+      modal.querySelectorAll('.min-quick-btn').forEach(function(b) {
+        var target = document.getElementById(b.dataset.target);
+        var val = target ? target.value : '';
+        if (val.length === 1) val = '0' + val;
+        if (b.dataset.val === val) {
+          b.classList.add.apply(b.classList, activeMinCls);
+        } else {
+          b.classList.remove.apply(b.classList, activeMinCls);
+        }
+      });
+    }
+
+    // 분 빠른 선택 버튼
+    modal.querySelectorAll('.min-quick-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var target = document.getElementById(this.dataset.target);
+        target.value = this.dataset.val;
+        refreshMinBtns();
+      });
+    });
+
+    // 분 직접 입력 시 버튼 하이라이트 갱신
+    ['event-start-min', 'event-end-min'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('input', refreshMinBtns);
+    });
+
+    // 시간 프리셋 버튼
+    modal.querySelectorAll('.time-preset-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var sp = this.dataset.start.split(':');
+        var ep = this.dataset.end.split(':');
+        document.getElementById('event-start-hour').value = sp[0];
+        document.getElementById('event-start-min').value = sp[1];
+        document.getElementById('event-end-hour').value = ep[0];
+        document.getElementById('event-end-min').value = ep[1];
+        // 선택된 프리셋 하이라이트
+        modal.querySelectorAll('.time-preset-btn').forEach(function(b) {
+          b.classList.remove('border-green-500', 'bg-green-50', 'text-green-600');
+        });
+        this.classList.add('border-green-500', 'bg-green-50', 'text-green-600');
+        refreshMinBtns();
+      });
+    });
+
+    // 기존 값 하이라이트
+    refreshMinBtns();
+    if (ev.startTime && ev.endTime) {
+      modal.querySelectorAll('.time-preset-btn').forEach(function(btn) {
+        if (btn.dataset.start === ev.startTime && btn.dataset.end === ev.endTime) {
+          btn.classList.add('border-green-500', 'bg-green-50', 'text-green-600');
+        }
+      });
+    }
+
     // 닫기
     function closeModal() {
       modal.remove();
@@ -390,7 +521,14 @@ const Calendar = {
     document.getElementById('cal-modal-save').addEventListener('click', function() {
       var title = document.getElementById('event-title').value.trim();
       var date = document.getElementById('event-date').value;
-      var time = document.getElementById('event-time').value;
+      var sh = document.getElementById('event-start-hour').value;
+      var sm = document.getElementById('event-start-min').value || '00';
+      var eh = document.getElementById('event-end-hour').value;
+      var em = document.getElementById('event-end-min').value || '00';
+      if (sm.length === 1) sm = '0' + sm;
+      if (em.length === 1) em = '0' + em;
+      var startTime = sh ? (sh + ':' + sm) : '';
+      var endTime = eh ? (eh + ':' + em) : '';
       var desc = document.getElementById('event-desc').value.trim();
       var maxP = parseInt(document.getElementById('event-max').value) || 0;
       var colorRadio = document.querySelector('input[name="event-color"]:checked');
@@ -413,7 +551,9 @@ const Calendar = {
           if (events[i].id === existingEvent.id) {
             events[i].title = title;
             events[i].date = date;
-            events[i].time = time;
+            events[i].startTime = startTime;
+            events[i].endTime = endTime;
+            delete events[i].time;
             events[i].description = desc;
             events[i].color = color;
             events[i].maxParticipants = maxP;
@@ -426,7 +566,8 @@ const Calendar = {
           id: Storage.generateId(),
           title: title,
           date: date,
-          time: time,
+          startTime: startTime,
+          endTime: endTime,
           description: desc,
           color: color,
           maxParticipants: maxP,
@@ -438,7 +579,7 @@ const Calendar = {
       // 날짜순 정렬
       events.sort(function(a, b) {
         if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-        return (a.time || '').localeCompare(b.time || '');
+        return (a.startTime || a.time || '').localeCompare(b.startTime || b.time || '');
       });
 
       Storage.saveEvents(events);
@@ -478,6 +619,14 @@ const Calendar = {
       closeModal();
       self.render(self._container);
     });
+  },
+
+  _formatTimeRange(ev) {
+    var start = ev.startTime || ev.time || '';
+    var end = ev.endTime || '';
+    if (!start && !end) return '';
+    if (start && end) return start + ' ~ ' + end;
+    return start;
   },
 
   // 유틸리티

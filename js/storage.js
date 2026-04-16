@@ -4,6 +4,7 @@ const Storage = {
     PLAYERS: 'tennis_players',
     TOURNAMENTS: 'tennis_tournaments',
     EVENTS: 'tennis_events',
+    COURTS: 'tennis_courts',
   },
 
   get(key) {
@@ -110,6 +111,21 @@ const Storage = {
           if (ev.maxParticipants > 0 && ev.participants.length >= ev.maxParticipants) {
             return 'full';
           }
+          // 같은 날짜 + 같은 시작 시간 중복 참석 확인
+          var evStart = ev.startTime || ev.time || '';
+          if (evStart) {
+            for (var j = 0; j < events.length; j++) {
+              if (events[j].id === eventId) continue;
+              if (events[j].date !== ev.date) continue;
+              var otherStart = events[j].startTime || events[j].time || '';
+              if (otherStart === evStart) {
+                var otherP = events[j].participants || [];
+                if (otherP.indexOf(memberName) >= 0) {
+                  return { conflict: true, title: events[j].title };
+                }
+              }
+            }
+          }
           ev.participants.push(memberName);
           // 대기 목록에 있었으면 제거
           var wIdx = ev.waitlist.indexOf(memberName);
@@ -146,6 +162,21 @@ const Storage = {
     return false;
   },
 
+  // 코트 관련
+  getCourts() {
+    return this.get(this.KEYS.COURTS) || [];
+  },
+
+  saveCourts(courts) {
+    if (typeof RolesConfig !== 'undefined' && !RolesConfig.isAdmin()) {
+      console.warn('관리자만 코트를 수정할 수 있습니다.');
+      return false;
+    }
+    var result = this.set(this.KEYS.COURTS, courts);
+    this.syncToFirestore('courts', courts);
+    return result;
+  },
+
   // 유틸리티
   generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
@@ -156,6 +187,7 @@ const Storage = {
   _unsubPlayers: null,
   _unsubTournaments: null,
   _unsubEvents: null,
+  _unsubCourts: null,
 
   // Firestore 경로 분기: 클럽 사용자(admin/member) → 공유, 그 외 → per-user
   _getBase() {
@@ -187,16 +219,19 @@ const Storage = {
     localStorage.removeItem(this.KEYS.PLAYERS);
     localStorage.removeItem(this.KEYS.TOURNAMENTS);
     localStorage.removeItem(this.KEYS.EVENTS);
+    localStorage.removeItem(this.KEYS.COURTS);
 
     try {
       var results = await Promise.all([
         base.doc('players').get(),
         base.doc('tournaments').get(),
-        base.doc('events').get()
+        base.doc('events').get(),
+        base.doc('courts').get()
       ]);
       var pDoc = results[0];
       var tDoc = results[1];
       var eDoc = results[2];
+      var cDoc = results[3];
 
       if (pDoc.exists) {
         var d = pDoc.data();
@@ -211,6 +246,7 @@ const Storage = {
         localStorage.setItem(this.KEYS.PLAYERS, JSON.stringify([]));
         localStorage.setItem(this.KEYS.TOURNAMENTS, JSON.stringify([]));
         localStorage.setItem(this.KEYS.EVENTS, JSON.stringify([]));
+        localStorage.setItem(this.KEYS.COURTS, JSON.stringify([]));
         return;
       } else {
         // 그 외: per-user에 데이터 없으면 로컬 데이터를 업로드
@@ -235,6 +271,15 @@ const Storage = {
         var localE = this.getEvents();
         if (localE.length > 0) this.syncToFirestore('events', localE);
       }
+
+      if (cDoc.exists) {
+        var dc = cDoc.data();
+        var cItems = dc.json ? JSON.parse(dc.json) : (dc.items || []);
+        localStorage.setItem(this.KEYS.COURTS, JSON.stringify(cItems));
+      } else if (RolesConfig.isAdmin()) {
+        var localC = this.getCourts();
+        if (localC.length > 0) this.syncToFirestore('courts', localC);
+      }
     } catch (err) {
       console.error('Firestore load error:', err);
     }
@@ -251,15 +296,18 @@ const Storage = {
       var results = await Promise.all([
         userBase.doc('players').get(),
         userBase.doc('tournaments').get(),
-        userBase.doc('events').get()
+        userBase.doc('events').get(),
+        userBase.doc('courts').get()
       ]);
       var pDoc = results[0];
       var tDoc = results[1];
       var eDoc = results[2];
+      var cDoc = results[3];
 
       var players = [];
       var tournaments = [];
       var events = [];
+      var courts = [];
 
       if (pDoc.exists) {
         var d = pDoc.data();
@@ -273,17 +321,23 @@ const Storage = {
         var de = eDoc.data();
         events = de.json ? JSON.parse(de.json) : (de.items || []);
       }
+      if (cDoc.exists) {
+        var dc = cDoc.data();
+        courts = dc.json ? JSON.parse(dc.json) : (dc.items || []);
+      }
 
       // 공유 경로에 저장
       await Promise.all([
         sharedBase.doc('players').set({ json: JSON.stringify(players) }),
         sharedBase.doc('tournaments').set({ json: JSON.stringify(tournaments) }),
-        sharedBase.doc('events').set({ json: JSON.stringify(events) })
+        sharedBase.doc('events').set({ json: JSON.stringify(events) }),
+        sharedBase.doc('courts').set({ json: JSON.stringify(courts) })
       ]);
 
       localStorage.setItem(this.KEYS.PLAYERS, JSON.stringify(players));
       localStorage.setItem(this.KEYS.TOURNAMENTS, JSON.stringify(tournaments));
       localStorage.setItem(this.KEYS.EVENTS, JSON.stringify(events));
+      localStorage.setItem(this.KEYS.COURTS, JSON.stringify(courts));
       console.log('마이그레이션 완료');
     } catch (err) {
       console.error('마이그레이션 오류:', err);
@@ -350,6 +404,23 @@ const Storage = {
       console.error('Events realtime sync error:', err);
     });
 
+    // 코트 데이터 실시간 리스너
+    this._unsubCourts = base.doc('courts').onSnapshot(function(doc) {
+      if (doc.metadata.hasPendingWrites) return;
+      if (!doc.exists) return;
+      var d = doc.data();
+      var items = d.json ? JSON.parse(d.json) : (d.items || []);
+      var current = localStorage.getItem(self.KEYS.COURTS);
+      var newJson = JSON.stringify(items);
+      if (current !== newJson) {
+        localStorage.setItem(self.KEYS.COURTS, newJson);
+        console.log('실시간 동기화: 코트 데이터 업데이트');
+        self._onRemoteChange();
+      }
+    }, function(err) {
+      console.error('Courts realtime sync error:', err);
+    });
+
     console.log('실시간 동기화 시작');
   },
 
@@ -366,6 +437,10 @@ const Storage = {
       this._unsubEvents();
       this._unsubEvents = null;
     }
+    if (this._unsubCourts) {
+      this._unsubCourts();
+      this._unsubCourts = null;
+    }
     console.log('실시간 동기화 중지');
   },
 
@@ -374,6 +449,8 @@ const Storage = {
     if (typeof App !== 'undefined') {
       if (App._viewMode === 'calendar') {
         App.showCalendar();
+      } else if (App._viewMode === 'settings') {
+        App.showSettings();
       } else if (App.currentTab) {
         App.navigate(App.currentTab);
       }
