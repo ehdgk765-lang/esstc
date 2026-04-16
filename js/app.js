@@ -277,7 +277,54 @@ const App = {
                 }).join('')) +
           '</div>' +
         '</div>' +
+        // 역할 관리
+        '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-100/30 border border-white/60 mt-4">' +
+          '<div class="px-4 py-3 border-b border-gray-100">' +
+            '<h3 class="font-semibold text-gray-700 text-sm mb-2">역할 관리</h3>' +
+            '<div class="flex gap-2">' +
+              '<input type="email" id="role-email-input" class="min-w-0 flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 text-base" placeholder="이메일 입력" maxlength="50">' +
+              '<select id="role-type-select" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-700 focus:border-green-700">' +
+                '<option value="admin">관리자</option>' +
+                '<option value="member">멤버</option>' +
+              '</select>' +
+              '<button id="add-role-btn" class="px-4 py-2.5 bg-gradient-to-r from-green-700 to-green-800 text-white rounded-xl hover:from-green-800 hover:to-green-900 active:scale-[0.98] transition-all font-medium whitespace-nowrap flex-shrink-0 shadow-sm shadow-green-300/50">추가</button>' +
+            '</div>' +
+          '</div>' +
+          '<div id="role-list" class="divide-y divide-gray-50">' +
+            '<p class="text-gray-400 text-center py-4 text-sm">불러오는 중...</p>' +
+          '</div>' +
+        '</div>' +
       '</div>';
+
+    // 역할 목록 로드
+    self._loadRoleList();
+
+    // 역할 추가
+    var roleEmailInput = document.getElementById('role-email-input');
+    var roleTypeSelect = document.getElementById('role-type-select');
+    var addRoleBtn = document.getElementById('add-role-btn');
+
+    var addRole = async function() {
+      var email = roleEmailInput.value.trim().toLowerCase();
+      if (!email) return;
+      var role = roleTypeSelect.value;
+      addRoleBtn.disabled = true;
+      addRoleBtn.textContent = '처리 중...';
+      var ok = await RolesConfig.setRole(email, role);
+      if (ok) {
+        roleEmailInput.value = '';
+        self._loadRoleList();
+      } else {
+        alert('역할 설정에 실패했습니다.');
+      }
+      addRoleBtn.disabled = false;
+      addRoleBtn.textContent = '추가';
+    };
+
+    addRoleBtn.addEventListener('click', addRole);
+    roleEmailInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addRole();
+    });
 
     // 코트 추가
     var courtInput = document.getElementById('court-name-input');
@@ -526,6 +573,52 @@ const App = {
     var div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  },
+
+  // 역할 목록 Firestore에서 로드하여 UI 갱신
+  async _loadRoleList() {
+    var self = this;
+    var listEl = document.getElementById('role-list');
+    if (!listEl) return;
+    var roles = await RolesConfig.getRoles();
+    var currentEmail = fbAuth.currentUser ? fbAuth.currentUser.email.toLowerCase() : '';
+    var roleLabels = { admin: '관리자', member: '멤버' };
+    if (roles.length === 0) {
+      listEl.innerHTML = '<p class="text-gray-400 text-center py-4 text-sm">등록된 역할이 없습니다.</p>';
+      return;
+    }
+    listEl.innerHTML = roles.map(function(r, i) {
+      var isSelf = r.email === currentEmail;
+      return '<div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition">' +
+        '<div class="flex items-center gap-3 min-w-0">' +
+          '<span class="w-7 h-7 ' + (r.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700') + ' rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">' + (roleLabels[r.role] || r.role).charAt(0) + '</span>' +
+          '<div class="min-w-0">' +
+            '<span class="text-gray-800 font-medium text-sm truncate block">' + self._escapeHtml(r.email) + '</span>' +
+            '<span class="text-xs text-gray-400">' + (roleLabels[r.role] || r.role) + '</span>' +
+          '</div>' +
+        '</div>' +
+        (isSelf ? '<span class="text-xs text-gray-400 flex-shrink-0 ml-2">나</span>' :
+          '<button class="delete-role-btn text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg px-3 py-1 transition text-sm flex-shrink-0 ml-2" data-email="' + self._escapeHtml(r.email) + '">삭제</button>') +
+      '</div>';
+    }).join('');
+
+    // 역할 삭제 이벤트
+    listEl.querySelectorAll('.delete-role-btn').forEach(function(btn) {
+      btn.addEventListener('click', async function() {
+        var email = btn.dataset.email;
+        if (!confirm(email + '의 역할을 삭제하시겠습니까?\n삭제 후 해당 계정은 "그 외" 사용자가 됩니다.')) return;
+        btn.disabled = true;
+        btn.textContent = '삭제 중...';
+        var ok = await RolesConfig.removeRole(email);
+        if (ok) {
+          self._loadRoleList();
+        } else {
+          alert('역할 삭제에 실패했습니다.');
+          btn.disabled = false;
+          btn.textContent = '삭제';
+        }
+      });
+    });
   },
 
   _updateMenuActive() {
