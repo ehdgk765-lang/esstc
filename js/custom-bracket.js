@@ -79,7 +79,7 @@ const CustomBracket = {
             <label class="block text-sm font-semibold text-gray-700">대진표 배치</label>
             <span id="cb-placement-count" class="text-sm text-gray-500"></span>
           </div>
-          <p class="text-xs text-gray-400 mb-3">빈 슬롯을 클릭하여 팀/선수를 배치하세요. 빈 슬롯은 부전승(BYE) 처리됩니다.</p>
+          <p class="text-xs text-gray-400 mb-3">빈 슬롯을 클릭하여 팀/멤버를 배치하세요. 빈 슬롯은 부전승(BYE) 처리됩니다.</p>
           <div id="cb-bracket-preview"></div>
         </div>
 
@@ -289,7 +289,7 @@ const CustomBracket = {
     picker.innerHTML = `
       <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 max-h-[70vh] flex flex-col">
         <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
-        <h3 class="text-lg font-bold text-center mb-3">선수 선택</h3>
+        <h3 class="text-lg font-bold text-center mb-3">멤버 선택</h3>
 
         <div class="mb-3">
           <div class="flex gap-2">
@@ -301,7 +301,7 @@ const CustomBracket = {
         </div>
 
         ${allPlayers.length > 0 ? `
-          <div class="text-xs text-gray-400 mb-2">등록된 선수 목록</div>
+          <div class="text-xs text-gray-400 mb-2">등록된 멤버 목록</div>
           <div class="overflow-y-auto flex-1 divide-y divide-gray-50">
             ${allPlayers.map(p => {
               const isPlaced = placedNames.has(p.name);
@@ -315,7 +315,7 @@ const CustomBracket = {
                 </div>`;
             }).join('')}
           </div>
-        ` : '<p class="text-sm text-gray-400 text-center py-4">등록된 선수가 없습니다.</p>'}
+        ` : '<p class="text-sm text-gray-400 text-center py-4">등록된 멤버가 없습니다.</p>'}
 
         <button type="button" class="mt-3 w-full py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition cb-picker-cancel">취소</button>
       </div>`;
@@ -336,7 +336,7 @@ const CustomBracket = {
 
     const addCustom = () => {
       const val = searchInput.value.trim();
-      if (!val) { alert('선수명을 입력해주세요.'); return; }
+      if (!val) { alert('멤버명을 입력해주세요.'); return; }
       if (placedNames.has(val)) { alert('이미 배치된 이름입니다.'); return; }
       this._commitPick(slotIndex, val, previewContainer);
     };
@@ -357,7 +357,7 @@ const CustomBracket = {
 
     const allPlayers = Storage.getPlayers();
     const usedNames = this._getPlacedPlayerNames();
-    // 기존 배치에서 현재 슬롯 선수는 제외 (재선택 가능)
+    // 기존 배치에서 현재 슬롯 멤버는 제외 (재선택 가능)
     const currentVal = this._state.placements[slotIndex];
     if (currentVal) {
       currentVal.split(' / ').forEach(n => usedNames.delete(n));
@@ -391,7 +391,7 @@ const CustomBracket = {
                 </div>`;
               }
               return `<div class="cb-doubles-slot px-3 py-2 border-2 border-dashed border-gray-300 rounded-xl text-center" data-idx="${i}">
-                <span class="text-sm text-gray-300 italic">선수 ${i + 1}</span>
+                <span class="text-sm text-gray-300 italic">멤버 ${i + 1}</span>
               </div>`;
             }).join('')}
           </div>
@@ -406,7 +406,7 @@ const CustomBracket = {
           </div>
 
           ${allPlayers.length > 0 ? `
-            <div class="text-xs text-gray-400 mb-2">등록된 선수 목록</div>
+            <div class="text-xs text-gray-400 mb-2">등록된 멤버 목록</div>
             <div class="overflow-y-auto flex-1 divide-y divide-gray-50">
               ${allPlayers.map(p => {
                 const isUsed = allUsed.has(p.name);
@@ -420,7 +420,7 @@ const CustomBracket = {
                   </div>`;
               }).join('')}
             </div>
-          ` : '<p class="text-sm text-gray-400 text-center py-4">등록된 선수가 없습니다.</p>'}
+          ` : '<p class="text-sm text-gray-400 text-center py-4">등록된 멤버가 없습니다.</p>'}
 
           <div class="flex gap-2 mt-3">
             <button type="button" class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition cb-picker-cancel">취소</button>
@@ -458,7 +458,7 @@ const CustomBracket = {
         const val = searchInput.value.trim();
         if (!val) return;
         const allUsed = new Set([...usedNames, ...picked.filter(Boolean)]);
-        if (allUsed.has(val)) { alert('이미 선택된 선수입니다.'); return; }
+        if (allUsed.has(val)) { alert('이미 선택된 멤버입니다.'); return; }
         addName(val);
       };
       searchInput.addEventListener('keydown', (e) => {
@@ -518,11 +518,11 @@ const CustomBracket = {
     // Check duplicates
     const nonNull = orderedPlayers.filter(p => p !== null);
     if (isDoubles) {
-      // 복식: 개별 선수 이름 중복 체크
+      // 복식: 개별 멤버 이름 중복 체크
       const allNames = [];
       nonNull.forEach(t => t.split(' / ').forEach(n => allNames.push(n)));
       if (new Set(allNames).size !== allNames.length) {
-        alert('중복 배치된 선수가 있습니다.');
+        alert('중복 배치된 멤버가 있습니다.');
         return null;
       }
     } else {

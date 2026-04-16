@@ -24,7 +24,7 @@ const Schedule = {
     return slots;
   },
 
-  // 가용 선수로 가능한 게임 타입 확인
+  // 가용 멤버로 가능한 게임 타입 확인
   getPossibleTypes(availMales, availFemales, allowMixed) {
     const types = [];
     if (availMales.length >= 2 && availFemales.length >= 2) types.push('XD');
@@ -134,7 +134,7 @@ const Schedule = {
     return result;
   },
 
-  // 플랜이 선수 수로 실행 가능한지 확인
+  // 플랜이 멤버 수로 실행 가능한지 확인
   isPlanValid(plan, maleCount, femaleCount) {
     let needM = 0, needF = 0, needAny = 0;
     for (const type of plan) {
@@ -163,7 +163,7 @@ const Schedule = {
     // 유효한 플랜 중 랜덤 선택
     const plan = validPlans[Math.floor(Math.random() * validPlans.length)];
 
-    // NTRP 맵 + 가용 선수 정렬: 경기 수 적은 순 (동점 셔플)
+    // NTRP 맵 + 가용 멤버 정렬: 경기 수 적은 순 (동점 셔플)
     const ntrpMap = this.buildNtrpMap();
     let availM = this.sortByCountShuffled(males, gameCounts);
     let availF = this.sortByCountShuffled(females, gameCounts);
@@ -255,7 +255,7 @@ const Schedule = {
     return matches;
   },
 
-  // 선수별 통계 계산
+  // 멤버별 통계 계산
   calcPlayerStats(tournament) {
     const stats = {};
     const allPlayers = [...(tournament.males || []), ...(tournament.females || [])];
@@ -326,7 +326,7 @@ const Schedule = {
       <div>
         <div id="schedule-header" class="mb-4 pb-1">
           <div class="flex items-start justify-between gap-2">
-            <h3 id="schedule-title" class="text-xl font-bold text-gray-800 cursor-pointer hover:text-green-700 transition flex-1 min-w-0" title="클릭하여 이름 수정">${Results.escapeHtml(tournament.name)} <svg class="w-3.5 h-3.5 inline-block text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></h3>
+            <h3 id="schedule-title" class="text-xl font-bold text-gray-800 ${!RolesConfig.isMember() ? 'cursor-pointer hover:text-green-700' : ''} transition flex-1 min-w-0" ${!RolesConfig.isMember() ? 'title="클릭하여 이름 수정"' : ''}>${Results.escapeHtml(tournament.name)} ${!RolesConfig.isMember() ? '<svg class="w-3.5 h-3.5 inline-block text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>' : ''}</h3>
             <span class="text-sm font-medium whitespace-nowrap flex-shrink-0 ${isComplete ? 'text-green-600' : 'text-orange-600'}">
               ${completedMatches}/${totalMatches} 완료
             </span>
@@ -335,10 +335,10 @@ const Schedule = {
             ${tournament.startTime} ~ ${tournament.endTime} · 코트 ${maxCourts}면 · ${playerInfo}
           </p>
           <div class="flex items-center gap-2 mt-3">
-            <button id="add-match-btn" class="text-sm px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 active:scale-[0.98] transition-all font-medium flex items-center gap-1 shadow-sm shadow-green-200/50">
+            ${!RolesConfig.isMember() ? `<button id="add-match-btn" class="text-sm px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 active:scale-[0.98] transition-all font-medium flex items-center gap-1 shadow-sm shadow-green-200/50">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
               대진 추가
-            </button>
+            </button>` : ''}
             <button id="pdf-download-btn" class="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition font-medium flex items-center gap-1">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               PDF
@@ -363,15 +363,15 @@ const Schedule = {
           `).join('')}
         </div>
 
-        <!-- 선수별 통계 -->
+        <!-- 멤버별 통계 -->
         <div id="stats-section" class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-50/30 border border-white/60 overflow-hidden">
           <div class="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
-            <span class="font-semibold text-gray-700 text-sm">선수별 통계</span>
+            <span class="font-semibold text-gray-700 text-sm">멤버별 통계</span>
           </div>
           <table class="w-full text-sm standings-table">
             <thead>
               <tr class="border-b border-gray-100 text-gray-500 text-xs">
-                <th class="text-left px-4 py-2">선수</th>
+                <th class="text-left px-4 py-2">멤버</th>
                 <th class="text-center px-2 py-2">경기</th>
                 <th class="text-center px-2 py-2">승</th>
                 <th class="text-center px-2 py-2">무</th>
@@ -411,30 +411,33 @@ const Schedule = {
       pdfBtn.onclick = () => this.exportPDF(container, tournament);
     }
 
-    // 대진 추가
-    const addMatchBtn = container.querySelector('#add-match-btn');
-    if (addMatchBtn) {
-      addMatchBtn.onclick = () => this.showAddMatchModal(container, tournament);
+    if (!RolesConfig.isMember()) {
+      // 대진 추가
+      const addMatchBtn = container.querySelector('#add-match-btn');
+      if (addMatchBtn) {
+        addMatchBtn.onclick = () => this.showAddMatchModal(container, tournament);
+      }
+
+      // 대진표 이름 수정
+      const titleEl = container.querySelector('#schedule-title');
+      if (titleEl) {
+        titleEl.onclick = () => {
+          const newName = prompt('대진표 이름을 입력하세요', tournament.name);
+          if (newName !== null && newName.trim() !== '') {
+            tournament.name = newName.trim();
+            Storage.updateTournament(tournament);
+            this.render(container, tournament);
+          }
+        };
+      }
     }
 
-    // 대진표 이름 수정
-    const titleEl = container.querySelector('#schedule-title');
-    if (titleEl) {
-      titleEl.onclick = () => {
-        const newName = prompt('대진표 이름을 입력하세요', tournament.name);
-        if (newName !== null && newName.trim() !== '') {
-          tournament.name = newName.trim();
-          Storage.updateTournament(tournament);
-          this.render(container, tournament);
-        }
-      };
-    }
-
-    // ─── 선수 탭-교환 + 매치 카드 드래그 ───
+    // ─── 멤버 탭-교환 + 매치 카드 드래그 (관리자 전용) ───
     const cards = container.querySelectorAll('.schedule-match-card');
     let selectedPlayer = null;
 
-    // 선수 이름 탭 → 선택/교환
+    if (!RolesConfig.isMember()) {
+    // 멤버 이름 탭 → 선택/교환
     container.querySelectorAll('.swap-player').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation(); // 카드 클릭(스코어) 방지
@@ -445,16 +448,16 @@ const Schedule = {
         };
 
         if (!selectedPlayer) {
-          // 첫 번째 선수 선택
+          // 첫 번째 멤버 선택
           selectedPlayer = { el, ...data };
           el.classList.add('bg-green-200', 'ring-2', 'ring-green-500', 'rounded');
         } else if (selectedPlayer.slotIdx === data.slotIdx && selectedPlayer.matchIdx === data.matchIdx
           && selectedPlayer.team === data.team && selectedPlayer.pos === data.pos) {
-          // 같은 선수 재탭 → 선택 해제
+          // 같은 멤버 재탭 → 선택 해제
           selectedPlayer.el.classList.remove('bg-green-200', 'ring-2', 'ring-green-500', 'rounded');
           selectedPlayer = null;
         } else {
-          // 두 번째 선수 탭 → 교환
+          // 두 번째 멤버 탭 → 교환
           const src = selectedPlayer, tgt = data;
           const srcMatch = tournament.timeSlots[src.slotIdx].matches[src.matchIdx];
           const tgtMatch = tournament.timeSlots[tgt.slotIdx].matches[tgt.matchIdx];
@@ -479,7 +482,7 @@ const Schedule = {
             [t1[src.pos], t2[tgt.pos]] = [t2[tgt.pos], t1[src.pos]];
             const all = [...t1, ...t2];
             if (new Set(all).size !== all.length) {
-              alert('같은 선수가 동일 경기에 중복됩니다.');
+              alert('같은 멤버가 동일 경기에 중복됩니다.');
               clearSel();
               return;
             }
@@ -496,7 +499,7 @@ const Schedule = {
 
             if (new Set([...srcTeam, ...srcOther]).size !== srcTeam.length + srcOther.length
               || new Set([...tgtTeam, ...tgtOther]).size !== tgtTeam.length + tgtOther.length) {
-              alert('같은 선수가 동일 경기에 중복됩니다.');
+              alert('같은 멤버가 동일 경기에 중복됩니다.');
               clearSel();
               return;
             }
@@ -510,7 +513,7 @@ const Schedule = {
       });
     });
 
-    // 카드 빈 영역 클릭 → 스코어 입력 (선수 선택 중이면 해제)
+    // 카드 빈 영역 클릭 → 스코어 입력 (멤버 선택 중이면 해제)
     cards.forEach(card => {
       card.addEventListener('click', () => {
         if (selectedPlayer) {
@@ -590,6 +593,7 @@ const Schedule = {
         this.render(container, tournament);
       });
     });
+    } // end !RolesConfig.isMember() block
   },
 
   // PDF 내보내기 (타임슬롯 단위 캡처, 페이지당 4개)
@@ -721,7 +725,7 @@ const Schedule = {
     }
   },
 
-  // 선수 이름을 개별 탭 가능한 span으로 렌더링
+  // 멤버 이름을 개별 탭 가능한 span으로 렌더링
   renderSwapPlayer(name, slotIdx, matchIdx, team, pos) {
     const allPlayers = Storage.getPlayers();
     const pd = allPlayers.find(p => p.name === name);
@@ -753,11 +757,11 @@ const Schedule = {
 
     return `
       <div class="schedule-match-card relative bg-white border ${borderColor} rounded-xl p-3 cursor-pointer hover:shadow-md transition"
-           draggable="true" data-match-id="${match.id}" data-slot-idx="${slotIdx}" data-match-idx="${matchIdx}">
-        <button type="button" class="delete-match-btn absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-slot-idx="${slotIdx}" data-match-idx="${matchIdx}">
+           ${!RolesConfig.isMember() ? 'draggable="true"' : ''} data-match-id="${match.id}" data-slot-idx="${slotIdx}" data-match-idx="${matchIdx}">
+        ${!RolesConfig.isMember() ? `<button type="button" class="delete-match-btn absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-slot-idx="${slotIdx}" data-match-idx="${matchIdx}">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-        <div class="flex items-center justify-between mb-2 pr-5">
+        </button>` : ''}
+        <div class="flex items-center justify-between mb-2 ${!RolesConfig.isMember() ? 'pr-5' : ''}">
           <span class="change-gametype-btn text-xs px-2 py-0.5 rounded-full font-medium ${cfg.badgeClass} cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-green-400 transition" data-match-id="${match.id}">${cfg.label}</span>
           <span class="text-xs text-gray-400">코트 ${match.court}</span>
         </div>
@@ -812,7 +816,7 @@ const Schedule = {
     const border = hasScore ? '#bbf7d0' : '#e5e7eb';
     const allPlayers = Storage.getPlayers();
 
-    // ── [패딩 조정] 선수이름 행: padding: 상 우 하 좌 ──
+    // ── [패딩 조정] 멤버이름 행: padding: 상 우 하 좌 ──
     const teamPad = 'padding:6px 8px 14px 8px';
     const scorePad = 'padding:6px 6px 14px 6px';
     // ── [패딩 조정] 게임타입 뱃지 (혼합복식): padding: 상 우 하 좌 ──
@@ -928,16 +932,16 @@ const Schedule = {
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-2">팀 1</label>
               <div class="space-y-2">
-                ${playerSlot('t1p1', '선수 1 선택...')}
-                ${playerSlot('t1p2', '선수 2 선택...')}
+                ${playerSlot('t1p1', '멤버 1 선택...')}
+                ${playerSlot('t1p2', '멤버 2 선택...')}
               </div>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-2">팀 2</label>
               <div class="space-y-2">
-                ${playerSlot('t2p1', '선수 1 선택...')}
-                ${playerSlot('t2p2', '선수 2 선택...')}
+                ${playerSlot('t2p1', '멤버 1 선택...')}
+                ${playerSlot('t2p2', '멤버 2 선택...')}
               </div>
             </div>
 
@@ -960,12 +964,12 @@ const Schedule = {
       modal.querySelector('.am-submit').onclick = () => {
         const { t1p1, t1p2, t2p1, t2p2 } = selected;
         if (!t1p1 || !t1p2 || !t2p1 || !t2p2) {
-          alert('모든 선수를 선택해주세요.');
+          alert('모든 멤버를 선택해주세요.');
           return;
         }
         const names = [t1p1, t1p2, t2p1, t2p2];
         if (new Set(names).size !== 4) {
-          alert('중복된 선수가 있습니다.');
+          alert('중복된 멤버가 있습니다.');
           return;
         }
         const slotIdx = parseInt(modal.querySelector('#am-slot').value);
@@ -1010,7 +1014,7 @@ const Schedule = {
     bindModalEvents();
   },
 
-  // 선수 선택 피커 (대진 추가용)
+  // 멤버 선택 피커 (대진 추가용)
   _showPlayerPickerForSlot(parentModal, allPlayers, selected, slotKey, onDone) {
     const existing = document.querySelector('.am-player-picker');
     if (existing) existing.remove();
@@ -1023,7 +1027,7 @@ const Schedule = {
     picker.innerHTML = `
       <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 max-h-[70vh] flex flex-col">
         <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
-        <h3 class="text-lg font-bold text-center mb-3">선수 선택</h3>
+        <h3 class="text-lg font-bold text-center mb-3">멤버 선택</h3>
         <div class="mb-3">
           <div class="flex gap-2">
             <input type="text" id="amp-search" placeholder="이름 검색 또는 직접 입력..."
@@ -1033,7 +1037,7 @@ const Schedule = {
           </div>
         </div>
         ${allPlayers.length > 0 ? `
-          <div class="text-xs text-gray-400 mb-2">등록된 선수</div>
+          <div class="text-xs text-gray-400 mb-2">등록된 멤버</div>
           <div class="overflow-y-auto flex-1 divide-y divide-gray-50">
             ${allPlayers.map(p => {
               const isUsed = usedNames.has(p.name);
@@ -1047,7 +1051,7 @@ const Schedule = {
                 </div>`;
             }).join('')}
           </div>
-        ` : '<p class="text-sm text-gray-400 text-center py-4">등록된 선수가 없습니다.</p>'}
+        ` : '<p class="text-sm text-gray-400 text-center py-4">등록된 멤버가 없습니다.</p>'}
         <button type="button" class="mt-3 w-full py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition amp-cancel">취소</button>
       </div>`;
 
@@ -1069,7 +1073,7 @@ const Schedule = {
     const addCustom = () => {
       const val = searchInput.value.trim();
       if (!val) return;
-      if (usedNames.has(val)) { alert('이미 선택된 선수입니다.'); return; }
+      if (usedNames.has(val)) { alert('이미 선택된 멤버입니다.'); return; }
       selected[slotKey] = val;
       picker.remove();
       onDone();

@@ -14,8 +14,37 @@ const App = {
   _scheduleSubTab: 'custom-schedule',
 
   init() {
+    this.applyRoleUI();
     this.bindTabs();
-    this.navigate('players');
+    this.navigate(RolesConfig.getDefaultTab());
+  },
+
+  applyRoleUI() {
+    var visibleTabs = RolesConfig.getVisibleTabs();
+    document.querySelectorAll('[data-tab]').forEach(function(tab) {
+      tab.style.display = visibleTabs.includes(tab.dataset.tab) ? '' : 'none';
+    });
+
+    // 사이드 메뉴에 역할 뱃지 표시
+    var menuHeader = document.querySelector('#left-menu h2');
+    if (menuHeader) {
+      var badge = document.getElementById('role-badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.id = 'role-badge';
+        menuHeader.appendChild(badge);
+      }
+      var roleLabel = RolesConfig.isAdmin() ? '관리자' : RolesConfig.isMember() ? '멤버' : '';
+      if (roleLabel) {
+        badge.textContent = roleLabel;
+        badge.style.display = '';
+        badge.className = RolesConfig.isAdmin()
+          ? 'text-xs font-normal ml-2 px-2 py-0.5 rounded-full bg-red-100 text-red-600'
+          : 'text-xs font-normal ml-2 px-2 py-0.5 rounded-full bg-blue-100 text-blue-600';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
   },
 
   bindTabs() {
@@ -25,6 +54,11 @@ const App = {
   },
 
   navigate(tabName, tournamentId) {
+    // 멤버가 관리자 전용 탭 접근 시 기본 탭으로 리다이렉트
+    var visibleTabs = RolesConfig.getVisibleTabs();
+    if (!visibleTabs.includes(tabName)) {
+      tabName = RolesConfig.getDefaultTab();
+    }
     this.currentTab = tabName;
 
     document.querySelectorAll('[data-tab]').forEach(tab => {
@@ -109,8 +143,8 @@ const App = {
     if (allPlayers.length < 2) {
       container.innerHTML = `
         <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 text-center">
-          <p class="text-yellow-800 font-medium mb-2">선수를 2명 이상 등록해주세요.</p>
-          <button onclick="App.navigate('players')" class="text-green-600 font-semibold hover:underline">선수 관리로 이동</button>
+          <p class="text-yellow-800 font-medium mb-2">멤버를 2명 이상 등록해주세요.</p>
+          <button onclick="App.navigate('players')" class="text-green-600 font-semibold hover:underline">멤버 관리로 이동</button>
         </div>`;
       return;
     }
@@ -256,14 +290,14 @@ const App = {
     if (eligible.length < minPlayers) {
       section.innerHTML = `
         <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-center text-sm">
-          <p class="text-yellow-800">${config.label}에 참가 가능한 선수가 부족합니다. (현재 ${eligible.length}명, 최소 ${minPlayers}명 필요)</p>
+          <p class="text-yellow-800">${config.label}에 참가 가능한 멤버가 부족합니다. (현재 ${eligible.length}명, 최소 ${minPlayers}명 필요)</p>
         </div>`;
       return;
     }
 
     section.innerHTML = `
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">참가 선수 선택</label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">참가 멤버 선택</label>
         <input type="text" id="player-search" placeholder="이름 검색..."
           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm mb-2">
         <div class="flex justify-between items-center mb-2">
@@ -331,7 +365,7 @@ const App = {
     const renderList = (players, prefix, genderLabel, badgeClass) => `
       <div>
         <label class="block text-sm font-semibold text-gray-700 mb-2">
-          ${genderLabel}자 선수 선택
+          ${genderLabel}자 멤버 선택
           <span id="${prefix}-count" class="text-green-600 font-normal">(0명 선택)</span>
         </label>
         <input type="text" id="${prefix}-search" placeholder="이름 검색..."
@@ -589,9 +623,9 @@ const App = {
     if (allPlayers.length < 4) {
       container.innerHTML = `
         <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 text-center">
-          <p class="text-yellow-800 font-medium mb-2">복식 경기를 위해 최소 4명의 선수가 필요합니다.</p>
+          <p class="text-yellow-800 font-medium mb-2">복식 경기를 위해 최소 4명의 멤버가 필요합니다.</p>
           <p class="text-yellow-700 text-sm mb-3">현재: 남 ${males.length}명, 여 ${females.length}명</p>
-          <button onclick="App.navigate('players')" class="text-green-600 font-semibold hover:underline">선수 관리로 이동</button>
+          <button onclick="App.navigate('players')" class="text-green-600 font-semibold hover:underline">멤버 관리로 이동</button>
         </div>`;
       return;
     }
@@ -643,12 +677,12 @@ const App = {
           </div>
         </div>
 
-        <!-- 남자 선수 선택 -->
+        <!-- 남자 멤버 선택 -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">
-            남자 선수 <span id="male-count" class="text-green-600 font-normal">(0/${males.length}명 선택)</span>
+            남자 멤버 <span id="male-count" class="text-green-600 font-normal">(0/${males.length}명 선택)</span>
           </label>
-          ${males.length === 0 ? '<p class="text-sm text-gray-400">등록된 남자 선수가 없습니다.</p>' : `
+          ${males.length === 0 ? '<p class="text-sm text-gray-400">등록된 남자 멤버가 없습니다.</p>' : `
           <input type="text" id="sch-male-search" placeholder="이름 검색..."
             class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm mb-2">
           <div class="flex justify-between items-center mb-2">
@@ -667,12 +701,12 @@ const App = {
           </div>`}
         </div>
 
-        <!-- 여자 선수 선택 -->
+        <!-- 여자 멤버 선택 -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">
-            여자 선수 <span id="female-count" class="text-green-600 font-normal">(0/${females.length}명 선택)</span>
+            여자 멤버 <span id="female-count" class="text-green-600 font-normal">(0/${females.length}명 선택)</span>
           </label>
-          ${females.length === 0 ? '<p class="text-sm text-gray-400">등록된 여자 선수가 없습니다.</p>' : `
+          ${females.length === 0 ? '<p class="text-sm text-gray-400">등록된 여자 멤버가 없습니다.</p>' : `
           <input type="text" id="sch-female-search" placeholder="이름 검색..."
             class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm mb-2">
           <div class="flex justify-between items-center mb-2">
@@ -771,7 +805,7 @@ const App = {
 
       const totalPlayers = selectedMales.length + selectedFemales.length;
       if (totalPlayers < 4) {
-        alert('최소 4명의 선수를 선택해주세요.');
+        alert('최소 4명의 멤버를 선택해주세요.');
         return;
       }
 
@@ -779,7 +813,7 @@ const App = {
 
       const possibleTypes = Schedule.getPossibleTypes(selectedMales, selectedFemales, allowMixed);
       if (possibleTypes.length === 0) {
-        alert('선택한 선수 구성으로 복식 경기를 만들 수 없습니다.\n혼합복식: 남2+여2, 남자복식: 남4, 여자복식: 여4 이상 필요\n또는 섞어복식 허용을 체크해주세요.');
+        alert('선택한 멤버 구성으로 복식 경기를 만들 수 없습니다.\n혼합복식: 남2+여2, 남자복식: 남4, 여자복식: 여4 이상 필요\n또는 섞어복식 허용을 체크해주세요.');
         return;
       }
 
@@ -853,7 +887,7 @@ const App = {
       preview.innerHTML = `
         <div class="space-y-1">
           <p><span class="font-medium">총 경기:</span> 최대 ${totalGamesMax}경기 (${slots.length}타임 × ${courts}코트)</p>
-          <p><span class="font-medium">선수:</span> 남 ${maleCount}명, 여 ${femaleCount}명</p>
+          <p><span class="font-medium">멤버:</span> 남 ${maleCount}명, 여 ${femaleCount}명</p>
           <p><span class="font-medium">가능한 게임:</span> ${possibleTypes.join(', ')}</p>
         </div>`;
     } else {
@@ -904,10 +938,10 @@ const App = {
               return `
                 <div class="tournament-card relative bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 cursor-pointer hover:shadow-lg hover:shadow-green-100/50 hover:border-green-200 transition-all shadow-sm shadow-green-50/30"
                      data-id="${t.id}">
-                  <button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
+                  ${!RolesConfig.isMember() ? `<button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                  </button>
-                  <div class="flex items-center justify-between mb-2 pr-6">
+                  </button>` : ''}
+                  <div class="flex items-center justify-between mb-2 ${!RolesConfig.isMember() ? 'pr-6' : ''}">
                     <h3 class="font-bold text-gray-800">${Results.escapeHtml(t.name)}</h3>
                     <span class="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700">대진표</span>
                   </div>
@@ -925,10 +959,10 @@ const App = {
             return `
               <div class="tournament-card relative bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 cursor-pointer hover:shadow-lg hover:shadow-green-100/50 hover:border-green-200 transition-all shadow-sm shadow-green-50/30"
                    data-id="${t.id}">
-                <button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
+                ${!RolesConfig.isMember() ? `<button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-                <div class="flex items-center justify-between mb-2 pr-6">
+                </button>` : ''}
+                <div class="flex items-center justify-between mb-2 ${!RolesConfig.isMember() ? 'pr-6' : ''}">
                   <h3 class="font-bold text-gray-800">${Results.escapeHtml(t.name)}</h3>
                   <div class="flex items-center gap-2">
                     ${gameLabel ? `<span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">${gameLabel}</span>` : ''}
