@@ -213,7 +213,9 @@ const Auth = {
     if (confirm('로그아웃 하시겠습니까?')) {
       localStorage.removeItem(Storage.KEYS.PLAYERS);
       localStorage.removeItem(Storage.KEYS.TOURNAMENTS);
+      localStorage.removeItem(Storage.KEYS.EVENTS);
       localStorage.removeItem('tennis_last_uid');
+      localStorage.removeItem('tennis_member_name');
       fbAuth.signOut();
     }
   }

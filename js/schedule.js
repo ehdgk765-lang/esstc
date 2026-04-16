@@ -512,8 +512,9 @@ const Schedule = {
         }
       });
     });
+    } // end !RolesConfig.isMember() block
 
-    // 카드 빈 영역 클릭 → 스코어 입력 (멤버 선택 중이면 해제)
+    // 카드 빈 영역 클릭 → 스코어 입력 (관리자 + 멤버 모두 가능)
     cards.forEach(card => {
       card.addEventListener('click', () => {
         if (selectedPlayer) {
@@ -538,6 +539,7 @@ const Schedule = {
       });
     });
 
+    if (!RolesConfig.isMember()) {
     // 대진 삭제 (X 버튼)
     container.querySelectorAll('.delete-match-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -593,7 +595,7 @@ const Schedule = {
         this.render(container, tournament);
       });
     });
-    } // end !RolesConfig.isMember() block
+    } // end !RolesConfig.isMember() block (admin-only: delete, gametype, drag)
   },
 
   // PDF 내보내기 (타임슬롯 단위 캡처, 페이지당 4개)
