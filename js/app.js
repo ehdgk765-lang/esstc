@@ -1436,6 +1436,18 @@ const App = {
             if (t.format === 'schedule') {
               const allMatches = Schedule.getAllMatches(t);
               const completed = allMatches.filter(m => m.winner).length;
+              // males/females 배열이 비어있으면 매치 데이터에서 선수 추출
+              let maleCount = t.males ? t.males.length : 0;
+              let femaleCount = t.females ? t.females.length : 0;
+              if (maleCount === 0 && femaleCount === 0) {
+                const playerSet = new Set();
+                allMatches.forEach(m => {
+                  if (m.player1) m.player1.split(' / ').forEach(n => playerSet.add(n.trim()));
+                  if (m.player2) m.player2.split(' / ').forEach(n => playerSet.add(n.trim()));
+                });
+                maleCount = playerSet.size;
+              }
+              const playerLabel = femaleCount > 0 ? `남${maleCount} · 여${femaleCount}` : `${maleCount}명`;
               return `
                 <div class="tournament-card relative bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl p-4 cursor-pointer hover:shadow-lg hover:shadow-green-100/50 hover:border-green-200 transition-all shadow-sm shadow-green-50/30"
                      data-id="${t.id}">
@@ -1447,7 +1459,7 @@ const App = {
                     <span class="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700">대진표</span>
                   </div>
                   <div class="flex items-center gap-4 text-sm text-gray-500">
-                    <span>남${t.males.length} · 여${t.females.length}</span>
+                    <span>${playerLabel}</span>
                     <span>${t.startTime}~${t.endTime}</span>
                     <span>${completed}/${allMatches.length}경기</span>
                   </div>

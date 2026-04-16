@@ -245,19 +245,45 @@ const Players = {
       };
     }
 
-    // 더보기 버튼
+    // 더보기/접기 버튼
     const showMoreBtn = container.querySelector('#show-more-players');
     if (showMoreBtn) {
-      showMoreBtn.onclick = () => {
-        const items = container.querySelectorAll('.player-item.hidden:not(.search-hidden)');
-        const toShow = Array.from(items).slice(0, PAGE_SIZE);
-        toShow.forEach(el => el.classList.remove('hidden'));
+      const btnLabel = showMoreBtn.querySelector('span:first-child');
+      const btnCount = container.querySelector('#show-more-count');
+      const btnIcon = showMoreBtn.querySelector('svg');
+      let expanded = false;
 
-        const remaining = container.querySelectorAll('.player-item.hidden:not(.search-hidden)').length;
-        if (remaining === 0) {
-          showMoreBtn.parentElement.style.display = 'none';
+      showMoreBtn.onclick = () => {
+        if (!expanded) {
+          // 더보기: 10개씩 펼치기
+          const items = container.querySelectorAll('.player-item.hidden:not(.search-hidden)');
+          const toShow = Array.from(items).slice(0, PAGE_SIZE);
+          toShow.forEach(el => el.classList.remove('hidden'));
+
+          const remaining = container.querySelectorAll('.player-item.hidden:not(.search-hidden)').length;
+          if (remaining === 0) {
+            // 모두 펼침 → 접기 모드로 전환
+            expanded = true;
+            btnLabel.textContent = '접기';
+            btnCount.textContent = '';
+            btnIcon.style.transform = 'rotate(180deg)';
+          } else {
+            btnCount.textContent = `(${remaining}명 더)`;
+          }
         } else {
-          container.querySelector('#show-more-count').textContent = `(${remaining}명 더)`;
+          // 접기: 10개만 남기고 숨기기
+          const allItems = container.querySelectorAll('.player-item');
+          allItems.forEach((el, i) => {
+            if (i >= PAGE_SIZE) el.classList.add('hidden');
+          });
+          expanded = false;
+          const remaining = container.querySelectorAll('.player-item.hidden:not(.search-hidden)').length;
+          btnLabel.textContent = '더보기';
+          btnCount.textContent = `(${remaining}명 더)`;
+          btnIcon.style.transform = '';
+          // 목록 상단으로 스크롤
+          var listEl = container.querySelector('#player-list');
+          if (listEl) listEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         updateSelectionUI();
       };
