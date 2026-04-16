@@ -12,7 +12,7 @@ const App = {
   currentTournamentId: null,
   _createSubTab: 'custom-bracket',
   _scheduleSubTab: 'custom-schedule',
-  _viewMode: 'home', // 'home' | 'calendar'
+  _viewMode: 'home', // 'home' | 'calendar' | 'settings'
 
   init() {
     this.applyRoleUI();
@@ -124,6 +124,12 @@ const App = {
         badge.style.display = 'none';
       }
     }
+
+    // 설정 메뉴: 관리자만 표시
+    var settingsBtn = document.getElementById('menu-settings');
+    if (settingsBtn) {
+      settingsBtn.classList.toggle('hidden', !RolesConfig.isAdmin());
+    }
   },
 
   bindTabs() {
@@ -154,9 +160,362 @@ const App = {
     Calendar.render(content);
   },
 
+  showSettings() {
+    this._viewMode = 'settings';
+    var tabNav = document.querySelector('header nav');
+    if (tabNav) tabNav.style.display = 'none';
+    document.querySelectorAll('[data-tab]').forEach(function(tab) {
+      tab.classList.remove('tab-active');
+      tab.classList.add('text-gray-500');
+    });
+    this._updateMenuActive();
+    var content = document.getElementById('main-content');
+    this.renderSettings(content);
+  },
+
+  renderSettings(container) {
+    var self = this;
+    var courts = Storage.getCourts();
+
+    // 월 옵션 생성 (현재 월 기준 앞뒤 포함)
+    var now = new Date();
+    var curYear = now.getFullYear();
+    var curMonth = now.getMonth(); // 0-based
+    var monthOptions = '';
+    for (var mi = 0; mi < 12; mi++) {
+      var selected = mi === curMonth ? ' selected' : '';
+      monthOptions += '<option value="' + mi + '"' + selected + '>' + (mi + 1) + '월</option>';
+    }
+
+    container.innerHTML =
+      '<div class="max-w-lg mx-auto">' +
+        '<h2 class="text-2xl font-bold text-gray-800 mb-6">설정</h2>' +
+        // 정규 운동 등록
+        '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-50/30 border border-white/60 mb-4">' +
+          '<div class="px-4 py-3">' +
+            '<h3 class="font-semibold text-gray-700 text-sm mb-3">정규 운동 등록</h3>' +
+            '<div class="flex items-center gap-2">' +
+              '<select id="reg-year-select" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500">' +
+                '<option value="' + (curYear - 1) + '">' + (curYear - 1) + '년</option>' +
+                '<option value="' + curYear + '" selected>' + curYear + '년</option>' +
+                '<option value="' + (curYear + 1) + '">' + (curYear + 1) + '년</option>' +
+              '</select>' +
+              '<select id="reg-month-select" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500">' +
+                monthOptions +
+              '</select>' +
+              '<button id="reg-exercise-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-green-200/50">정규 운동 등록</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        // 정규 운동 확인
+        '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-50/30 border border-white/60 mb-4">' +
+          '<div class="px-4 py-3">' +
+            '<h3 class="font-semibold text-gray-700 text-sm mb-3">정규 운동 확인</h3>' +
+            '<div class="flex items-center gap-2 mb-2">' +
+              '<select id="reg-check-year" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500">' +
+                '<option value="' + (curYear - 1) + '">' + (curYear - 1) + '년</option>' +
+                '<option value="' + curYear + '" selected>' + curYear + '년</option>' +
+                '<option value="' + (curYear + 1) + '">' + (curYear + 1) + '년</option>' +
+              '</select>' +
+              '<select id="reg-check-month" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500">' +
+                monthOptions +
+              '</select>' +
+              '<select id="reg-check-day" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500"></select>' +
+            '</div>' +
+            '<div class="flex items-center gap-2">' +
+              '<select id="reg-check-court" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500">' +
+                '<option value="선정">선정</option>' +
+                '<option value="장미">장미</option>' +
+              '</select>' +
+              '<select id="reg-check-time" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500">' +
+                '<option value="06~09">06~09</option>' +
+                '<option value="09~12">09~12</option>' +
+              '</select>' +
+              '<button id="reg-check-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-blue-200/50">정규 운동 확인</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        // 코트 관리
+        '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-50/30 border border-white/60">' +
+          '<div class="px-4 py-3 border-b border-gray-100">' +
+            '<h3 class="font-semibold text-gray-700 text-sm mb-2">코트 관리</h3>' +
+            '<div class="flex gap-2">' +
+              '<input type="text" id="court-name-input" class="min-w-0 flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base" placeholder="코트 이름 입력" maxlength="30">' +
+              '<button id="add-court-btn" class="px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 active:scale-[0.98] transition-all font-medium whitespace-nowrap flex-shrink-0 shadow-sm shadow-green-200/50">추가</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="px-4 py-2 border-b border-gray-100 bg-gray-50/50">' +
+            '<span class="text-xs text-gray-500">등록 코트 ' + courts.length + '면</span>' +
+          '</div>' +
+          '<div id="court-list" class="divide-y divide-gray-50">' +
+            (courts.length === 0
+              ? '<p class="text-gray-400 text-center py-8">등록된 코트가 없습니다.</p>'
+              : courts.map(function(c, i) {
+                  return '<div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition">' +
+                    '<div class="flex items-center gap-3 min-w-0">' +
+                      '<span class="w-7 h-7 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">' + (i + 1) + '</span>' +
+                      '<span class="text-gray-800 font-medium truncate">' + self._escapeHtml(c.name) + '</span>' +
+                    '</div>' +
+                    '<button class="delete-court-btn text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg px-3 py-1 transition text-sm flex-shrink-0 ml-2" data-id="' + c.id + '">삭제</button>' +
+                  '</div>';
+                }).join('')) +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    // 코트 추가
+    var courtInput = document.getElementById('court-name-input');
+    var addCourtBtn = document.getElementById('add-court-btn');
+
+    var addCourt = function() {
+      var name = courtInput.value.trim();
+      if (!name) return;
+      var courts = Storage.getCourts();
+      if (courts.some(function(c) { return c.name === name; })) {
+        alert('이미 등록된 코트입니다.');
+        return;
+      }
+      courts.push({ id: Storage.generateId(), name: name });
+      Storage.saveCourts(courts);
+      self.renderSettings(container);
+    };
+
+    addCourtBtn.addEventListener('click', addCourt);
+    courtInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addCourt();
+    });
+
+    // 코트 삭제
+    container.querySelectorAll('.delete-court-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!confirm('이 코트를 삭제하시겠습니까?')) return;
+        var courts = Storage.getCourts().filter(function(c) { return c.id !== btn.dataset.id; });
+        Storage.saveCourts(courts);
+        self.renderSettings(container);
+      });
+    });
+
+    // 정규 운동 등록 버튼
+    var regBtn = document.getElementById('reg-exercise-btn');
+    if (regBtn) {
+      regBtn.addEventListener('click', function() {
+        var year = parseInt(document.getElementById('reg-year-select').value);
+        var month = parseInt(document.getElementById('reg-month-select').value);
+        self.handleRegularExercise(container, year, month);
+      });
+    }
+
+    // 정규 운동 확인 - 일(day) 옵션 동적 생성
+    var regCheckYear = document.getElementById('reg-check-year');
+    var regCheckMonth = document.getElementById('reg-check-month');
+    var regCheckDay = document.getElementById('reg-check-day');
+    var dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    function updateDayOptions() {
+      var y = parseInt(regCheckYear.value);
+      var m = parseInt(regCheckMonth.value);
+      var days = new Date(y, m + 1, 0).getDate();
+      var prevVal = regCheckDay.value;
+      var todayDate = now.getDate();
+      regCheckDay.innerHTML = '';
+
+      // 1일이 일요일이면 단독 표시
+      if (new Date(y, m, 1).getDay() === 0) {
+        var opt = document.createElement('option');
+        opt.value = 1;
+        opt.textContent = '1일(일)';
+        regCheckDay.appendChild(opt);
+      }
+
+      // 토요일 기준으로 토~일 쌍 생성
+      for (var di = 1; di <= days; di++) {
+        if (new Date(y, m, di).getDay() !== 6) continue;
+        var opt = document.createElement('option');
+        opt.value = di;
+        if (di + 1 <= days) {
+          opt.textContent = di + '일(토)~' + (di + 1) + '일(일)';
+        } else {
+          opt.textContent = di + '일(토)';
+        }
+        regCheckDay.appendChild(opt);
+      }
+
+      // 기본값: 이전 선택값 유지 또는 오늘 이후 가장 가까운 주말
+      var options = regCheckDay.options;
+      if (prevVal && regCheckDay.querySelector('option[value="' + prevVal + '"]')) {
+        regCheckDay.value = prevVal;
+      } else {
+        var found = false;
+        for (var oi = 0; oi < options.length; oi++) {
+          if (parseInt(options[oi].value) >= todayDate) {
+            regCheckDay.value = options[oi].value;
+            found = true;
+            break;
+          }
+        }
+        if (!found && options.length > 0) {
+          regCheckDay.selectedIndex = 0;
+        }
+      }
+    }
+    updateDayOptions();
+    regCheckYear.addEventListener('change', updateDayOptions);
+    regCheckMonth.addEventListener('change', updateDayOptions);
+
+    // 정규 운동 확인 버튼
+    var regCheckBtn = document.getElementById('reg-check-btn');
+    if (regCheckBtn) {
+      regCheckBtn.addEventListener('click', function() {
+        var year = parseInt(regCheckYear.value);
+        var month = parseInt(regCheckMonth.value);
+        var day = parseInt(regCheckDay.value);
+        var court = document.getElementById('reg-check-court').value;
+        var time = document.getElementById('reg-check-time').value;
+        self.handleRegularExerciseCheck(year, month, day, court, time);
+      });
+    }
+  },
+
+  handleRegularExercise(container, year, month) {
+    // 선택한 년/월의 모든 토요일·일요일 구하기
+    var weekendDates = [];
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dayOfWeek = new Date(year, month, d).getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) { // 일요일(0) 또는 토요일(6)
+        var mm = String(month + 1).padStart(2, '0');
+        var dd = String(d).padStart(2, '0');
+        weekendDates.push(year + '-' + mm + '-' + dd);
+      }
+    }
+
+    if (weekendDates.length === 0) {
+      alert('해당 월에 주말이 없습니다.');
+      return;
+    }
+
+    // 주말별 3개 일정 정의
+    var templates = [
+      { title: '장미 06~09 정규 운동', startTime: '06:00', endTime: '09:00', color: 'pink' },
+      { title: '선정 06~09 정규 운동', startTime: '06:00', endTime: '09:00', color: 'blue' },
+      { title: '선정 09~12 정규 운동', startTime: '09:00', endTime: '12:00', color: 'orange' },
+    ];
+
+    var events = Storage.getEvents();
+
+    // 중복 체크: 같은 날짜 + 같은 제목이 이미 있으면 건너뜀
+    var newCount = 0;
+    for (var i = 0; i < weekendDates.length; i++) {
+      var dateStr = weekendDates[i];
+      for (var j = 0; j < templates.length; j++) {
+        var tmpl = templates[j];
+        var exists = events.some(function(e) {
+          return e.date === dateStr && e.title === tmpl.title;
+        });
+        if (!exists) {
+          events.push({
+            id: Storage.generateId(),
+            title: tmpl.title,
+            date: dateStr,
+            startTime: tmpl.startTime,
+            endTime: tmpl.endTime,
+            description: '',
+            color: tmpl.color,
+            maxParticipants: 0,
+            participants: [],
+            waitlist: []
+          });
+          newCount++;
+        }
+      }
+    }
+
+    if (newCount === 0) {
+      alert((month + 1) + '월 주말 정규 운동이 이미 모두 등록되어 있습니다.');
+      return;
+    }
+
+    // 날짜순 정렬
+    events.sort(function(a, b) {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      return (a.startTime || a.time || '').localeCompare(b.startTime || b.time || '');
+    });
+
+    Storage.saveEvents(events);
+    alert((month + 1) + '월 주말 정규 운동 ' + newCount + '건이 등록되었습니다.');
+  },
+
+  handleRegularExerciseCheck(year, month, day, court, time) {
+    var selectedDate = new Date(year, month, day);
+    var dow = selectedDate.getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+    // 선택한 날의 토·일 쌍 구하기
+    var satDay, sunDay;
+    if (dow === 6) { satDay = day; sunDay = day + 1; }
+    else { satDay = day - 1; sunDay = day; }
+
+    var weekendDays = [];
+    if (satDay >= 1 && satDay <= daysInMonth) weekendDays.push({ day: satDay, dow: 6 });
+    if (sunDay >= 1 && sunDay <= daysInMonth) weekendDays.push({ day: sunDay, dow: 0 });
+
+    // 이벤트 제목 매칭 키워드: "선정 06~09" or "장미 09~12" 등
+    var titleKeyword = court + ' ' + time;
+    var events = Storage.getEvents();
+    var mm = String(month + 1).padStart(2, '0');
+
+    var lines = [];
+    lines.push('안녕하세요.');
+    lines.push('금주 참석자 명단을 공지합니다. 변동사항이 있으시면 말씀해주시기 바랍니다.');
+    lines.push('');
+
+    for (var i = 0; i < weekendDays.length; i++) {
+      var wd = weekendDays[i];
+      var dd = String(wd.day).padStart(2, '0');
+      var dateStr = year + '-' + mm + '-' + dd;
+
+      var matchEvent = events.find(function(e) {
+        return e.date === dateStr && e.title.indexOf(titleKeyword) >= 0;
+      });
+
+      var participants = matchEvent ? (matchEvent.participants || []) : [];
+      lines.push('* ' + wd.day + '일(' + dayNames[wd.dow] + ') : ' + participants.length + '명');
+      if (participants.length > 0) {
+        for (var pi = 0; pi < participants.length; pi += 6) {
+          lines.push(participants.slice(pi, pi + 6).join(', '));
+        }
+      }
+      lines.push('');
+    }
+
+    var text = lines.join('\n').trim();
+
+    navigator.clipboard.writeText(text).then(function() {
+      alert('클립보드에 복사되었습니다.');
+    }).catch(function() {
+      // fallback
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert('클립보드에 복사되었습니다.');
+    });
+  },
+
+  _escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  },
+
   _updateMenuActive() {
     var homeBtn = document.getElementById('menu-home');
     var calBtn = document.getElementById('menu-calendar');
+    var settingsBtn = document.getElementById('menu-settings');
     if (homeBtn) {
       if (this._viewMode === 'home') {
         homeBtn.classList.add('active');
@@ -169,6 +528,13 @@ const App = {
         calBtn.classList.add('active');
       } else {
         calBtn.classList.remove('active');
+      }
+    }
+    if (settingsBtn) {
+      if (this._viewMode === 'settings') {
+        settingsBtn.classList.add('active');
+      } else {
+        settingsBtn.classList.remove('active');
       }
     }
   },
