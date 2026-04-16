@@ -19,15 +19,7 @@ const RolesConfig = {
       if (doc.exists) {
         this._currentRole = doc.data().role || 'other';
       } else {
-        // 역할 문서가 없으면 → roles 컬렉션 자체가 비어있는지 확인 (최초 설정)
-        var snapshot = await fbDb.collection('roles').limit(1).get();
-        if (snapshot.empty) {
-          // 최초 로그인: 현재 사용자를 관리자로 자동 설정
-          await fbDb.collection('roles').doc(email).set({ role: 'admin' });
-          this._currentRole = 'admin';
-        } else {
-          this._currentRole = 'other';
-        }
+        this._currentRole = 'other';
       }
     } catch (e) {
       console.error('역할 조회 실패:', e);
