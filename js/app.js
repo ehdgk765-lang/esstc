@@ -15,6 +15,9 @@ const App = {
   _viewMode: 'home', // 'home' | 'calendar' | 'settings'
 
   init() {
+    // 재로그인 시 이전 화면 잔존 방지
+    var content = document.getElementById('main-content');
+    if (content) content.innerHTML = '';
     this.applyRoleUI();
     this.bindTabs();
     // 멤버: 이름 확인 필요
@@ -49,6 +52,9 @@ const App = {
     modal.innerHTML =
       '<div class="absolute inset-0 bg-black/50"></div>' +
       '<div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">' +
+        '<button id="member-name-close" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition" title="닫기">' +
+          '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
+        '</button>' +
         '<h3 class="text-lg font-bold text-gray-800 text-center">이름 확인</h3>' +
         '<p class="text-sm text-gray-500 text-center">멤버 목록에 등록된 본인의 이름을 입력해주세요.</p>' +
         '<input type="text" id="member-name-input" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500 transition" placeholder="이름 입력">' +
@@ -91,6 +97,16 @@ const App = {
         e.preventDefault();
         trySubmit();
       }
+    });
+    document.getElementById('member-name-close').addEventListener('click', function() {
+      modal.remove();
+      localStorage.removeItem(Storage.KEYS.PLAYERS);
+      localStorage.removeItem(Storage.KEYS.TOURNAMENTS);
+      localStorage.removeItem(Storage.KEYS.EVENTS);
+      localStorage.removeItem(Storage.KEYS.COURTS);
+      localStorage.removeItem('tennis_last_uid');
+      localStorage.removeItem('tennis_member_name');
+      fbAuth.signOut();
     });
   },
 
