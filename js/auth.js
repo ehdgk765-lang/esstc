@@ -8,8 +8,8 @@ const Auth = {
       const appEl = document.getElementById('app-container');
 
       if (user) {
-        // 역할 초기화
-        RolesConfig.initRole();
+        // 역할 초기화 (Firestore에서 비동기 조회)
+        await RolesConfig.initRole();
 
         // 다른 계정으로 전환된 경우 이전 데이터 정리
         const lastUid = localStorage.getItem('tennis_last_uid');
