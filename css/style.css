@@ -865,43 +865,40 @@ html.dark .change-gametype-modal .cgt-cancel {
 
 /* 로고 배경 */
 .auth-logo-bg {
-  background: url('tennis-smile-2.png') center/96px 96px no-repeat;
-  -webkit-mask-image: radial-gradient(circle, #000 55%, transparent 80%);
-  mask-image: radial-gradient(circle, #000 55%, transparent 80%);
+  background: url('esstc.jpg') center/cover no-repeat;
+  border-radius: 50%;
   mix-blend-mode: multiply;
 }
 .header-logo-bg {
-  background: url('tennis-smile-2.png') center/24px 24px no-repeat;
-  -webkit-mask-image: radial-gradient(circle, #000 50%, transparent 80%);
-  mask-image: radial-gradient(circle, #000 50%, transparent 80%);
+  background: url('esstc.jpg') center/cover no-repeat;
+  border-radius: 50%;
   mix-blend-mode: multiply;
 }
-/* 다크모드: mask로 흰 배경 페이드 + box-shadow 은은한 글로우 */
+/* 다크모드: blend 해제 + 가장자리 페이드 + 글로우 */
 html.dark .auth-logo-bg {
   mix-blend-mode: normal;
-  -webkit-mask-image: radial-gradient(circle, #000 40%, transparent 72%);
-  mask-image: radial-gradient(circle, #000 40%, transparent 72%);
-  box-shadow: 0 0 24px 10px rgba(255, 255, 255, 0.1);
+  -webkit-mask-image: radial-gradient(circle, #000 50%, transparent 75%);
+  mask-image: radial-gradient(circle, #000 50%, transparent 75%);
+  box-shadow: 0 0 24px 10px rgba(255, 255, 255, 0.08);
 }
 html.dark .header-logo-bg {
   mix-blend-mode: normal;
-  -webkit-mask-image: radial-gradient(circle, #000 35%, transparent 70%);
-  mask-image: radial-gradient(circle, #000 35%, transparent 70%);
-  box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.1);
+  -webkit-mask-image: radial-gradient(circle, #000 45%, transparent 70%);
+  mask-image: radial-gradient(circle, #000 45%, transparent 70%);
+  box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.08);
 }
-/* 기기 다크모드 대응: html.dark 미적용 시에도 동일 스타일 보장 */
 @media (prefers-color-scheme: dark) {
   .auth-logo-bg {
     mix-blend-mode: normal;
-    -webkit-mask-image: radial-gradient(circle, #000 40%, transparent 72%);
-    mask-image: radial-gradient(circle, #000 40%, transparent 72%);
-    box-shadow: 0 0 24px 10px rgba(255, 255, 255, 0.1);
+    -webkit-mask-image: radial-gradient(circle, #000 50%, transparent 75%);
+    mask-image: radial-gradient(circle, #000 50%, transparent 75%);
+    box-shadow: 0 0 24px 10px rgba(255, 255, 255, 0.08);
   }
   .header-logo-bg {
     mix-blend-mode: normal;
-    -webkit-mask-image: radial-gradient(circle, #000 35%, transparent 70%);
-    mask-image: radial-gradient(circle, #000 35%, transparent 70%);
-    box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.1);
+    -webkit-mask-image: radial-gradient(circle, #000 45%, transparent 70%);
+    mask-image: radial-gradient(circle, #000 45%, transparent 70%);
+    box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.08);
   }
 }
 
