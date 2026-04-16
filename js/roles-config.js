@@ -1,8 +1,4 @@
 // roles-config.js - 역할 설정 및 헬퍼
-// 계정 종류: admin(관리자), member(멤버), other(그 외)
-// - admin/member: 공유 데이터 (club/shared/) 사용, 상호작용
-// - other: 독립 데이터 (users/{uid}/) 사용, 전체 기능
-// - 역할 정보는 Firestore roles 컬렉션에서 관리 (소스코드에 이메일 미포함)
 const RolesConfig = {
   _currentRole: null,
 
