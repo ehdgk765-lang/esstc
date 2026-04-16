@@ -1,4 +1,4 @@
-// players.js - 선수 관리 CRUD + UI 렌더링
+// players.js - 멤버 관리 CRUD + UI 렌더링
 const NTRP_VALUES = [2.0, 2.5, 3.0, 3.5, 4.0];
 
 const Players = {
@@ -9,10 +9,10 @@ const Players = {
 
     container.innerHTML = `
       <div class="max-w-lg mx-auto">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">선수 관리</h2>
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">멤버 관리</h2>
 
         <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-50/30 border border-white/60">
-          <!-- 선수 추가 입력 -->
+          <!-- 멤버 추가 입력 -->
           <div class="px-4 py-3 border-b border-gray-100">
             <div class="flex gap-2 overflow-hidden">
               <input type="text" id="player-name-input"
@@ -48,7 +48,7 @@ const Players = {
               ${players.length > 0 ? `
                 <input type="checkbox" id="select-all-players" class="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500 cursor-pointer">
               ` : ''}
-              <span class="font-semibold text-gray-700 text-sm">등록 선수</span>
+              <span class="font-semibold text-gray-700 text-sm">등록 멤버</span>
               <span id="selected-player-count" class="text-xs text-green-600 font-medium hidden"></span>
             </div>
             <div class="flex items-center gap-2">
@@ -58,10 +58,10 @@ const Players = {
               <span class="text-xs text-gray-500">남 ${males.length} · 여 ${females.length} · 총 ${players.length}명</span>
             </div>
           </div>
-          <!-- 선수 목록 -->
+          <!-- 멤버 목록 -->
           <div id="player-list" class="divide-y divide-gray-50">
             ${players.length === 0
-              ? '<p class="text-gray-400 text-center py-8">등록된 선수가 없습니다.</p>'
+              ? '<p class="text-gray-400 text-center py-8">등록된 멤버가 없습니다.</p>'
               : players.map((p, i) => `
                 <div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition">
                   <div class="flex items-center gap-3 min-w-0">
@@ -98,7 +98,7 @@ const Players = {
 
       const players = Storage.getPlayers();
       if (players.some(p => p.name === name)) {
-        alert('이미 등록된 선수입니다.');
+        alert('이미 등록된 멤버입니다.');
         return;
       }
 
@@ -139,14 +139,14 @@ const Players = {
     container.querySelectorAll('.delete-player-btn').forEach(btn => {
       btn.onclick = () => {
         const id = btn.dataset.id;
-        if (!confirm('선수를 삭제하시겠습니까?')) return;
+        if (!confirm('멤버를 삭제하시겠습니까?')) return;
         const players = Storage.getPlayers().filter(p => p.id !== id);
         Storage.savePlayers(players);
         this.render(container);
       };
     });
 
-    // 선수 선택 체크박스
+    // 멤버 선택 체크박스
     const selectAllCb = container.querySelector('#select-all-players');
     const playerCbs = container.querySelectorAll('.player-select-cb');
     const deleteSelectedBtn = container.querySelector('#delete-selected-btn');
@@ -186,7 +186,7 @@ const Players = {
       deleteSelectedBtn.onclick = () => {
         const checkedIds = Array.from(container.querySelectorAll('.player-select-cb:checked')).map(cb => cb.dataset.id);
         if (checkedIds.length === 0) return;
-        if (!confirm(`선택한 ${checkedIds.length}명의 선수를 삭제하시겠습니까?`)) return;
+        if (!confirm(`선택한 ${checkedIds.length}명의 멤버를 삭제하시겠습니까?`)) return;
         const players = Storage.getPlayers().filter(p => !checkedIds.includes(p.id));
         Storage.savePlayers(players);
         this.render(container);

@@ -44,6 +44,18 @@ header {
   min-height: 44px; /* 최소 터치 영역 */
 }
 
+/* 사이드 메뉴 */
+#left-menu {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+#left-menu.menu-open {
+  transform: translateX(0) !important;
+}
+#menu-overlay {
+  transition: opacity 0.3s ease;
+}
+
 /* 토너먼트 브래킷 */
 .bracket-container {
   -webkit-overflow-scrolling: touch;
@@ -250,6 +262,38 @@ html.dark {
 html.dark body {
   background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a) !important;
   color: #e2e8f0 !important;
+}
+
+/* 사이드 메뉴 */
+html.dark #left-menu {
+  background-color: #1e293b !important;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4) !important;
+}
+html.dark #left-menu h2 {
+  color: #e2e8f0;
+}
+html.dark #left-menu .menu-item {
+  color: #94a3b8;
+}
+html.dark #left-menu .menu-item:hover {
+  background-color: rgba(74, 222, 128, 0.1) !important;
+  color: #4ade80 !important;
+}
+html.dark #left-menu #menu-logout:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: #f87171 !important;
+}
+html.dark #left-menu #menu-close {
+  color: #64748b;
+}
+html.dark #left-menu #menu-close:hover {
+  background-color: #334155;
+}
+html.dark #left-menu .border-gray-100 {
+  border-color: #334155 !important;
+}
+html.dark #menu-overlay {
+  background-color: rgba(0, 0, 0, 0.6) !important;
 }
 
 /* 헤더 */
@@ -529,7 +573,7 @@ html.dark .border-green-200 {
   border-color: #166534 !important;
 }
 
-/* 선수 교환 선택 */
+/* 멤버 교환 선택 */
 html.dark .swap-player:hover {
   background-color: rgba(234, 179, 8, 0.15) !important;
 }
@@ -591,7 +635,7 @@ html.dark .sub-tab[class*="bg-green-600"] {
   color: white !important;
 }
 
-/* 커스텀 대진표 선수 선택 모달 */
+/* 커스텀 대진표 멤버 선택 모달 */
 html.dark .cb-player-picker > div {
   background-color: #1e293b !important;
   color: #e2e8f0;
@@ -634,7 +678,7 @@ html.dark .add-match-modal label div {
   border-color: #475569;
 }
 
-/* 대진 추가 선수 피커 */
+/* 대진 추가 멤버 피커 */
 html.dark .am-player-picker > div {
   background-color: #1e293b !important;
   color: #e2e8f0;

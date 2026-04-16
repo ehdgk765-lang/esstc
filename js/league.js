@@ -129,7 +129,7 @@ const League = {
             <thead>
               <tr class="bg-gray-50 text-gray-600">
                 <th class="px-3 py-2 text-left">#</th>
-                <th class="px-3 py-2 text-left">${tournament.gameType && GAME_TYPES[tournament.gameType]?.doubles ? '팀' : '선수'}</th>
+                <th class="px-3 py-2 text-left">${tournament.gameType && GAME_TYPES[tournament.gameType]?.doubles ? '팀' : '멤버'}</th>
                 <th class="px-3 py-2 text-center">승</th>
                 <th class="px-3 py-2 text-center">무</th>
                 <th class="px-3 py-2 text-center">패</th>

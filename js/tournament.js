@@ -77,7 +77,7 @@ const Tournament = {
           } else {
             nextMatch.player2 = match.winner;
           }
-          // 다음 라운드도 BYE vs 실제 선수면 자동 승리
+          // 다음 라운드도 BYE vs 실제 멤버면 자동 승리
           if (nextMatch.player1 && nextMatch.player2) {
             // 둘 다 있으면 대기
           } else if (nextMatch.player1 && nextMatch.player2 === null && rounds[r].length > 1) {

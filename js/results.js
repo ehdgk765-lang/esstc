@@ -18,7 +18,7 @@ const Results = {
     const t1Html = this.formatTeamHtml(player1Name);
     const t2Html = this.formatTeamHtml(player2Name);
 
-    // 팀 이름 축약 (첫 번째 선수 성만 표시)
+    // 팀 이름 축약 (첫 번째 멤버 성만 표시)
     const t1Short = player1Name.split(' / ')[0].slice(0, 3) + 'Team';
     const t2Short = player2Name.split(' / ')[0].slice(0, 3) + 'Team';
 

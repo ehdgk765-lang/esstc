@@ -8,6 +8,9 @@ const Auth = {
       const appEl = document.getElementById('app-container');
 
       if (user) {
+        // 역할 초기화
+        RolesConfig.initRole();
+
         // 다른 계정으로 전환된 경우 이전 데이터 정리
         const lastUid = localStorage.getItem('tennis_last_uid');
         if (lastUid && lastUid !== user.uid) {
@@ -36,6 +39,7 @@ const Auth = {
       } else {
         // 실시간 동기화 중지
         Storage.stopRealtimeSync();
+        RolesConfig._currentRole = null;
         // 로그인 페이지 표시 (localStorage는 건드리지 않음 - logout에서 정리)
         authEl.style.display = '';
         appEl.style.display = 'none';
@@ -65,8 +69,8 @@ const Auth = {
           <div class="relative inline-block mb-4">
             <div class="auth-logo-bg w-28 h-28 rounded-3xl mx-auto" role="img" aria-label="Tennis"></div>
           </div>
-          <h1 class="text-2xl font-extrabold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent">Happy Tennis Life</h1>
-          <p class="text-sm text-gray-400 mt-1">테니스를 더 즐겁게</p>
+          <h1 class="text-2xl font-extrabold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent">ESSTC</h1>
+          <p class="text-sm text-gray-400 mt-1">더블에스 클럽에 오신 것을 환영합니다</p>
         </div>
 
         <!-- 로그인 카드 -->
@@ -90,6 +94,10 @@ const Auth = {
                 class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:bg-white transition"
                 placeholder="비밀번호를 다시 입력">
             </div>
+            <label class="flex items-center justify-end gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" id="auth-remember" class="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 accent-green-600">
+              <span class="text-xs text-gray-400">이메일 기억하기</span>
+            </label>
             <p id="auth-error" class="text-sm text-red-500 hidden"></p>
             <button type="submit" id="auth-submit-btn"
               class="w-full py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 active:scale-[0.98] transition-all font-bold text-lg shadow-md shadow-green-200">
@@ -130,6 +138,15 @@ const Auth = {
       if (metaColor) metaColor.content = isDark ? '#1e293b' : '#ffffff';
     };
 
+    // 이메일 기억하기: 저장된 이메일 복원
+    const emailInput = container.querySelector('#auth-email');
+    const rememberCheck = container.querySelector('#auth-remember');
+    const savedEmail = localStorage.getItem('tennis_remember_email');
+    if (savedEmail) {
+      emailInput.value = savedEmail;
+      rememberCheck.checked = true;
+    }
+
     let isRegister = false;
     const form = container.querySelector('#auth-form');
     const confirmWrap = container.querySelector('#auth-confirm-wrap');
@@ -156,6 +173,13 @@ const Auth = {
       submitBtn.textContent = '처리 중...';
 
       try {
+        // 이메일 기억하기 처리
+        if (rememberCheck.checked) {
+          localStorage.setItem('tennis_remember_email', email);
+        } else {
+          localStorage.removeItem('tennis_remember_email');
+        }
+
         if (isRegister) {
           const confirm = container.querySelector('#auth-password-confirm').value;
           if (password !== confirm) {

@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#ffffff" id="meta-theme-color">
-  <title>Happy-Tennis-Life</title>
+  <title>ESSTC</title>
   <script>
     // 페이지 렌더 전 테마 적용 (깜빡임 방지)
     (function() {
@@ -49,33 +49,80 @@
 
   <!-- 앱 -->
   <div id="app-container" style="display:none">
+    <!-- 사이드 메뉴 오버레이 -->
+    <div id="menu-overlay" class="fixed inset-0 bg-black/40 z-50 hidden"></div>
+    <!-- 사이드 메뉴 -->
+    <aside id="left-menu" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 shadow-xl">
+      <div class="p-5 h-full flex flex-col" style="padding-top: calc(env(safe-area-inset-top, 0px) + 20px)">
+        <!-- 메뉴 헤더 -->
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <span class="header-logo-bg inline-flex w-7 h-7 rounded-lg flex-shrink-0"></span>
+            ESSTC
+          </h2>
+          <button id="menu-close" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition text-gray-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <!-- 메뉴 항목 -->
+        <nav class="flex-1 space-y-1">
+          <button id="menu-theme" class="menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-green-50 hover:text-green-700 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <span>테마 전환</span>
+          </button>
+        </nav>
+        <!-- 하단: 로그아웃 -->
+        <div class="border-t border-gray-100 pt-3">
+          <button id="menu-logout" class="menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-red-50 hover:text-red-600 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            <span>로그아웃</span>
+          </button>
+        </div>
+      </div>
+    </aside>
     <!-- 헤더 -->
     <header class="bg-white/80 backdrop-blur-md border-b border-green-100/60 sticky top-0 z-40 shadow-sm shadow-green-100/30">
       <div class="max-w-4xl mx-auto px-4">
         <div class="flex items-center justify-between py-3">
-          <button id="logout-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-green-50 transition" title="로그아웃" aria-label="로그아웃">
+          <!-- 좌측: 메뉴 버튼 -->
+          <button id="menu-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-green-50 transition" title="메뉴" aria-label="메뉴 열기">
             <svg class="w-[18px] h-[18px] text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
           </button>
+          <!-- 중앙: 로고 -->
           <h1 class="text-lg font-extrabold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent flex items-center gap-1.5">
             <span class="header-logo-bg inline-flex w-7 h-7 rounded-lg flex-shrink-0"></span>
-            <span>Happy Tennis Life</span>
+            <span>ESSTC</span>
           </h1>
-          <button id="theme-toggle" title="테마 전환" aria-label="테마 전환">
-            <svg id="icon-sun" class="text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-            </svg>
-            <svg id="icon-moon" class="text-yellow-400" style="display:none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-            </svg>
-          </button>
+          <!-- 우측: 테마 전환 + 로그아웃 -->
+          <div class="flex items-center gap-1">
+            <button id="theme-toggle" title="테마 전환" aria-label="테마 전환">
+              <svg id="icon-sun" class="text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+              <svg id="icon-moon" class="text-yellow-400" style="display:none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+              </svg>
+            </button>
+            <button id="logout-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-green-50 transition" title="로그아웃" aria-label="로그아웃">
+              <svg class="w-[18px] h-[18px] text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+            </button>
+          </div>
         </div>
         <!-- 탭 네비게이션 -->
         <nav class="flex -mb-px gap-0.5">
           <button data-tab="players"
             class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-600 active:bg-green-50/50 rounded-t-lg">
-            선수 관리
+            멤버 관리
           </button>
           <button data-tab="create"
             class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-600 active:bg-green-50/50 rounded-t-lg">
@@ -104,6 +151,7 @@
 
   <!-- JS 모듈 (의존성 순서대로) -->
   <script src="js/firebase-config.js"></script>
+  <script src="js/roles-config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/results.js"></script>
   <script src="js/players.js"></script>
@@ -142,9 +190,44 @@
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
         applyIcons(e.matches || document.documentElement.classList.contains('dark'));
       });
+
+      // 사이드 메뉴 테마 전환 버튼
+      document.getElementById('menu-theme').addEventListener('click', function() {
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) return;
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        applyIcons(isDark);
+      });
     })();
 
-    // 로그아웃 버튼
+    // 사이드 메뉴 열기/닫기
+    (function() {
+      var menuBtn = document.getElementById('menu-btn');
+      var leftMenu = document.getElementById('left-menu');
+      var overlay = document.getElementById('menu-overlay');
+      var closeBtn = document.getElementById('menu-close');
+
+      function openMenu() {
+        leftMenu.classList.add('menu-open');
+        overlay.classList.remove('hidden');
+      }
+      function closeMenu() {
+        leftMenu.classList.remove('menu-open');
+        overlay.classList.add('hidden');
+      }
+
+      menuBtn.addEventListener('click', openMenu);
+      overlay.addEventListener('click', closeMenu);
+      closeBtn.addEventListener('click', closeMenu);
+
+      // 메뉴 내 로그아웃
+      document.getElementById('menu-logout').addEventListener('click', function() {
+        closeMenu();
+        Auth.logout();
+      });
+    })();
+
+    // 로그아웃 버튼 (헤더)
     document.getElementById('logout-btn').addEventListener('click', function() {
       Auth.logout();
     });
