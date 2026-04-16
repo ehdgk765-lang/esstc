@@ -11,24 +11,24 @@ const Players = {
       <div class="max-w-lg mx-auto">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">멤버 관리</h2>
 
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-50/30 border border-white/60">
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-100/30 border border-white/60">
           <!-- 멤버 추가 입력 -->
           <div class="px-4 py-3 border-b border-gray-100">
             <div class="flex gap-2 overflow-hidden">
               <input type="text" id="player-name-input"
-                class="min-w-0 flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base"
+                class="min-w-0 flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 text-base"
                 placeholder="이름 입력 / 검색" maxlength="20" style="flex:1 1 0;min-width:0">
               <select id="player-gender-select"
-                class="px-2 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm font-medium bg-white flex-shrink-0">
+                class="px-2 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 text-sm font-medium bg-white flex-shrink-0">
                 <option value="M">남</option>
                 <option value="F">여</option>
               </select>
               <select id="player-ntrp-select"
-                class="px-1 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm font-medium bg-white flex-shrink-0">
+                class="px-1 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 text-sm font-medium bg-white flex-shrink-0">
                 ${NTRP_VALUES.map(v => `<option value="${v}" ${v === 2.5 ? 'selected' : ''}>${v.toFixed(1)}</option>`).join('')}
               </select>
               <button id="add-player-btn"
-                class="px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 active:scale-[0.98] transition-all font-medium whitespace-nowrap flex-shrink-0 shadow-sm shadow-green-200/50">
+                class="px-4 py-2.5 bg-gradient-to-r from-green-700 to-green-800 text-white rounded-xl hover:from-green-800 hover:to-green-900 active:scale-[0.98] transition-all font-medium whitespace-nowrap flex-shrink-0 shadow-sm shadow-green-300/50">
                 추가
               </button>
             </div>
@@ -37,7 +37,7 @@ const Players = {
           <div class="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
             <input type="file" id="excel-upload" accept=".xlsx,.xls,.csv" class="hidden">
             <button id="excel-upload-btn"
-              class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-green-400 hover:text-green-600 hover:bg-green-50/50 transition cursor-pointer">
+              class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-green-600 hover:text-green-700 hover:bg-green-50/50 transition cursor-pointer">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
               엑셀 파일 업로드 (이름, 성별, NTRP)
             </button>
@@ -46,10 +46,10 @@ const Players = {
           <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <div class="flex items-center gap-2">
               ${players.length > 0 ? `
-                <input type="checkbox" id="select-all-players" class="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500 cursor-pointer">
+                <input type="checkbox" id="select-all-players" class="w-4 h-4 text-green-700 rounded border-gray-300 focus:ring-green-700 cursor-pointer">
               ` : ''}
               <span class="font-semibold text-gray-700 text-sm">등록 멤버</span>
-              <span id="selected-player-count" class="text-xs text-green-600 font-medium hidden"></span>
+              <span id="selected-player-count" class="text-xs text-green-700 font-medium hidden"></span>
             </div>
             <div class="flex items-center gap-2">
               <button id="delete-selected-btn" class="hidden text-xs px-2.5 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium">
@@ -65,7 +65,7 @@ const Players = {
               : players.map((p, i) => `
                 <div class="player-item flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition${i >= 10 ? ' hidden' : ''}" data-name="${this.escapeAttr(p.name)}">
                   <div class="flex items-center gap-3 min-w-0">
-                    <input type="checkbox" class="player-select-cb w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500 cursor-pointer flex-shrink-0" data-id="${p.id}">
+                    <input type="checkbox" class="player-select-cb w-4 h-4 text-green-700 rounded border-gray-300 focus:ring-green-700 cursor-pointer flex-shrink-0" data-id="${p.id}">
                     <span class="w-7 h-7 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">${i + 1}</span>
                     <span class="text-gray-800 font-medium truncate">${this.escapeHtml(p.name)}</span>
                     <button class="gender-toggle-btn text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 cursor-pointer active:scale-95 transition ${p.gender === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}"
@@ -80,7 +80,7 @@ const Players = {
           </div>
           ${players.length > 10 ? `
           <div class="px-4 py-3 border-t border-gray-100">
-            <button id="show-more-players" class="w-full py-2.5 text-sm font-medium text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-xl transition flex items-center justify-center gap-1.5">
+            <button id="show-more-players" class="w-full py-2.5 text-sm font-medium text-gray-500 hover:text-green-700 hover:bg-green-50 rounded-xl transition flex items-center justify-center gap-1.5">
               <span>더보기</span>
               <span class="text-xs text-gray-400" id="show-more-count">(${players.length - 10}명 더)</span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>

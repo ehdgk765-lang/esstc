@@ -34,10 +34,10 @@ header {
 
 /* 탭 네비게이션 */
 .tab-active {
-  color: #16a34a !important;
-  border-bottom-color: #16a34a !important;
+  color: #15803d !important;
+  border-bottom-color: #15803d !important;
   font-weight: 700;
-  background: linear-gradient(to top, rgba(22, 163, 74, 0.06), transparent);
+  background: linear-gradient(to top, rgba(21, 128, 61, 0.06), transparent);
 }
 
 [data-tab] {
@@ -59,7 +59,7 @@ header {
 /* 사이드 메뉴 active 항목 */
 .menu-item.active {
   background-color: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
 }
 
 /* 캘린더 */
@@ -111,7 +111,7 @@ header {
   background-color: #f0fdf4;
 }
 .calendar-day.today .day-number {
-  background-color: #16a34a;
+  background-color: #15803d;
   color: white;
   width: 24px;
   height: 24px;
@@ -122,7 +122,7 @@ header {
 }
 .calendar-day.selected {
   background-color: #ecfdf5;
-  box-shadow: inset 0 0 0 2px #16a34a;
+  box-shadow: inset 0 0 0 2px #15803d;
 }
 .calendar-dots {
   display: flex;
@@ -214,7 +214,7 @@ header {
 
 /* 포맷 선택 라디오 */
 .format-option input:checked + div {
-  border-color: #16a34a;
+  border-color: #15803d;
   background-color: #f0fdf4;
 }
 
@@ -448,7 +448,7 @@ html.dark .shadow-green-50\/30 {
   --tw-shadow-color: transparent !important;
 }
 html.dark .shadow-green-200\/50 {
-  --tw-shadow-color: rgba(22, 163, 74, 0.15) !important;
+  --tw-shadow-color: rgba(21, 128, 61, 0.15) !important;
 }
 html.dark .border-white\/60 {
   border-color: rgba(51, 65, 85, 0.5) !important;
@@ -518,7 +518,7 @@ html.dark input[type="text"]:focus,
 html.dark input[type="email"]:focus,
 html.dark input[type="password"]:focus,
 html.dark select:focus {
-  border-color: #22c55e !important;
+  border-color: #15803d !important;
 }
 
 /* 로그인 페이지 */
@@ -539,10 +539,10 @@ html.dark .hover\:border-green-300:hover {
 
 /* 라운드/배지 - 색상 톤 다운 */
 html.dark .bg-green-50 {
-  background-color: rgba(34, 197, 94, 0.1) !important;
+  background-color: rgba(21, 128, 61, 0.1) !important;
 }
 html.dark .bg-green-100 {
-  background-color: rgba(34, 197, 94, 0.15) !important;
+  background-color: rgba(21, 128, 61, 0.15) !important;
 }
 html.dark .bg-yellow-50 {
   background-color: rgba(234, 179, 8, 0.1) !important;
@@ -568,14 +568,14 @@ html.dark .bg-red-50 {
 
 /* 포맷 선택 라디오 (다크) */
 html.dark .format-option input:checked + div {
-  border-color: #22c55e;
-  background-color: rgba(34, 197, 94, 0.1);
+  border-color: #15803d;
+  background-color: rgba(21, 128, 61, 0.1);
 }
 html.dark .peer:checked ~ .peer-checked\:border-green-500 {
-  border-color: #22c55e !important;
+  border-color: #15803d !important;
 }
 html.dark .peer:checked ~ .peer-checked\:bg-green-50 {
-  background-color: rgba(34, 197, 94, 0.1) !important;
+  background-color: rgba(21, 128, 61, 0.1) !important;
 }
 
 /* 스코어 모달 */
@@ -588,7 +588,7 @@ html.dark #score-modal h3 {
 }
 /* 팀1 표시 (초록) */
 html.dark #score-modal .bg-green-50 {
-  background-color: rgba(22, 163, 74, 0.15) !important;
+  background-color: rgba(21, 128, 61, 0.15) !important;
 }
 html.dark #score-modal .text-green-700 {
   color: #4ade80 !important;
@@ -608,13 +608,13 @@ html.dark #score-modal .text-blue-600 {
 }
 /* 스코어 입력란 - 팀1 (초록) */
 html.dark #score-modal input[data-player="0"] {
-  background-color: rgba(22, 163, 74, 0.12) !important;
+  background-color: rgba(21, 128, 61, 0.12) !important;
   border-color: #166534 !important;
   color: #4ade80 !important;
 }
 html.dark #score-modal input[data-player="0"]:focus {
-  border-color: #22c55e !important;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3) !important;
+  border-color: #15803d !important;
+  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.3) !important;
 }
 /* 스코어 입력란 - 팀2 (파랑) */
 html.dark #score-modal input[data-player="1"] {
@@ -696,15 +696,15 @@ html.dark .calendar-day:hover {
   background-color: #334155;
 }
 html.dark .calendar-day.today {
-  background-color: rgba(22, 163, 74, 0.12);
+  background-color: rgba(21, 128, 61, 0.12);
 }
 html.dark .calendar-day.today .day-number {
-  background-color: #16a34a;
+  background-color: #15803d;
   color: white;
 }
 html.dark .calendar-day.selected {
-  background-color: rgba(22, 163, 74, 0.08);
-  box-shadow: inset 0 0 0 2px #22c55e;
+  background-color: rgba(21, 128, 61, 0.08);
+  box-shadow: inset 0 0 0 2px #15803d;
 }
 html.dark #cal-modal > div:not(:first-child) {
   background-color: #1e293b !important;
@@ -781,7 +781,7 @@ html.dark .sub-tab:hover {
 }
 html.dark .sub-tab.bg-green-600,
 html.dark .sub-tab[class*="bg-green-600"] {
-  background-color: #16a34a !important;
+  background-color: #15803d !important;
   color: white !important;
 }
 
@@ -932,7 +932,7 @@ html.dark #auth-container label {
   color: #94a3b8 !important;
 }
 html.dark #auth-container .shadow-green-200 {
-  --tw-shadow-color: rgba(22, 163, 74, 0.15) !important;
+  --tw-shadow-color: rgba(21, 128, 61, 0.15) !important;
 }
 html.dark #auth-container .shadow-green-100\/50 {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;

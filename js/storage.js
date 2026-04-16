@@ -292,7 +292,7 @@ const Storage = {
   async _migrateToShared() {
     var user = fbAuth.currentUser;
     if (!user) return;
-    console.log('기존 데이터를 공유 경로로 마이그레이션 중...');
+    // console.log('기존 데이터를 공유 경로로 마이그레이션 중...');
     try {
       var userBase = fbDb.collection('users').doc(user.uid).collection('data');
       var sharedBase = fbDb.collection('club').doc('shared').collection('data');
@@ -341,7 +341,7 @@ const Storage = {
       localStorage.setItem(this.KEYS.TOURNAMENTS, JSON.stringify(tournaments));
       localStorage.setItem(this.KEYS.EVENTS, JSON.stringify(events));
       localStorage.setItem(this.KEYS.COURTS, JSON.stringify(courts));
-      console.log('마이그레이션 완료');
+      // console.log('마이그레이션 완료');
     } catch (err) {
       console.error('마이그레이션 오류:', err);
     }
@@ -366,7 +366,7 @@ const Storage = {
       var newJson = JSON.stringify(items);
       if (current !== newJson) {
         localStorage.setItem(self.KEYS.PLAYERS, newJson);
-        console.log('실시간 동기화: 멤버 데이터 업데이트');
+        // console.log('실시간 동기화: 멤버 데이터 업데이트');
         self._onRemoteChange();
       }
     }, function(err) {
@@ -383,7 +383,7 @@ const Storage = {
       var newJson = JSON.stringify(items);
       if (current !== newJson) {
         localStorage.setItem(self.KEYS.TOURNAMENTS, newJson);
-        console.log('실시간 동기화: 대회 데이터 업데이트');
+        // console.log('실시간 동기화: 대회 데이터 업데이트');
         self._onRemoteChange();
       }
     }, function(err) {
@@ -400,7 +400,7 @@ const Storage = {
       var newJson = JSON.stringify(items);
       if (current !== newJson) {
         localStorage.setItem(self.KEYS.EVENTS, newJson);
-        console.log('실시간 동기화: 일정 데이터 업데이트');
+        // console.log('실시간 동기화: 일정 데이터 업데이트');
         self._onRemoteChange();
       }
     }, function(err) {
@@ -417,14 +417,14 @@ const Storage = {
       var newJson = JSON.stringify(items);
       if (current !== newJson) {
         localStorage.setItem(self.KEYS.COURTS, newJson);
-        console.log('실시간 동기화: 코트 데이터 업데이트');
+        // console.log('실시간 동기화: 코트 데이터 업데이트');
         self._onRemoteChange();
       }
     }, function(err) {
       console.error('Courts realtime sync error:', err);
     });
 
-    console.log('실시간 동기화 시작');
+    // console.log('실시간 동기화 시작');
   },
 
   stopRealtimeSync() {
@@ -444,7 +444,7 @@ const Storage = {
       this._unsubCourts();
       this._unsubCourts = null;
     }
-    console.log('실시간 동기화 중지');
+    // console.log('실시간 동기화 중지');
   },
 
   // 원격 변경 시 UI 갱신 (debounce 300ms + 로컬 쓰기 직후 무시)
