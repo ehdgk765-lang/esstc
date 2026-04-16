@@ -49,13 +49,13 @@ const RolesConfig = {
 
   getVisibleTabs() {
     if (this.isMember()) {
-      return ['active', 'history'];
+      return ['calendar', 'active'];
     }
     // admin, other 모두 전체 탭
-    return ['players', 'create', 'schedule', 'active', 'history'];
+    return ['players', 'create', 'schedule', 'active'];
   },
 
   getDefaultTab() {
-    return this.isMember() ? 'active' : 'players';
+    return this.isMember() ? 'calendar' : 'players';
   }
 };
