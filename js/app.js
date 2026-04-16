@@ -12,11 +12,86 @@ const App = {
   currentTournamentId: null,
   _createSubTab: 'custom-bracket',
   _scheduleSubTab: 'custom-schedule',
+  _viewMode: 'home', // 'home' | 'calendar'
 
   init() {
     this.applyRoleUI();
     this.bindTabs();
-    this.navigate(RolesConfig.getDefaultTab());
+    // 멤버: 이름 확인 필요
+    if (RolesConfig.isMember() && !this.getMemberName()) {
+      this.showMemberNameModal();
+    } else {
+      this.navigate(RolesConfig.getDefaultTab());
+    }
+  },
+
+  // 멤버 이름 관련
+  getMemberName() {
+    return localStorage.getItem('tennis_member_name') || '';
+  },
+
+  setMemberName(name) {
+    localStorage.setItem('tennis_member_name', name);
+  },
+
+  clearMemberName() {
+    localStorage.removeItem('tennis_member_name');
+  },
+
+  showMemberNameModal() {
+    var self = this;
+    var players = Storage.getPlayers();
+    var playerNames = players.map(function(p) { return p.name; });
+
+    var modal = document.createElement('div');
+    modal.id = 'member-name-modal';
+    modal.className = 'fixed inset-0 z-[60] flex items-center justify-center p-4';
+    modal.innerHTML =
+      '<div class="absolute inset-0 bg-black/50"></div>' +
+      '<div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">' +
+        '<h3 class="text-lg font-bold text-gray-800 text-center">이름 확인</h3>' +
+        '<p class="text-sm text-gray-500 text-center">멤버 목록에 등록된 본인의 이름을 입력해주세요.</p>' +
+        '<input type="text" id="member-name-input" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500 transition" placeholder="이름 입력">' +
+        '<p id="member-name-error" class="text-sm text-red-500 hidden text-center"></p>' +
+        '<button id="member-name-submit" class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 font-semibold transition">확인</button>' +
+      '</div>';
+
+    document.body.appendChild(modal);
+
+    setTimeout(function() {
+      document.getElementById('member-name-input').focus();
+    }, 100);
+
+    function trySubmit() {
+      var name = document.getElementById('member-name-input').value.trim();
+      var errorEl = document.getElementById('member-name-error');
+
+      if (!name) {
+        errorEl.textContent = '이름을 입력해주세요.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      var found = playerNames.find(function(n) { return n === name; });
+      if (!found) {
+        errorEl.textContent = '멤버 목록에 등록되지 않은 이름입니다.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      self.setMemberName(found);
+      self.applyRoleUI();
+      modal.remove();
+      self.navigate(RolesConfig.getDefaultTab());
+    }
+
+    document.getElementById('member-name-submit').addEventListener('click', trySubmit);
+    document.getElementById('member-name-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        trySubmit();
+      }
+    });
   },
 
   applyRoleUI() {
@@ -34,7 +109,11 @@ const App = {
         badge.id = 'role-badge';
         menuHeader.appendChild(badge);
       }
-      var roleLabel = RolesConfig.isAdmin() ? '관리자' : RolesConfig.isMember() ? '멤버' : '';
+      var roleLabel = RolesConfig.isAdmin() ? '관리자' : '';
+      if (RolesConfig.isMember()) {
+        var mName = this.getMemberName();
+        roleLabel = mName ? mName + '님' : '멤버';
+      }
       if (roleLabel) {
         badge.textContent = roleLabel;
         badge.style.display = '';
@@ -53,7 +132,54 @@ const App = {
     });
   },
 
+  showHome() {
+    this._viewMode = 'home';
+    var tabNav = document.querySelector('header nav');
+    if (tabNav) tabNav.style.display = '';
+    this._updateMenuActive();
+    this.navigate(this.currentTab || RolesConfig.getDefaultTab());
+  },
+
+  showCalendar() {
+    this._viewMode = 'calendar';
+    var tabNav = document.querySelector('header nav');
+    if (tabNav) tabNav.style.display = 'none';
+    // 탭 active 스타일 제거
+    document.querySelectorAll('[data-tab]').forEach(function(tab) {
+      tab.classList.remove('tab-active');
+      tab.classList.add('text-gray-500');
+    });
+    this._updateMenuActive();
+    var content = document.getElementById('main-content');
+    Calendar.render(content);
+  },
+
+  _updateMenuActive() {
+    var homeBtn = document.getElementById('menu-home');
+    var calBtn = document.getElementById('menu-calendar');
+    if (homeBtn) {
+      if (this._viewMode === 'home') {
+        homeBtn.classList.add('active');
+      } else {
+        homeBtn.classList.remove('active');
+      }
+    }
+    if (calBtn) {
+      if (this._viewMode === 'calendar') {
+        calBtn.classList.add('active');
+      } else {
+        calBtn.classList.remove('active');
+      }
+    }
+  },
+
   navigate(tabName, tournamentId) {
+    // 탭 전환 시 홈 모드로 전환 + 탭 네비 보이기
+    this._viewMode = 'home';
+    var tabNav = document.querySelector('header nav');
+    if (tabNav) tabNav.style.display = '';
+    this._updateMenuActive();
+
     // 멤버가 관리자 전용 탭 접근 시 기본 탭으로 리다이렉트
     var visibleTabs = RolesConfig.getVisibleTabs();
     if (!visibleTabs.includes(tabName)) {

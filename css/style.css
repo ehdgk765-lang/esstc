@@ -56,6 +56,90 @@ header {
   transition: opacity 0.3s ease;
 }
 
+/* 사이드 메뉴 active 항목 */
+.menu-item.active {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+/* 캘린더 */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.calendar-weekday {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 6px 0;
+}
+.calendar-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 2px 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  min-height: 48px;
+}
+.calendar-day:hover {
+  background-color: #f3f4f6;
+}
+.calendar-day.empty {
+  cursor: default;
+}
+.calendar-day.empty:hover {
+  background-color: transparent;
+}
+.calendar-day .day-number {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1;
+}
+.calendar-day.sunday .day-number {
+  color: #ef4444;
+}
+.calendar-day.saturday .day-number {
+  color: #3b82f6;
+}
+.calendar-day.today {
+  background-color: #f0fdf4;
+}
+.calendar-day.today .day-number {
+  background-color: #16a34a;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.calendar-day.selected {
+  background-color: #ecfdf5;
+  box-shadow: inset 0 0 0 2px #16a34a;
+}
+.calendar-dots {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+}
+.calendar-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+/* 캘린더 모달 */
+#cal-modal {
+  animation: fadeIn 0.15s ease-out;
+}
+
 /* 토너먼트 브래킷 */
 .bracket-container {
   -webkit-overflow-scrolling: touch;
@@ -274,6 +358,10 @@ html.dark #left-menu h2 {
 }
 html.dark #left-menu .menu-item {
   color: #94a3b8;
+}
+html.dark #left-menu .menu-item.active {
+  background-color: rgba(74, 222, 128, 0.12) !important;
+  color: #4ade80 !important;
 }
 html.dark #left-menu .menu-item:hover {
   background-color: rgba(74, 222, 128, 0.1) !important;
@@ -589,6 +677,68 @@ html.dark ::-webkit-scrollbar-thumb {
 }
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
+}
+
+/* 캘린더 다크모드 */
+html.dark .calendar-weekday {
+  color: #64748b;
+}
+html.dark .calendar-day .day-number {
+  color: #cbd5e1;
+}
+html.dark .calendar-day.sunday .day-number {
+  color: #f87171;
+}
+html.dark .calendar-day.saturday .day-number {
+  color: #60a5fa;
+}
+html.dark .calendar-day:hover {
+  background-color: #334155;
+}
+html.dark .calendar-day.today {
+  background-color: rgba(22, 163, 74, 0.12);
+}
+html.dark .calendar-day.today .day-number {
+  background-color: #16a34a;
+  color: white;
+}
+html.dark .calendar-day.selected {
+  background-color: rgba(22, 163, 74, 0.08);
+  box-shadow: inset 0 0 0 2px #22c55e;
+}
+html.dark #cal-modal > div:not(:first-child) {
+  background-color: #1e293b !important;
+}
+html.dark #cal-modal h3 {
+  color: #e2e8f0;
+}
+html.dark #cal-modal #cal-modal-cancel {
+  background-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+/* 참석 취소 확인 모달 다크모드 */
+html.dark #cal-cancel-modal > div:not(:first-child) {
+  background-color: #1e293b !important;
+}
+html.dark #cal-cancel-modal h3 {
+  color: #e2e8f0;
+}
+html.dark #cal-cancel-modal p {
+  color: #94a3b8;
+}
+html.dark #cal-cancel-modal #cal-cancel-no {
+  background-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+/* 멤버 이름 확인 모달 다크모드 */
+html.dark #member-name-modal > div:not(:first-child) {
+  background-color: #1e293b !important;
+}
+html.dark #member-name-modal h3 {
+  color: #e2e8f0;
+}
+html.dark #member-name-modal p {
+  color: #94a3b8;
 }
 
 /* 테마 토글 버튼 */
