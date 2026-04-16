@@ -575,11 +575,11 @@ const App = {
       case 'schedule':
         this.renderScheduleForm(content);
         break;
-      case 'active':
-        this.renderTournamentList(content, 'active', tournamentId);
+      case 'calendar':
+        Calendar.render(content);
         break;
-      case 'history':
-        this.renderTournamentList(content, 'completed');
+      case 'active':
+        this.renderTournamentList(content, tournamentId);
         break;
     }
   },
@@ -1389,16 +1389,11 @@ const App = {
 
   // ─── 목록 / 상세 ───
 
-  renderTournamentList(container, statusFilter, openTournamentId) {
-    const all = Storage.getTournaments();
-    const tournaments = statusFilter === 'active'
-      ? all.filter(t => t.status === 'active')
-      : all.filter(t => t.status === 'completed');
-
-    const isActive = statusFilter === 'active';
+  renderTournamentList(container, openTournamentId) {
+    const tournaments = Storage.getTournaments();
 
     if (openTournamentId) {
-      const t = all.find(t => t.id === openTournamentId);
+      const t = tournaments.find(t => t.id === openTournamentId);
       if (t) {
         this.renderTournamentDetail(container, t);
         return;
@@ -1409,9 +1404,7 @@ const App = {
       container.innerHTML = `
         <div class="max-w-lg mx-auto text-center py-12">
           <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-50/30 border border-white/60 p-8">
-            <div class="text-5xl mb-4">${isActive ? '🎾' : '📋'}</div>
-            <h2 class="text-xl font-bold text-gray-800 mb-2">${isActive ? '진행 중인 대회가 없습니다' : '완료된 대회가 없습니다'}</h2>
-            <p class="text-gray-500 mb-4">${isActive ? '새 대회를 만들어보세요!' : '대회를 완료하면 여기에 표시됩니다.'}</p>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">등록된 대진표가 없습니다</h2>
           </div>
         </div>`;
       return;
@@ -1419,7 +1412,7 @@ const App = {
 
     container.innerHTML = `
       <div class="max-w-lg mx-auto">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">${isActive ? '진행 중' : '결과'}</h2>
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">대진표</h2>
         <div class="space-y-3">
           ${tournaments.map(t => {
             const dateStr = new Date(t.createdAt).toLocaleDateString('ko-KR');
@@ -1481,7 +1474,7 @@ const App = {
         const name = Storage.getTournamentById(btn.dataset.id)?.name || '';
         if (!confirm(`"${name}" 대회를 삭제하시겠습니까?`)) return;
         Storage.deleteTournament(btn.dataset.id);
-        this.renderTournamentList(container, statusFilter);
+        this.renderTournamentList(container);
       };
     });
 
@@ -1506,7 +1499,7 @@ const App = {
     backBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> 목록으로`;
     backBtn.onclick = () => {
       this.currentTournamentId = null;
-      this.navigate(tournament.status === 'completed' ? 'history' : 'active');
+      this.navigate('active');
     };
 
     const detailContainer = document.createElement('div');

@@ -188,6 +188,8 @@ const Storage = {
   _unsubTournaments: null,
   _unsubEvents: null,
   _unsubCourts: null,
+  _remoteChangeTimer: null,
+  _localWriteTs: 0,
 
   // Firestore 경로 분기: 클럽 사용자(admin/member) → 공유, 그 외 → per-user
   _getBase() {
@@ -203,6 +205,7 @@ const Storage = {
   syncToFirestore(docName, data) {
     var base = this._getBase();
     if (!base) return;
+    this._localWriteTs = Date.now();
     base.doc(docName)
       .set({ json: JSON.stringify(data || []) })
       .catch(function(err) { console.error('Firestore sync error:', err); });
@@ -444,16 +447,24 @@ const Storage = {
     console.log('실시간 동기화 중지');
   },
 
-  // 원격 변경 시 UI 갱신
+  // 원격 변경 시 UI 갱신 (debounce 300ms + 로컬 쓰기 직후 무시)
   _onRemoteChange() {
-    if (typeof App !== 'undefined') {
-      if (App._viewMode === 'calendar') {
-        App.showCalendar();
-      } else if (App._viewMode === 'settings') {
-        App.showSettings();
-      } else if (App.currentTab) {
-        App.navigate(App.currentTab);
+    var self = this;
+    // 로컬 쓰기 직후 500ms 이내면 무시 (자기 자신의 변경)
+    if (Date.now() - this._localWriteTs < 500) return;
+    // debounce: 여러 snapshot이 연달아 오면 마지막 것만 처리
+    if (this._remoteChangeTimer) clearTimeout(this._remoteChangeTimer);
+    this._remoteChangeTimer = setTimeout(function() {
+      self._remoteChangeTimer = null;
+      if (typeof App !== 'undefined') {
+        if (App._viewMode === 'calendar') {
+          App.showCalendar();
+        } else if (App._viewMode === 'settings') {
+          App.showSettings();
+        } else if (App.currentTab && App.currentTab !== 'active') {
+          App.navigate(App.currentTab);
+        }
       }
-    }
+    }, 300);
   },
 };
