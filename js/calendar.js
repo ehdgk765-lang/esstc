@@ -42,7 +42,7 @@ const Calendar = {
     var dayEvents = this._getEventsForDate(events, this._selectedDate);
     var eventsList = this._buildEventsList(dayEvents, canEdit);
 
-    container.innerHTML =
+    patchDOM(container,
       '<div class="max-w-lg mx-auto">' +
         // 헤더
         '<div class="flex items-center justify-between mb-4">' +
@@ -74,7 +74,7 @@ const Calendar = {
           '</div>' +
           '<div id="cal-events-list">' + eventsList + '</div>' +
         '</div>' +
-      '</div>';
+      '</div>');
 
     this._bindEvents(container);
   },
@@ -221,47 +221,47 @@ const Calendar = {
     var self = this;
 
     // 이전/다음 월
-    document.getElementById('cal-prev').addEventListener('click', function() {
+    document.getElementById('cal-prev').onclick = function() {
       self._currentMonth.setMonth(self._currentMonth.getMonth() - 1);
       self._selectedDate = null;
       self.render(self._container);
-    });
-    document.getElementById('cal-next').addEventListener('click', function() {
+    };
+    document.getElementById('cal-next').onclick = function() {
       self._currentMonth.setMonth(self._currentMonth.getMonth() + 1);
       self._selectedDate = null;
       self.render(self._container);
-    });
+    };
 
     // 날짜 클릭
     container.querySelectorAll('.calendar-day:not(.empty)').forEach(function(dayEl) {
-      dayEl.addEventListener('click', function() {
+      dayEl.onclick = function() {
         self._selectedDate = this.dataset.date;
         self.render(self._container);
-      });
+      };
     });
 
     // 일정 추가
     var addBtn = document.getElementById('cal-add-event');
     if (addBtn) {
-      addBtn.addEventListener('click', function() {
+      addBtn.onclick = function() {
         self._showEventModal(null);
-      });
+      };
     }
 
     // 수정 버튼
     container.querySelectorAll('.cal-edit-btn').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
+      btn.onclick = function(e) {
         e.stopPropagation();
         var id = this.dataset.id;
         var events = Storage.getEvents();
         var ev = events.find(function(e) { return e.id === id; });
         if (ev) self._showEventModal(ev);
-      });
+      };
     });
 
     // 삭제 버튼
     container.querySelectorAll('.cal-delete-btn').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
+      btn.onclick = function(e) {
         e.stopPropagation();
         var id = this.dataset.id;
         if (confirm('이 일정을 삭제하시겠습니까?')) {
@@ -269,12 +269,12 @@ const Calendar = {
           Storage.saveEvents(events);
           self.render(self._container);
         }
-      });
+      };
     });
 
     // 참석 버튼
     container.querySelectorAll('.cal-attend-btn').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
+      btn.onclick = function(e) {
         e.stopPropagation();
         var id = this.dataset.id;
         var memberName = App.getMemberName();
@@ -289,30 +289,30 @@ const Calendar = {
           return;
         }
         self.render(self._container);
-      });
+      };
     });
 
     // 참석 취소 버튼 (확인 모달)
     container.querySelectorAll('.cal-cancel-attend-btn').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
+      btn.onclick = function(e) {
         e.stopPropagation();
         var id = this.dataset.id;
         var memberName = App.getMemberName();
         if (!memberName) return;
         self._showCancelConfirmModal(id, memberName);
-      });
+      };
     });
 
     // 대기 신청/취소 버튼
     container.querySelectorAll('.cal-waitlist-btn').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
+      btn.onclick = function(e) {
         e.stopPropagation();
         var id = this.dataset.id;
         var memberName = App.getMemberName();
         if (!memberName) return;
         Storage.toggleWaitlist(id, memberName);
         self.render(self._container);
-      });
+      };
     });
   },
 

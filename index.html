@@ -38,6 +38,19 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js"></script>
+  <!-- morphdom: DOM diffing for flicker-free updates -->
+  <script src="https://unpkg.com/morphdom@2.7.4/dist/morphdom-umd.min.js"></script>
+  <script>
+    function patchDOM(container, html) {
+      if (!container.firstElementChild) {
+        container.innerHTML = html;
+        return;
+      }
+      var tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      morphdom(container, tmp, { childrenOnly: true });
+    }
+  </script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-gradient-to-br from-white via-green-50/40 to-gray-50 min-h-screen">

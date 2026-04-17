@@ -156,7 +156,7 @@ const Tournament = {
     }
 
     html += `</div></div></div>`;
-    container.innerHTML = html;
+    patchDOM(container, html);
 
     // 브래킷 스크롤 힌트: 끝까지 스크롤하면 그라데이션 숨김
     const scrollContainer = container.querySelector('.bracket-container');
@@ -166,7 +166,7 @@ const Tournament = {
         const atEnd = scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 10;
         scrollHint.classList.toggle('scrolled-end', atEnd);
       };
-      scrollContainer.addEventListener('scroll', checkScroll, { passive: true });
+      scrollContainer.onscroll = checkScroll;
       checkScroll();
     }
 

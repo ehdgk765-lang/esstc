@@ -203,7 +203,7 @@ const App = {
       monthOptions += '<option value="' + mi + '"' + selected + '>' + (mi + 1) + '월</option>';
     }
 
-    container.innerHTML =
+    patchDOM(container,
       '<div class="max-w-lg mx-auto">' +
         '<h2 class="text-2xl font-bold text-gray-800 mb-6">설정</h2>' +
         // 정규 운동 등록
@@ -294,7 +294,7 @@ const App = {
             '<p class="text-gray-400 text-center py-4 text-sm">불러오는 중...</p>' +
           '</div>' +
         '</div>' +
-      '</div>';
+      '</div>');
 
     // 역할 목록 로드
     self._loadRoleList();
@@ -705,7 +705,7 @@ const App = {
   renderCreateForm(container) {
     const activeSubTab = this._createSubTab || 'auto';
 
-    container.innerHTML = `
+    patchDOM(container, `
       <div class="max-w-lg mx-auto">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">대회 만들기</h2>
         <div class="flex gap-2 mb-6">
@@ -721,7 +721,7 @@ const App = {
           </button>
         </div>
         <div id="create-sub-content"></div>
-      </div>`;
+      </div>`);
 
     container.querySelectorAll('[data-subtab]').forEach(btn => {
       btn.onclick = () => {
@@ -742,15 +742,15 @@ const App = {
     const allPlayers = Storage.getPlayers();
 
     if (allPlayers.length < 2) {
-      container.innerHTML = `
+      patchDOM(container, `
         <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 text-center">
           <p class="text-yellow-800 font-medium mb-2">멤버를 2명 이상 등록해주세요.</p>
           <button onclick="App.navigate('players')" class="text-green-700 font-semibold hover:underline">멤버 관리로 이동</button>
-        </div>`;
+        </div>`);
       return;
     }
 
-    container.innerHTML = `
+    patchDOM(container, `
       <form id="create-form" class="space-y-5">
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">대회명</label>
@@ -817,7 +817,7 @@ const App = {
           class="w-full py-3 bg-gradient-to-r from-green-700 to-green-800 text-white rounded-xl hover:from-green-800 hover:to-green-900 active:scale-[0.98] transition-all font-semibold text-lg shadow-md shadow-green-300/50">
           대회 생성
         </button>
-      </form>`;
+      </form>`);
 
     const gameTypeRadios = container.querySelectorAll('input[name="gameType"]');
     gameTypeRadios.forEach(r => {
@@ -889,14 +889,14 @@ const App = {
     const minPlayers = config.doubles ? 4 : 2;
 
     if (eligible.length < minPlayers) {
-      section.innerHTML = `
+      patchDOM(section, `
         <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-center text-sm">
           <p class="text-yellow-800">${config.label}에 참가 가능한 멤버가 부족합니다. (현재 ${eligible.length}명, 최소 ${minPlayers}명 필요)</p>
-        </div>`;
+        </div>`);
       return;
     }
 
-    section.innerHTML = `
+    patchDOM(section, `
       <div>
         <label class="block text-sm font-semibold text-gray-700 mb-2">참가 멤버 선택</label>
         <input type="text" id="player-search" placeholder="이름 검색..."
@@ -915,7 +915,7 @@ const App = {
             </label>
           `).join('')}
         </div>
-      </div>`;
+      </div>`);
 
     const searchInput = section.querySelector('#player-search');
     const playerItems = section.querySelectorAll('.player-item');
@@ -956,10 +956,10 @@ const App = {
     const females = allPlayers.filter(p => p.gender === 'F');
 
     if (males.length < 2 || females.length < 2) {
-      section.innerHTML = `
+      patchDOM(section, `
         <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-center text-sm">
           <p class="text-yellow-800">혼합복식: 남자 2명, 여자 2명 이상 필요합니다. (남 ${males.length}명, 여 ${females.length}명)</p>
-        </div>`;
+        </div>`);
       return;
     }
 
@@ -987,12 +987,12 @@ const App = {
         </div>
       </div>`;
 
-    section.innerHTML = `
+    patchDOM(section, `
       <div class="space-y-4">
         ${renderList(males, 'xd-male', '남', 'bg-blue-100 text-blue-700')}
         ${renderList(females, 'xd-female', '여', 'bg-pink-100 text-pink-700')}
         <p class="text-xs text-gray-400">남녀 같은 수를 선택하면 자동으로 팀이 구성됩니다.</p>
-      </div>`;
+      </div>`);
 
     const bindList = (prefix) => {
       const search = section.querySelector(`#${prefix}-search`);
@@ -1091,7 +1091,7 @@ const App = {
   renderScheduleForm(container) {
     const activeSubTab = this._scheduleSubTab || 'time-court';
 
-    container.innerHTML = `
+    patchDOM(container, `
       <div class="max-w-lg mx-auto">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">대진표 만들기</h2>
         <div class="flex gap-2 mb-6">
@@ -1107,7 +1107,7 @@ const App = {
           </button>
         </div>
         <div id="schedule-sub-content"></div>
-      </div>`;
+      </div>`);
 
     container.querySelectorAll('[data-subtab]').forEach(btn => {
       btn.onclick = () => {
@@ -1125,7 +1125,7 @@ const App = {
   },
 
   _renderCustomScheduleForm(container) {
-    container.innerHTML = `
+    patchDOM(container, `
       <p class="text-xs text-gray-400 mb-4">빈 대진표를 생성한 후, 직접 매치를 추가할 수 있습니다.</p>
       <form id="custom-schedule-form" class="space-y-5">
         <div>
@@ -1166,7 +1166,7 @@ const App = {
           class="w-full py-3 bg-gradient-to-r from-green-700 to-green-800 text-white rounded-xl hover:from-green-800 hover:to-green-900 active:scale-[0.98] transition-all font-semibold text-lg shadow-md shadow-green-300/50">
           빈 대진표 생성
         </button>
-      </form>`;
+      </form>`);
 
     container.querySelector('#custom-schedule-form').onsubmit = (e) => {
       e.preventDefault();
@@ -1222,16 +1222,16 @@ const App = {
     const females = allPlayers.filter(p => p.gender === 'F');
 
     if (allPlayers.length < 4) {
-      container.innerHTML = `
+      patchDOM(container, `
         <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 text-center">
           <p class="text-yellow-800 font-medium mb-2">복식 경기를 위해 최소 4명의 멤버가 필요합니다.</p>
           <p class="text-yellow-700 text-sm mb-3">현재: 남 ${males.length}명, 여 ${females.length}명</p>
           <button onclick="App.navigate('players')" class="text-green-700 font-semibold hover:underline">멤버 관리로 이동</button>
-        </div>`;
+        </div>`);
       return;
     }
 
-    container.innerHTML = `
+    patchDOM(container, `
       <div class="flex items-center justify-end mb-4">
         <label class="flex items-center gap-1.5 cursor-pointer">
           <input type="checkbox" id="allow-mixed" class="w-3.5 h-3.5 text-green-700 rounded border-gray-300 focus:ring-green-700">
@@ -1334,7 +1334,7 @@ const App = {
           class="w-full py-3 bg-gradient-to-r from-green-700 to-green-800 text-white rounded-xl hover:from-green-800 hover:to-green-900 active:scale-[0.98] transition-all font-semibold text-lg shadow-md shadow-green-300/50">
           대진표 생성
         </button>
-      </form>`;
+      </form>`);
 
     const updateCounts = () => {
       const maleChecked = container.querySelectorAll('.male-cb:checked').length;
@@ -1510,16 +1510,16 @@ const App = {
     }
 
     if (tournaments.length === 0) {
-      container.innerHTML = `
+      patchDOM(container, `
         <div class="max-w-lg mx-auto text-center py-12">
           <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-100/30 border border-white/60 p-8">
             <h2 class="text-xl font-bold text-gray-800 mb-2">등록된 대진표가 없습니다</h2>
           </div>
-        </div>`;
+        </div>`);
       return;
     }
 
-    container.innerHTML = `
+    patchDOM(container, `
       <div class="max-w-lg mx-auto">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">대진표</h2>
         <div class="space-y-3">
@@ -1586,7 +1586,7 @@ const App = {
               </div>`;
           }).join('')}
         </div>
-      </div>`;
+      </div>`);
 
     // 삭제 버튼
     container.querySelectorAll('.delete-tournament-btn').forEach(btn => {

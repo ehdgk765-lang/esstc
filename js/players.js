@@ -7,7 +7,7 @@ const Players = {
     const males = players.filter(p => p.gender === 'M');
     const females = players.filter(p => p.gender === 'F');
 
-    container.innerHTML = `
+    patchDOM(container, `
       <div class="max-w-lg mx-auto">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">멤버 관리</h2>
 
@@ -88,7 +88,7 @@ const Players = {
           </div>
           ` : ''}
         </div>
-      </div>`;
+      </div>`);
 
     this.bindEvents(container);
   },

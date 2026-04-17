@@ -202,7 +202,7 @@ const League = {
     }
 
     html += `</div>`;
-    container.innerHTML = html;
+    patchDOM(container, html);
 
     // 클릭 이벤트 바인딩
     container.querySelectorAll('.league-match').forEach(el => {
