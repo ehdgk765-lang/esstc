@@ -7,7 +7,7 @@
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: only light;
 }
 
 html, body {
@@ -863,6 +863,104 @@ html.dark .change-gametype-modal .cgt-cancel {
   color: #94a3b8 !important;
 }
 
+/* ─── 누락된 다크모드 오버라이드 보완 ─── */
+
+/* 체크박스 / 라디오 다크모드 */
+html.dark input[type="checkbox"],
+html.dark input[type="radio"] {
+  background-color: #0f172a !important;
+  border-color: #475569 !important;
+  accent-color: #15803d !important;
+}
+html.dark input[type="checkbox"]:checked,
+html.dark input[type="radio"]:checked {
+  background-color: #15803d !important;
+  border-color: #15803d !important;
+}
+
+/* 배경색 보완 */
+html.dark .bg-gray-200 {
+  background-color: #334155 !important;
+}
+html.dark .bg-gray-300 {
+  background-color: #475569 !important;
+}
+html.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+html.dark .bg-purple-50 {
+  background-color: rgba(168, 85, 247, 0.1) !important;
+}
+html.dark .bg-orange-50 {
+  background-color: rgba(249, 115, 22, 0.1) !important;
+}
+
+/* 호버 배경 보완 */
+html.dark .hover\:bg-gray-200:hover {
+  background-color: #475569 !important;
+}
+
+/* 텍스트 색상 보완 - 뱃지/라벨 */
+html.dark .text-gray-900 {
+  color: #f1f5f9 !important;
+}
+html.dark .text-yellow-800 {
+  color: #fbbf24 !important;
+}
+html.dark .text-yellow-700 {
+  color: #fbbf24 !important;
+}
+html.dark .text-yellow-600 {
+  color: #facc15 !important;
+}
+html.dark .text-blue-700 {
+  color: #60a5fa !important;
+}
+html.dark .text-blue-600 {
+  color: #60a5fa !important;
+}
+html.dark .text-pink-700 {
+  color: #f472b6 !important;
+}
+html.dark .text-pink-600 {
+  color: #f472b6 !important;
+}
+html.dark .text-orange-700 {
+  color: #fb923c !important;
+}
+html.dark .text-orange-600 {
+  color: #fb923c !important;
+}
+html.dark .text-purple-700 {
+  color: #a78bfa !important;
+}
+html.dark .text-purple-600 {
+  color: #a78bfa !important;
+}
+html.dark .text-red-400 {
+  color: #f87171 !important;
+}
+html.dark .text-red-500 {
+  color: #f87171 !important;
+}
+html.dark .text-red-600 {
+  color: #ef4444 !important;
+}
+html.dark .text-green-600 {
+  color: #4ade80 !important;
+}
+html.dark .text-green-800 {
+  color: #4ade80 !important;
+}
+
+/* 테두리 색상 보완 */
+html.dark .border-gray-300 {
+  border-color: #475569 !important;
+}
+html.dark .border-blue-300 {
+  border-color: #1e40af !important;
+}
+
 /* 로고 배경 */
 .auth-logo-bg {
   background: url('esstc.jpg') center/cover no-repeat;
@@ -886,20 +984,6 @@ html.dark .header-logo-bg {
   -webkit-mask-image: radial-gradient(circle, #000 45%, transparent 70%);
   mask-image: radial-gradient(circle, #000 45%, transparent 70%);
   box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.08);
-}
-@media (prefers-color-scheme: dark) {
-  .auth-logo-bg {
-    mix-blend-mode: normal;
-    -webkit-mask-image: radial-gradient(circle, #000 50%, transparent 75%);
-    mask-image: radial-gradient(circle, #000 50%, transparent 75%);
-    box-shadow: 0 0 24px 10px rgba(255, 255, 255, 0.08);
-  }
-  .header-logo-bg {
-    mix-blend-mode: normal;
-    -webkit-mask-image: radial-gradient(circle, #000 45%, transparent 70%);
-    mask-image: radial-gradient(circle, #000 45%, transparent 70%);
-    box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.08);
-  }
 }
 
 /* 로그인 페이지 다크 모드 */

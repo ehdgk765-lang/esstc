@@ -124,10 +124,11 @@ const Auth = {
     updateAuthThemeIcons(document.documentElement.classList.contains('dark'));
 
     authThemeToggle.onclick = () => {
-      // 기기 다크모드 시 라이트 전환 방지 (삼성 인터넷 어둡게 보기 배경색 통일)
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) return;
       const isDark = document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      // color-scheme 메타 태그 업데이트 (크롬 강제 다크모드 방지)
+      const csMeta = document.querySelector('meta[name="color-scheme"]');
+      if (csMeta) csMeta.content = isDark ? 'dark' : 'only light';
       updateAuthThemeIcons(isDark);
       // 앱 헤더 아이콘도 동기화
       const iconSun = document.getElementById('icon-sun');

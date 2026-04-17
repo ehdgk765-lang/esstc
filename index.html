@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="color-scheme" content="light dark">
+  <meta name="color-scheme" content="only light">
   <meta name="theme-color" content="#ffffff" id="meta-theme-color">
   <title>ESSTC</title>
   <script>
@@ -13,19 +13,12 @@
     (function() {
       const saved = localStorage.getItem('theme');
       var deviceDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      // 기기 다크모드 활성 시 항상 다크 적용 (삼성 인터넷 어둡게 보기 배경색 통일)
-      if (deviceDark || saved === 'dark') {
+      // 사용자 선택 우선, 없으면 기기 설정 따름
+      if (saved === 'dark' || (deviceDark && saved !== 'light')) {
         document.documentElement.classList.add('dark');
+        // 크롬 강제 다크모드 방지: color-scheme 메타도 dark로 설정
+        document.querySelector('meta[name="color-scheme"]').content = 'dark';
       }
-      // 기기 다크모드 변경 시 자동 동기화
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-        deviceDark = e.matches;
-        if (e.matches) {
-          document.documentElement.classList.add('dark');
-        } else if (localStorage.getItem('theme') !== 'dark') {
-          document.documentElement.classList.remove('dark');
-        }
-      });
     })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -206,16 +199,12 @@
       applyIcons(document.documentElement.classList.contains('dark'));
 
       toggle.addEventListener('click', function() {
-        // 기기 다크모드 시 라이트 전환 방지 (삼성 인터넷 어둡게 보기 배경색 통일)
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) return;
         const isDark = document.documentElement.classList.toggle('dark');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        // color-scheme 메타 태그 업데이트 (크롬 강제 다크모드 방지)
+        var csMeta = document.querySelector('meta[name="color-scheme"]');
+        if (csMeta) csMeta.content = isDark ? 'dark' : 'only light';
         applyIcons(isDark);
-      });
-
-      // 기기 다크모드 변경 시 아이콘도 동기화
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-        applyIcons(e.matches || document.documentElement.classList.contains('dark'));
       });
 
     })();
