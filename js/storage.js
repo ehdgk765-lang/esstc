@@ -461,7 +461,14 @@ const Storage = {
           App.showCalendar();
         } else if (App._viewMode === 'settings') {
           App.showSettings();
-        } else if (App.currentTab && App.currentTab !== 'active') {
+        } else if (App.currentTab === 'active' && App.currentTournamentId) {
+          // 대진표 상세보기 → 해당 대진표만 다시 렌더링
+          var t = self.getTournamentById(App.currentTournamentId);
+          if (t) {
+            var content = document.getElementById('main-content');
+            App.renderTournamentDetail(content, t);
+          }
+        } else if (App.currentTab) {
           App.navigate(App.currentTab);
         }
       }

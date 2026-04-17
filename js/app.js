@@ -1612,26 +1612,20 @@ const App = {
   renderTournamentDetail(container, tournament) {
     this.currentTournamentId = tournament.id;
 
-    const wrapper = document.createElement('div');
-    wrapper.className = 'max-w-4xl mx-auto';
+    patchDOM(container, `
+      <div class="max-w-4xl mx-auto">
+        <button id="detail-back-btn" class="flex items-center gap-1 text-gray-500 hover:text-gray-800 mb-4 text-sm font-medium transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> 목록으로
+        </button>
+        <div id="tournament-detail-view"></div>
+      </div>`);
 
-    const backBtn = document.createElement('button');
-    backBtn.className = 'flex items-center gap-1 text-gray-500 hover:text-gray-800 mb-4 text-sm font-medium transition';
-    backBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> 목록으로`;
-    backBtn.onclick = () => {
+    document.getElementById('detail-back-btn').onclick = () => {
       this.currentTournamentId = null;
       this.navigate('active');
     };
 
-    const detailContainer = document.createElement('div');
-
-    wrapper.appendChild(backBtn);
-    wrapper.appendChild(detailContainer);
-    container.innerHTML = '';
-    container.appendChild(wrapper);
-    
-    const viewContainer = document.createElement('div');
-    detailContainer.appendChild(viewContainer);
+    const viewContainer = document.getElementById('tournament-detail-view');
 
     if (tournament.format === 'schedule') {
       Schedule.render(viewContainer, tournament);
