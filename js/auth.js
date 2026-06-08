@@ -77,7 +77,7 @@ const Auth = {
         <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-green-200/50 p-6 border border-white/60">
           <form id="auth-form" class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">이메일</label>
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">아이디</label>
               <input type="email" id="auth-email" required
                 class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 focus:bg-white transition"
                 placeholder="email@example.com">
@@ -96,7 +96,7 @@ const Auth = {
             </div>
             <label class="flex items-center justify-end gap-1.5 cursor-pointer select-none">
               <input type="checkbox" id="auth-remember" class="w-4 h-4 rounded border-gray-300 text-green-700 focus:ring-green-700 accent-green-700">
-              <span class="text-xs text-gray-400">이메일 기억하기</span>
+              <span class="text-xs text-gray-400">아이디 기억하기</span>
             </label>
             <p id="auth-error" class="text-sm text-red-500 hidden"></p>
             <button type="submit" id="auth-submit-btn"
@@ -106,10 +106,10 @@ const Auth = {
           </form>
         </div>
 
-        <p class="text-center text-sm text-gray-400 mt-5">
+        <!--<p class="text-center text-sm text-gray-400 mt-5">
           <span id="auth-toggle-text">계정이 없으신가요?</span>
           <button type="button" id="auth-toggle-btn" class="text-green-700 font-bold hover:underline ml-1">회원가입</button>
-        </p>
+        </p>-->
       </div>`;
 
     // 로그인 페이지 테마 토글
@@ -153,17 +153,17 @@ const Auth = {
     const confirmWrap = container.querySelector('#auth-confirm-wrap');
     const submitBtn = container.querySelector('#auth-submit-btn');
     const toggleText = container.querySelector('#auth-toggle-text');
-    const toggleBtn = container.querySelector('#auth-toggle-btn');
+    //const toggleBtn = container.querySelector('#auth-toggle-btn');
     const errorEl = container.querySelector('#auth-error');
 
-    toggleBtn.onclick = () => {
-      isRegister = !isRegister;
-      confirmWrap.style.display = isRegister ? '' : 'none';
-      submitBtn.textContent = isRegister ? '회원가입' : '로그인';
-      toggleText.textContent = isRegister ? '이미 계정이 있으신가요?' : '계정이 없으신가요?';
-      toggleBtn.textContent = isRegister ? '로그인' : '회원가입';
-      errorEl.classList.add('hidden');
-    };
+    // toggleBtn.onclick = () => {
+    //   isRegister = !isRegister;
+    //   confirmWrap.style.display = isRegister ? '' : 'none';
+    //   submitBtn.textContent = isRegister ? '회원가입' : '로그인';
+    //   toggleText.textContent = isRegister ? '이미 계정이 있으신가요?' : '계정이 없으신가요?';
+    //   toggleBtn.textContent = isRegister ? '로그인' : '회원가입';
+    //   errorEl.classList.add('hidden');
+    // };
 
     form.onsubmit = async (e) => {
       e.preventDefault();
@@ -202,10 +202,10 @@ const Auth = {
   getErrorMessage(err) {
     const code = err.code || '';
     if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential')
-      return '이메일 또는 비밀번호가 올바르지 않습니다.';
-    if (code === 'auth/email-already-in-use') return '이미 사용 중인 이메일입니다.';
+      return '아이디 또는 비밀번호가 올바르지 않습니다.';
+    if (code === 'auth/email-already-in-use') return '이미 사용 중인 아이디입니다.';
     if (code === 'auth/weak-password') return '비밀번호가 너무 짧습니다. (6자 이상)';
-    if (code === 'auth/invalid-email') return '올바른 이메일 형식을 입력해주세요.';
+    if (code === 'auth/invalid-email') return '올바른 아이디 형식을 입력해주세요.';
     if (code === 'auth/too-many-requests') return '너무 많은 시도입니다. 잠시 후 다시 시도해주세요.';
     return err.message || '오류가 발생했습니다.';
   },

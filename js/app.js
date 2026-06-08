@@ -276,7 +276,7 @@ const App = {
           '<div class="px-4 py-3 border-b border-gray-100">' +
             '<h3 class="font-semibold text-gray-700 text-sm mb-2">역할 관리</h3>' +
             '<div class="flex gap-2">' +
-              '<input type="email" id="role-email-input" class="min-w-0 flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 text-base" placeholder="이메일 입력" maxlength="50">' +
+              '<input type="email" id="role-email-input" class="min-w-0 flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 text-base" placeholder="아이디 입력" maxlength="50">' +
               '<select id="role-type-select" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-700 focus:border-green-700">' +
                 '<option value="admin">관리자</option>' +
                 '<option value="member">멤버</option>' +
