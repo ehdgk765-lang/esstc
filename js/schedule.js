@@ -417,7 +417,7 @@ const Schedule = {
         <div id="schedule-header" class="mb-4 pb-1">
           <div class="flex items-start justify-between gap-2">
             <h3 id="schedule-title" class="text-xl font-bold text-gray-800 cursor-pointer hover:text-green-700 transition flex-1 min-w-0" title="클릭하여 이름 수정">${Results.escapeHtml(tournament.name)} <svg class="w-3.5 h-3.5 inline-block text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></h3>
-            <span class="text-sm font-medium whitespace-nowrap flex-shrink-0 ${isComplete ? 'text-green-600' : 'text-orange-600'}">
+            <span class="text-sm font-medium whitespace-nowrap flex-shrink-0 ${isComplete ? 'text-green-700' : 'text-orange-600'}">
               ${completedMatches}/${totalMatches} 완료
             </span>
           </div>
@@ -472,12 +472,12 @@ const Schedule = {
                       ${items.length > 0
                         ? `<div class="space-y-2">
                             ${items.map(item => this.renderMatchCard(item.match, si, item.mi)).join('')}
-                            <button type="button" class="slot-add-extra-btn w-full py-1.5 border-2 border-dashed border-gray-200 rounded-xl text-xs text-gray-400 hover:border-green-400 hover:text-green-600 hover:bg-green-50/50 transition flex items-center justify-center gap-1" data-slot-idx="${si}" data-court="${c}" style="display:none">
+                            <button type="button" class="slot-add-extra-btn w-full py-1.5 border-2 border-dashed border-gray-200 rounded-xl text-xs text-gray-400 hover:border-green-400 hover:text-green-700 hover:bg-green-50/50 transition flex items-center justify-center gap-1" data-slot-idx="${si}" data-court="${c}" style="display:none">
                               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                               코트${c}
                             </button>
                           </div>`
-                        : `<button type="button" class="slot-add-match-btn w-full py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-green-400 hover:text-green-600 hover:bg-green-50/50 transition flex items-center justify-center gap-1" data-slot-idx="${si}" data-court="${c}" style="display:none">
+                        : `<button type="button" class="slot-add-match-btn w-full py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-green-400 hover:text-green-700 hover:bg-green-50/50 transition flex items-center justify-center gap-1" data-slot-idx="${si}" data-court="${c}" style="display:none">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                             대진 추가
                           </button>`}
@@ -517,7 +517,7 @@ const Schedule = {
                   return '<tr class="border-b border-gray-50 hover:bg-gray-50' + (isComplete && rank < 3 ? ' bg-gradient-to-r' + (rank === 0 ? ' from-yellow-50/60' : rank === 1 ? ' from-gray-50/60' : ' from-orange-50/60') + ' to-transparent' : '') + '">' +
                     '<td class="px-4 py-2 font-medium text-gray-800">' + medalHtml + Results.escapeHtml(s.name) + '</td>' +
                     '<td class="text-center px-2 py-2 text-gray-600">' + s.games + '</td>' +
-                    '<td class="text-center px-2 py-2 text-green-600 font-medium">' + s.wins + '</td>' +
+                    '<td class="text-center px-2 py-2 text-green-700 font-medium">' + s.wins + '</td>' +
                     '<td class="text-center px-2 py-2 text-gray-500">' + s.draws + '</td>' +
                     '<td class="text-center px-2 py-2 text-red-500">' + s.losses + '</td>' +
                     '<td class="text-center px-2 py-2 text-orange-600 font-bold">' + s.matchPoints + '</td>' +
@@ -554,10 +554,10 @@ const Schedule = {
                   return '<tr class="border-b border-gray-50 hover:bg-gray-50' + (isComplete && rank < 3 ? ' bg-gradient-to-r' + (rank === 0 ? ' from-yellow-50/60' : rank === 1 ? ' from-gray-50/60' : ' from-orange-50/60') + ' to-transparent' : '') + '">' +
                     '<td class="px-4 py-2 font-medium text-gray-800">' + medalHtml + Results.escapeHtml(s.name) +
                       ' ' + genderBadge(gender) +
-                      (teamName ? ' <span class="text-xs px-1 py-0.5 rounded font-medium bg-green-50 text-green-600 border border-green-200">' + Results.escapeHtml(teamName) + '</span>' : '') +
+                      (teamName ? ' <span class="text-xs px-1 py-0.5 rounded font-medium bg-green-50 text-green-700 border border-green-200">' + Results.escapeHtml(teamName) + '</span>' : '') +
                     '</td>' +
                     '<td class="text-center px-2 py-2 text-gray-600">' + s.games + '</td>' +
-                    '<td class="text-center px-2 py-2 text-green-600 font-medium">' + s.wins + '</td>' +
+                    '<td class="text-center px-2 py-2 text-green-700 font-medium">' + s.wins + '</td>' +
                     '<td class="text-center px-2 py-2 text-gray-500">' + s.draws + '</td>' +
                     '<td class="text-center px-2 py-2 text-red-500">' + s.losses + '</td>' +
                     '<td class="text-center px-2 py-2 text-orange-600 font-bold">' + s.matchPoints + '</td>' +
@@ -600,7 +600,7 @@ const Schedule = {
                     (RolesConfig.isMember() ? '' : ' <span class="text-xs px-1 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">' + ntrp.toFixed(1) + '</span>') +
                   '</td>' +
                   '<td class="text-center px-2 py-2 text-gray-600">' + s.games + '</td>' +
-                  '<td class="text-center px-2 py-2 text-green-600 font-medium">' + s.wins + '</td>' +
+                  '<td class="text-center px-2 py-2 text-green-700 font-medium">' + s.wins + '</td>' +
                   '<td class="text-center px-2 py-2 text-gray-500">' + s.draws + '</td>' +
                   '<td class="text-center px-2 py-2 text-red-500">' + s.losses + '</td>' +
                   '<td class="text-center px-2 py-2 text-orange-600 font-bold">' + s.matchPoints + '</td>' +
@@ -690,7 +690,7 @@ const Schedule = {
         if (!selectedPlayer) {
           // 첫 번째 멤버 선택
           selectedPlayer = { el, ...data };
-          el.classList.add('bg-green-200', 'ring-2', 'ring-green-500', 'rounded');
+          el.classList.add('bg-green-200', 'ring-2', 'ring-green-700', 'rounded');
           // 교체 버튼 삽입 (카드 위 absolute)
           const card = el.closest('.schedule-match-card');
           if (card) {
@@ -701,7 +701,7 @@ const Schedule = {
               ev.stopPropagation();
               this._showReplacePlayerPicker(container, tournament, selectedPlayer, () => {
                 if (selectedPlayer) {
-                  selectedPlayer.el.classList.remove('bg-green-200', 'ring-2', 'ring-green-500', 'rounded');
+                  selectedPlayer.el.classList.remove('bg-green-200', 'ring-2', 'ring-green-700', 'rounded');
                 }
                 container.querySelectorAll('.replace-player-btn').forEach(b => b.remove());
                 selectedPlayer = null;
@@ -712,7 +712,7 @@ const Schedule = {
         } else if (selectedPlayer.slotIdx === data.slotIdx && selectedPlayer.matchIdx === data.matchIdx
           && selectedPlayer.team === data.team && selectedPlayer.pos === data.pos) {
           // 같은 멤버 재탭 → 선택 해제
-          selectedPlayer.el.classList.remove('bg-green-200', 'ring-2', 'ring-green-500', 'rounded');
+          selectedPlayer.el.classList.remove('bg-green-200', 'ring-2', 'ring-green-700', 'rounded');
           container.querySelectorAll('.replace-player-btn').forEach(b => b.remove());
           selectedPlayer = null;
         } else {
@@ -725,7 +725,7 @@ const Schedule = {
           const sameMatch = src.slotIdx === tgt.slotIdx && src.matchIdx === tgt.matchIdx;
 
           const clearSel = () => {
-            selectedPlayer.el.classList.remove('bg-green-200', 'ring-2', 'ring-green-500', 'rounded');
+            selectedPlayer.el.classList.remove('bg-green-200', 'ring-2', 'ring-green-700', 'rounded');
             container.querySelectorAll('.replace-player-btn').forEach(b => b.remove());
             selectedPlayer = null;
           };
@@ -799,7 +799,7 @@ const Schedule = {
     cards.forEach(card => {
       card.onclick = () => {
         if (selectedPlayer) {
-          selectedPlayer.el.classList.remove('bg-green-200', 'ring-2', 'ring-green-500', 'rounded');
+          selectedPlayer.el.classList.remove('bg-green-200', 'ring-2', 'ring-green-700', 'rounded');
           container.querySelectorAll('.replace-player-btn').forEach(b => b.remove());
           selectedPlayer = null;
           return;
@@ -877,12 +877,12 @@ const Schedule = {
         if (_dragType !== 'card') return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        card.classList.add('ring-2', 'ring-green-500');
+        card.classList.add('ring-2', 'ring-green-700');
       };
-      card.ondragleave = () => card.classList.remove('ring-2', 'ring-green-500');
+      card.ondragleave = () => card.classList.remove('ring-2', 'ring-green-700');
       card.ondrop = (e) => {
         e.preventDefault();
-        card.classList.remove('ring-2', 'ring-green-500');
+        card.classList.remove('ring-2', 'ring-green-700');
         if (_dragType !== 'card') return;
         const [si, mi] = e.dataTransfer.getData('text/plain').split(',').map(Number);
         const tSI = +card.dataset.slotIdx, tMI = +card.dataset.matchIdx;
@@ -960,8 +960,8 @@ const Schedule = {
           // 첫 번째 탭: 선택
           _slotSelected = idx;
           const srcSlotEl = handle.closest('.schedule-slot');
-          srcSlotEl.classList.add('ring-2', 'ring-green-500', 'rounded-xl', 'bg-green-50');
-          handle.querySelector('svg').classList.replace('text-gray-300', 'text-green-600');
+          srcSlotEl.classList.add('ring-2', 'ring-green-700', 'rounded-xl', 'bg-green-50');
+          handle.querySelector('svg').classList.replace('text-gray-300', 'text-green-700');
           // 다른 시간대에 힌트
           slotEls.forEach(el => {
             if (parseInt(el.dataset.slot) !== idx) {
@@ -983,9 +983,9 @@ const Schedule = {
 
     const clearSlotSelection = () => {
       slotEls.forEach(el => {
-        el.classList.remove('ring-2', 'ring-1', 'ring-green-500', 'ring-dashed', 'ring-green-300', 'rounded-xl', 'bg-green-50');
+        el.classList.remove('ring-2', 'ring-1', 'ring-green-700', 'ring-dashed', 'ring-green-300', 'rounded-xl', 'bg-green-50');
         const svg = el.querySelector('.slot-drag-handle svg');
-        if (svg) { svg.classList.remove('text-green-600', 'text-green-400'); svg.classList.add('text-gray-300'); }
+        if (svg) { svg.classList.remove('text-green-700', 'text-green-400'); svg.classList.add('text-gray-300'); }
       });
       _slotSelected = null;
     };
@@ -1159,7 +1159,7 @@ const Schedule = {
           </div>
           <div class="space-y-2">
             ${matches.map(({ match, mi }) => this.renderMatchCard(match, 0, mi)).join('')}
-            <button type="button" class="court-add-match-btn w-full py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-green-400 hover:text-green-600 hover:bg-green-50/50 transition flex items-center justify-center gap-1" data-court="${c}">
+            <button type="button" class="court-add-match-btn w-full py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-green-400 hover:text-green-700 hover:bg-green-50/50 transition flex items-center justify-center gap-1" data-court="${c}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
               대진 추가
             </button>
@@ -1230,7 +1230,7 @@ const Schedule = {
         </div>` : ''}
         <div class="space-y-0.5">
           <div class="${t1Bg} rounded-lg px-2 ${t1TeamName ? 'pt-1.5 pb-2' : 'py-2'}">
-            ${t1TeamName ? `<div class="text-center mb-1"><span class="inline-block text-[10px] leading-tight px-1.5 py-0.5 rounded bg-green-50 text-green-600 border border-green-200 font-medium">${t1TeamName}</span></div>` : ''}
+            ${t1TeamName ? `<div class="text-center mb-1"><span class="inline-block text-[10px] leading-tight px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 font-medium">${t1TeamName}</span></div>` : ''}
             <div class="text-sm sm:text-xs font-medium ${t1TextClass} text-center">
               ${isWin1 ? '🏆 ' : ''}${isDraw ? '🤝 ' : ''}${t1Html}
             </div>
@@ -1243,7 +1243,7 @@ const Schedule = {
               </div>`
             : `<div class="text-center text-xs text-gray-300 leading-tight">vs</div>`}
           <div class="${t2Bg} rounded-lg px-2 ${t2TeamName ? 'pt-1.5 pb-2' : 'py-2'}">
-            ${t2TeamName ? `<div class="text-center mb-1"><span class="inline-block text-[10px] leading-tight px-1.5 py-0.5 rounded bg-green-50 text-green-600 border border-green-200 font-medium">${t2TeamName}</span></div>` : ''}
+            ${t2TeamName ? `<div class="text-center mb-1"><span class="inline-block text-[10px] leading-tight px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 font-medium">${t2TeamName}</span></div>` : ''}
             <div class="text-sm sm:text-xs font-medium ${t2TextClass} text-center">
               ${isWin2 ? '🏆 ' : ''}${isDraw ? '🤝 ' : ''}${t2Html}
             </div>
@@ -1280,7 +1280,7 @@ const Schedule = {
               <span class="text-sm text-gray-800 font-medium">${Results.escapeHtml(name)}</span>
               ${pd ? `${genderBadge(pd.gender)}
               ${RolesConfig.isMember() ? '' : `<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(pd.ntrp || 2.5).toFixed(1)}</span>`}` : ''}
-              ${tn ? `<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-600 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
+              ${tn ? `<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-700 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
             </div>
             <button type="button" class="am-remove-player text-red-400 hover:text-red-600 text-xs" data-key="${key}">✕</button>
           </div>`;
@@ -1305,7 +1305,7 @@ const Schedule = {
               : `<div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">시간대</label>
-                    <select id="am-slot" class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-green-500">
+                    <select id="am-slot" class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-green-700">
                       ${tournament.timeSlots.map((s, i) =>
                         `<option value="${i}" ${i === selectedSlot ? 'selected' : ''}>${s.time}</option>`
                       ).join('')}
@@ -1355,7 +1355,7 @@ const Schedule = {
 
             <div class="flex gap-3 pt-2">
               <button type="button" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition am-cancel">취소</button>
-              <button type="button" class="flex-1 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition am-submit">추가</button>
+              <button type="button" class="flex-1 py-2.5 bg-green-700 text-white rounded-xl text-sm font-medium hover:bg-green-800 transition am-submit">추가</button>
             </div>
           </div>
         </div>`;
@@ -1543,9 +1543,9 @@ const Schedule = {
         <div class="mb-3">
           <div class="flex gap-2">
             <input type="text" autocomplete="off" id="amp-search" placeholder="이름 검색 또는 직접 입력..."
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-green-700 focus:border-green-700">
             <button type="button" id="amp-custom-add"
-              class="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition whitespace-nowrap">추가</button>
+              class="px-4 py-2 bg-green-700 text-white rounded-xl text-sm font-medium hover:bg-green-800 transition whitespace-nowrap">추가</button>
           </div>
         </div>
         ${visiblePlayers.length > 0 ? `
@@ -1562,7 +1562,7 @@ const Schedule = {
                   <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                   <span class="ml-2">${genderBadge(p.gender)}</span>
                   ${RolesConfig.isMember() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
-                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-600 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
+                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-700 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isUsed ? '<span class="ml-auto text-xs text-gray-400">선택됨</span>' : ''}
                   ${isBusy ? '<span class="ml-auto text-xs text-gray-400">같은 시간대</span>' : ''}
                 </div>`;
@@ -1672,7 +1672,7 @@ const Schedule = {
                   <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                   <span class="ml-2">${genderBadge(p.gender)}</span>
                   ${RolesConfig.isMember() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
-                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-600 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
+                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-700 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isSelf ? '<span class="ml-auto text-xs text-gray-400">현재</span>' : ''}
                   ${isDup ? '<span class="ml-auto text-xs text-gray-400">같은 시간대</span>' : ''}
                 </div>`;

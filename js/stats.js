@@ -241,7 +241,7 @@ const Stats = {
                 <td class="text-center px-2 py-2 font-bold text-yellow-600">${m.gold || '-'}</td>
                 <td class="text-center px-2 py-2 font-bold text-gray-400">${m.silver || '-'}</td>
                 <td class="text-center px-2 py-2 font-bold text-orange-600">${m.bronze || '-'}</td>
-                <td class="text-center px-2 py-2 font-bold text-green-600">${m.total}</td>
+                <td class="text-center px-2 py-2 font-bold text-green-700">${m.total}</td>
               </tr>`;
             }).join('')}
           </tbody>

@@ -814,7 +814,9 @@ html.dark .sub-tab:hover {
   background-color: #475569;
 }
 html.dark .sub-tab.bg-green-600,
-html.dark .sub-tab[class*="bg-green-600"] {
+html.dark .sub-tab[class*="bg-green-600"],
+html.dark .sub-tab.bg-green-700,
+html.dark .sub-tab[class*="bg-green-700"] {
   background-color: #15803d !important;
   color: white !important;
 }

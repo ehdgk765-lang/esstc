@@ -115,7 +115,7 @@ const Tournament = {
       const names = playerStr.split(' / ');
       const tns = [...new Set(names.map(n => _teamMap[n]).filter(Boolean))];
       if (tns.length === 0) return '';
-      return tns.map(tn => `<span class="text-xs px-1 py-0.5 rounded bg-green-50 text-green-600 border border-green-200 whitespace-nowrap flex-shrink-0">${Results.escapeHtml(tn)}</span>`).join(' ');
+      return tns.map(tn => `<span class="text-xs px-1 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 whitespace-nowrap flex-shrink-0">${Results.escapeHtml(tn)}</span>`).join(' ');
     };
 
     let html = `
@@ -170,12 +170,12 @@ const Tournament = {
               </div>
               ${match.scores && match.scores.length > 0 ? `
               <div class="match-score-bar flex items-center justify-center gap-2 px-3 py-1.5 bg-gray-50 border-t border-gray-100">
-                <span class="match-score text-sm font-bold ${match.winner === match.player1 ? 'text-green-600' : 'text-gray-400'}">${match.scores.map(s => s[0]).join(' ')}</span>
+                <span class="match-score text-sm font-bold ${match.winner === match.player1 ? 'text-green-700' : 'text-gray-400'}">${match.scores.map(s => s[0]).join(' ')}</span>
                 <span class="text-xs text-gray-300">:</span>
-                <span class="match-score text-sm font-bold ${match.winner === match.player2 ? 'text-green-600' : 'text-gray-400'}">${match.scores.map(s => s[1]).join(' ')}</span>
+                <span class="match-score text-sm font-bold ${match.winner === match.player2 ? 'text-green-700' : 'text-gray-400'}">${match.scores.map(s => s[1]).join(' ')}</span>
               </div>` : ''}
             </div>
-            ${canEdit ? `<div class="text-center mt-1"><span class="text-xs ${isMember && isMyMatch ? 'text-blue-600' : 'text-green-600'} font-medium">클릭하여 결과 입력</span></div>` : ''}
+            ${canEdit ? `<div class="text-center mt-1"><span class="text-xs ${isMember && isMyMatch ? 'text-blue-600' : 'text-green-700'} font-medium">클릭하여 결과 입력</span></div>` : ''}
           </div>`;
       }
 

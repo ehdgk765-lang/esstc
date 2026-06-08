@@ -29,21 +29,21 @@ const CustomBracket = {
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">대회명</label>
           <input type="text" id="cb-name" required maxlength="30"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700"
             placeholder="예: 2024년 봄 정기대회" value="${Results.escapeHtml(st.tournamentName)}">
         </div>
 
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">대회 날짜</label>
           <input type="date" id="cb-date" value="${st.gameDate || new Date().toISOString().slice(0, 10)}"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700">
         </div>
 
         <div>
           <div class="flex items-center justify-between mb-2">
             <label class="block text-sm font-semibold text-gray-700">경기 방식</label>
             <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="checkbox" id="cb-team-mode" ${st.isTeamMode ? 'checked' : ''} class="w-3.5 h-3.5 text-green-600 rounded border-gray-300 focus:ring-green-500">
+              <input type="checkbox" id="cb-team-mode" ${st.isTeamMode ? 'checked' : ''} class="w-3.5 h-3.5 text-green-700 rounded border-gray-300 focus:ring-green-700">
               <span class="text-xs text-gray-500">팀전</span>
             </label>
           </div>
@@ -99,7 +99,7 @@ const CustomBracket = {
         </div>
 
         <button type="submit"
-          class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 active:scale-[0.98] transition-all font-semibold text-lg shadow-md shadow-green-200/50">
+          class="w-full py-3 bg-gradient-to-r from-green-700 to-green-800 text-white rounded-xl hover:from-green-800 hover:to-green-900 active:scale-[0.98] transition-all font-semibold text-lg shadow-md shadow-green-300/50">
           대회 생성
         </button>
       </form>`);
@@ -264,7 +264,7 @@ const CustomBracket = {
         const names = playerName.split(' / ');
         const tns = [...new Set(names.map(n => _teamMap[n]).filter(Boolean))];
         if (tns.length > 0) {
-          teamBadge = tns.map(tn => `<span class="text-xs px-1 py-0.5 rounded bg-green-50 text-green-600 border border-green-200 whitespace-nowrap flex-shrink-0">${Results.escapeHtml(tn)}</span>`).join(' ');
+          teamBadge = tns.map(tn => `<span class="text-xs px-1 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 whitespace-nowrap flex-shrink-0">${Results.escapeHtml(tn)}</span>`).join(' ');
         }
       }
       return `
@@ -331,9 +331,9 @@ const CustomBracket = {
         <div class="mb-3">
           <div class="flex gap-2">
             <input type="text" id="cb-custom-name" placeholder="직접 입력..."
-              class="cb-picker-search flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
+              class="cb-picker-search flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-green-700 focus:border-green-700">
             <button type="button" id="cb-custom-add"
-              class="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition whitespace-nowrap">추가</button>
+              class="px-4 py-2 bg-green-700 text-white rounded-xl text-sm font-medium hover:bg-green-800 transition whitespace-nowrap">추가</button>
           </div>
         </div>
 
@@ -349,7 +349,7 @@ const CustomBracket = {
                   <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                   <span class="ml-2">${genderBadge(p.gender)}</span>
                   <span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
-                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-600 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
+                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-700 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isPlaced ? '<span class="ml-auto text-xs text-gray-400">배치됨</span>' : ''}
                 </div>`;
             }).join('')}
@@ -440,9 +440,9 @@ const CustomBracket = {
           <div class="mb-3">
             <div class="flex gap-2">
               <input type="text" autocomplete="off" id="cb-doubles-search" placeholder="이름 검색 또는 직접 입력..."
-                class="cb-picker-search flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                class="cb-picker-search flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-green-700 focus:border-green-700">
               <button type="button" id="cb-doubles-custom-add"
-                class="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition whitespace-nowrap">추가</button>
+                class="px-4 py-2 bg-green-700 text-white rounded-xl text-sm font-medium hover:bg-green-800 transition whitespace-nowrap">추가</button>
             </div>
           </div>
 
@@ -458,7 +458,7 @@ const CustomBracket = {
                     <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                     <span class="ml-2">${genderBadge(p.gender)}</span>
                     <span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
-                    ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-600 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
+                    ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-700 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
                     ${isUsed ? '<span class="ml-auto text-xs text-gray-400">선택됨</span>' : ''}
                   </div>`;
               }).join('')}
@@ -467,7 +467,7 @@ const CustomBracket = {
 
           <div class="flex gap-2 mt-3">
             <button type="button" class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition cb-picker-cancel">취소</button>
-            <button type="button" class="flex-1 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition cb-doubles-confirm ${picked[0] && picked[1] ? '' : 'opacity-50 cursor-not-allowed'}" ${picked[0] && picked[1] ? '' : 'disabled'}>확인</button>
+            <button type="button" class="flex-1 py-2 bg-green-700 text-white rounded-xl text-sm font-medium hover:bg-green-800 transition cb-doubles-confirm ${picked[0] && picked[1] ? '' : 'opacity-50 cursor-not-allowed'}" ${picked[0] && picked[1] ? '' : 'disabled'}>확인</button>
           </div>
         </div>`;
     };

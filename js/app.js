@@ -263,7 +263,7 @@ const App = {
               : courts.map(function(c, i) {
                   return '<div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition">' +
                     '<div class="flex items-center gap-3 min-w-0">' +
-                      '<span class="w-7 h-7 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">' + (i + 1) + '</span>' +
+                      '<span class="w-7 h-7 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">' + (i + 1) + '</span>' +
                       '<span class="text-gray-800 font-medium truncate">' + self._escapeHtml(c.name) + '</span>' +
                     '</div>' +
                     '<button class="delete-court-btn text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg px-3 py-1 transition text-sm flex-shrink-0 ml-2" data-id="' + c.id + '">삭제</button>' +
@@ -1339,7 +1339,7 @@ const App = {
                 <span class="ml-3 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                 <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-700">남</span>
                 <span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
-                ${tn ? `<span class="sch-team-badge text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-600 border border-green-200 hidden">${Results.escapeHtml(tn)}</span>` : ''}
+                ${tn ? `<span class="sch-team-badge text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-700 border border-green-200 hidden">${Results.escapeHtml(tn)}</span>` : ''}
               </label>`;
             }).join('')}
           </div>`}
@@ -1366,7 +1366,7 @@ const App = {
                 <span class="ml-3 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                 <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-medium bg-pink-100 text-pink-700">여</span>
                 <span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
-                ${tn ? `<span class="sch-team-badge text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-600 border border-green-200 hidden">${Results.escapeHtml(tn)}</span>` : ''}
+                ${tn ? `<span class="sch-team-badge text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-700 border border-green-200 hidden">${Results.escapeHtml(tn)}</span>` : ''}
               </label>`;
             }).join('')}
           </div>`}
@@ -1671,7 +1671,7 @@ const App = {
                 ${t.status === 'completed'
                   ? '<span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500">완료</span>'
                   : '<span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">진행중</span>'}
-                ${t.isTeamMode ? '<span class="text-xs px-2 py-1 rounded-full bg-green-50 text-green-600 border border-green-200">팀전</span>' : ''}
+                ${t.isTeamMode ? '<span class="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">팀전</span>' : ''}
                 <span class="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700">대진표</span>
               </div>
             </div>

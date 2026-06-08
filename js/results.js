@@ -35,7 +35,7 @@ const Results = {
     let setsHTML = `
       <div class="flex items-center gap-2 justify-center mb-1">
         <span class="w-16"></span>
-        <span class="w-14 text-center text-xs font-bold text-green-600 truncate">${this.escapeHtml(t1Short)}</span>
+        <span class="w-14 text-center text-xs font-bold text-green-700 truncate">${this.escapeHtml(t1Short)}</span>
         <span class="w-3"></span>
         <span class="w-14 text-center text-xs font-bold text-blue-600 truncate">${this.escapeHtml(t2Short)}</span>
       </div>`;
@@ -45,7 +45,7 @@ const Results = {
       setsHTML += `
         <div class="flex items-center gap-2 justify-center">
           <span class="text-sm text-gray-500 w-16">세트 ${i + 1}</span>
-          <input type="number" min="0" max="7" class="score-input w-14 h-10 text-center border-2 border-green-300 bg-green-50 rounded-lg text-lg font-bold text-green-700 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          <input type="number" min="0" max="7" class="score-input w-14 h-10 text-center border-2 border-green-300 bg-green-50 rounded-lg text-lg font-bold text-green-700 focus:ring-2 focus:ring-green-700 focus:border-green-700"
             data-set="${i}" data-player="0" value="${s1}" placeholder="0">
           <span class="text-gray-400 font-bold">:</span>
           <input type="number" min="0" max="7" class="score-input w-14 h-10 text-center border-2 border-blue-300 bg-blue-50 rounded-lg text-lg font-bold text-blue-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -60,7 +60,7 @@ const Results = {
         <div class="space-y-1.5 mb-4">
           <div class="bg-green-50 rounded-xl px-3 py-2 text-center">
             ${t1Team ? `<div class="font-bold text-green-700 text-sm">${this.escapeHtml(t1Team)}</div>
-              <div class="text-green-600 text-[11px] mt-0.5 opacity-70">${this.escapeHtml(player1Name)}</div>` :
+              <div class="text-green-700 text-[11px] mt-0.5 opacity-70">${this.escapeHtml(player1Name)}</div>` :
               `<span class="font-semibold text-green-700 text-xs sm:text-sm">${this.formatTeamHtml(player1Name, tournament.isCustom)}</span>`}
           </div>
           <div class="text-center text-xs text-gray-400 font-medium">vs</div>
@@ -74,7 +74,7 @@ const Results = {
         <div id="score-error" class="text-red-500 text-sm text-center mb-3 hidden"></div>
         <div class="flex gap-3">
           <button id="score-cancel" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 active:bg-gray-300 transition font-medium">취소</button>
-          <button id="score-save" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 active:bg-green-800 transition font-medium">저장</button>
+          <button id="score-save" class="flex-1 px-4 py-3 bg-green-700 text-white rounded-xl hover:bg-green-800 active:bg-green-900 transition font-medium">저장</button>
         </div>
       </div>`;
 

@@ -142,7 +142,7 @@ const League = {
                 <tr class="${i === 0 && isComplete ? 'bg-yellow-50' : (i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50')} border-b border-gray-50">
                   <td class="px-3 py-2.5 font-bold ${i === 0 && isComplete ? 'text-yellow-600' : 'text-gray-400'}">${i + 1}</td>
                   <td class="px-3 py-2.5 font-medium text-gray-800">${Results.escapeHtml(s.name)}</td>
-                  <td class="px-3 py-2.5 text-center text-green-600 font-semibold">${s.wins}</td>
+                  <td class="px-3 py-2.5 text-center text-green-700 font-semibold">${s.wins}</td>
                   <td class="px-3 py-2.5 text-center text-gray-500">${s.draws}</td>
                   <td class="px-3 py-2.5 text-center text-red-500">${s.losses}</td>
                   <td class="px-3 py-2.5 text-center font-bold text-orange-600">${s.points}</td>
@@ -175,7 +175,7 @@ const League = {
         const p2Class = isDraw ? 'font-bold text-yellow-700' : (p2Won ? 'font-bold text-green-700' : 'text-gray-700');
         const badge = (won, draw) => {
           if (draw) return '<span class="w-5 h-5 bg-yellow-400 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">D</span>';
-          if (won) return '<span class="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">W</span>';
+          if (won) return '<span class="w-5 h-5 bg-green-700 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">W</span>';
           return '';
         };
 
@@ -188,7 +188,7 @@ const League = {
             </div>
             <div class="league-score mx-3 text-center min-w-[80px]">
               ${hasResult ? `<span class="text-sm font-mono font-semibold ${isDraw ? 'text-yellow-600' : 'text-gray-600'}">${Results.formatScores(match.scores)}</span>` :
-                `<span class="text-xs ${canEdit ? 'text-green-600 font-medium' : 'text-gray-400'}">
+                `<span class="text-xs ${canEdit ? 'text-green-700 font-medium' : 'text-gray-400'}">
                   ${canEdit ? '결과 입력' : 'vs'}</span>`}
             </div>
             <div class="league-p2 flex-1 flex items-center gap-2">
