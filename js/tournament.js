@@ -92,12 +92,31 @@ const Tournament = {
     }
   },
 
+  // 매치에 멤버 본인 이름이 포함되어 있는지 확인
+  _isMyMatch(match) {
+    const name = App.getMemberName();
+    if (!name) return false;
+    const check = (pStr) => pStr && pStr.split(' / ').includes(name);
+    return check(match.player1) || check(match.player2);
+  },
+
   // 토너먼트 뷰 렌더링
   render(container, tournament) {
     const rounds = tournament.rounds;
     const totalRounds = rounds.length;
     const roundNames = this.getRoundNames(totalRounds);
     const isComplete = rounds[totalRounds - 1][0].winner !== null;
+    const isMember = RolesConfig.isMember();
+
+    // 멤버→팀 매핑
+    const _teamMap = buildTeamMap();
+    const _teamBadge = (playerStr) => {
+      if (!playerStr) return '';
+      const names = playerStr.split(' / ');
+      const tns = [...new Set(names.map(n => _teamMap[n]).filter(Boolean))];
+      if (tns.length === 0) return '';
+      return tns.map(tn => `<span class="text-xs px-1 py-0.5 rounded bg-green-50 text-green-600 border border-green-200 whitespace-nowrap flex-shrink-0">${Results.escapeHtml(tn)}</span>`).join(' ');
+    };
 
     let html = `
       <div class="mb-4 flex items-center justify-between">
@@ -114,6 +133,7 @@ const Tournament = {
         <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-2xl p-4 mb-6 text-center">
           <div class="text-yellow-600 text-sm font-medium mb-1">우승</div>
           <div class="text-2xl font-bold text-yellow-800">${Results.escapeHtml(rounds[totalRounds - 1][0].winner)}</div>
+          ${_teamBadge(rounds[totalRounds - 1][0].winner) ? `<div class="mt-1">${_teamBadge(rounds[totalRounds - 1][0].winner)}</div>` : ''}
         </div>`;
     }
 
@@ -126,24 +146,36 @@ const Tournament = {
           <div class="flex flex-col justify-around flex-1 gap-2">`;
 
       for (const match of rounds[r]) {
-        const canEdit = match.player1 && match.player2 && !match.winner;
+        const isMyMatch = this._isMyMatch(match);
+        const canEdit = match.player1 && match.player2 && !match.winner && (!isMember || isMyMatch);
         const hasResult = match.winner !== null;
         const isBye = match.scores && match.scores.length === 0;
+        const highlightClass = isMember && isMyMatch ? 'my-match' : '';
 
         html += `
-          <div class="bracket-match mx-2 ${canEdit ? 'cursor-pointer hover:shadow-md active:scale-[0.98]' : ''} ${hasResult ? 'completed' : ''}"
+          <div class="bracket-match mx-2 ${highlightClass} ${canEdit ? 'cursor-pointer hover:shadow-md active:scale-[0.98]' : ''} ${hasResult ? 'completed' : ''}"
                data-match-id="${match.id}" data-round="${r}">
-            <div class="match-card bg-white border ${hasResult ? 'border-green-200' : 'border-gray-200'} rounded-xl overflow-hidden shadow-sm">
-              <div class="match-player flex items-center justify-between px-3 py-2 ${match.winner === match.player1 && match.player1 ? 'bg-green-50 font-semibold text-green-800' : 'text-gray-700'} ${!match.player1 ? 'text-gray-300 italic' : ''} border-b border-gray-100">
-                <span class="truncate text-sm">${match.player1 ? Results.escapeHtml(match.player1) : (isBye ? 'BYE' : '대기 중')}</span>
-                ${match.scores && match.scores.length > 0 ? `<span class="text-xs text-gray-500 ml-2 whitespace-nowrap">${match.scores.map(s => s[0]).join(' ')}</span>` : ''}
+            <div class="match-card bg-white border ${isMember && isMyMatch ? 'border-blue-400 ring-2 ring-blue-200' : (hasResult ? 'border-green-200' : 'border-gray-200')} rounded-xl overflow-hidden shadow-sm">
+              <div class="match-player flex items-center px-3 py-2 ${match.winner === match.player1 && match.player1 ? 'bg-green-50 font-semibold text-green-800' : 'text-gray-700'} ${!match.player1 ? 'text-gray-300 italic' : ''} border-b border-gray-100">
+                <div class="flex items-center gap-1 min-w-0">
+                  <span class="truncate text-sm">${match.player1 ? Results.escapeHtml(match.player1) : (isBye ? 'BYE' : '대기 중')}</span>
+                  ${_teamBadge(match.player1)}
+                </div>
               </div>
-              <div class="match-player flex items-center justify-between px-3 py-2 ${match.winner === match.player2 && match.player2 ? 'bg-green-50 font-semibold text-green-800' : 'text-gray-700'} ${!match.player2 ? 'text-gray-300 italic' : ''}">
-                <span class="truncate text-sm">${match.player2 ? Results.escapeHtml(match.player2) : (isBye ? 'BYE' : '대기 중')}</span>
-                ${match.scores && match.scores.length > 0 ? `<span class="text-xs text-gray-500 ml-2 whitespace-nowrap">${match.scores.map(s => s[1]).join(' ')}</span>` : ''}
+              <div class="match-player flex items-center px-3 py-2 ${match.winner === match.player2 && match.player2 ? 'bg-green-50 font-semibold text-green-800' : 'text-gray-700'} ${!match.player2 ? 'text-gray-300 italic' : ''} ${match.scores && match.scores.length > 0 ? '' : ''}">
+                <div class="flex items-center gap-1 min-w-0">
+                  <span class="truncate text-sm">${match.player2 ? Results.escapeHtml(match.player2) : (isBye ? 'BYE' : '대기 중')}</span>
+                  ${_teamBadge(match.player2)}
+                </div>
               </div>
+              ${match.scores && match.scores.length > 0 ? `
+              <div class="match-score-bar flex items-center justify-center gap-2 px-3 py-1.5 bg-gray-50 border-t border-gray-100">
+                <span class="match-score text-sm font-bold ${match.winner === match.player1 ? 'text-green-600' : 'text-gray-400'}">${match.scores.map(s => s[0]).join(' ')}</span>
+                <span class="text-xs text-gray-300">:</span>
+                <span class="match-score text-sm font-bold ${match.winner === match.player2 ? 'text-green-600' : 'text-gray-400'}">${match.scores.map(s => s[1]).join(' ')}</span>
+              </div>` : ''}
             </div>
-            ${canEdit ? '<div class="text-center mt-1"><span class="text-xs text-green-600 font-medium">클릭하여 결과 입력</span></div>' : ''}
+            ${canEdit ? `<div class="text-center mt-1"><span class="text-xs ${isMember && isMyMatch ? 'text-blue-600' : 'text-green-600'} font-medium">클릭하여 결과 입력</span></div>` : ''}
           </div>`;
       }
 
@@ -162,12 +194,11 @@ const Tournament = {
     const scrollContainer = container.querySelector('.bracket-container');
     const scrollHint = container.querySelector('.bracket-scroll-hint');
     if (scrollContainer && scrollHint) {
-      const checkScroll = () => {
+      scrollContainer.onscroll = () => {
         const atEnd = scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 10;
         scrollHint.classList.toggle('scrolled-end', atEnd);
       };
-      scrollContainer.onscroll = checkScroll;
-      checkScroll();
+      scrollContainer.onscroll();
     }
 
     // 클릭 이벤트 바인딩
@@ -177,30 +208,42 @@ const Tournament = {
         const round = parseInt(el.dataset.round);
         const match = rounds[round].find(m => m.id === matchId);
         if (!match || !match.player1 || !match.player2 || match.winner) return;
+        // 멤버는 본인 매치만 입력 가능
+        if (isMember && !this._isMyMatch(match)) return;
 
         Results.showScoreModal(match, tournament, (result) => {
-          match.scores = result.scores;
-          match.winner = result.winner;
+          // 최신 대회 데이터를 다시 읽어서 해당 매치만 패치 (동시 접속 데이터 유실 방지)
+          const freshTournament = Storage.getTournamentById(tournament.id);
+          if (!freshTournament) return;
+          const freshRounds = freshTournament.rounds;
+          const freshMatch = freshRounds[round]?.find(m => m.id === matchId);
+          if (!freshMatch) return;
+
+          freshMatch.scores = result.scores;
+          freshMatch.winner = result.winner;
 
           // 다음 라운드에 승자 전파
           if (round < totalRounds - 1) {
-            const nextMatchIndex = Math.floor(match.matchIndex / 2);
-            const nextMatch = rounds[round + 1][nextMatchIndex];
-            if (match.matchIndex % 2 === 0) {
-              nextMatch.player1 = result.winner;
-            } else {
-              nextMatch.player2 = result.winner;
+            const nextMatchIndex = Math.floor(freshMatch.matchIndex / 2);
+            const nextMatch = freshRounds[round + 1]?.[nextMatchIndex];
+            if (nextMatch) {
+              if (freshMatch.matchIndex % 2 === 0) {
+                nextMatch.player1 = result.winner;
+              } else {
+                nextMatch.player2 = result.winner;
+              }
             }
           }
 
           // 대회 완료 체크
-          if (rounds[totalRounds - 1][0].winner) {
-            tournament.status = 'completed';
-            tournament.completedAt = new Date().toISOString();
+          const finalRound = freshRounds[freshRounds.length - 1];
+          if (finalRound && finalRound[0]?.winner) {
+            freshTournament.status = 'completed';
+            freshTournament.completedAt = new Date().toISOString();
           }
 
-          Storage.updateTournament(tournament);
-          this.render(container, tournament);
+          Storage.updateTournament(freshTournament);
+          this.render(container, freshTournament);
         });
       };
     });

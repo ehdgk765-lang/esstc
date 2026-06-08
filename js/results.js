@@ -15,19 +15,29 @@ const Results = {
 
     const player1Name = match.player1 || 'BYE';
     const player2Name = match.player2 || 'BYE';
-    const t1Html = this.formatTeamHtml(player1Name);
-    const t2Html = this.formatTeamHtml(player2Name);
 
-    // 팀 이름 축약 (첫 번째 멤버 성만 표시)
-    const t1Short = player1Name.split(' / ')[0].slice(0, 3) + 'Team';
-    const t2Short = player2Name.split(' / ')[0].slice(0, 3) + 'Team';
+    // 팀전 모드: 팀 이름 조회
+    let t1Team = '', t2Team = '';
+    if (tournament.isTeamMode) {
+      const _tm = buildTeamMap();
+      const getTeam = (pName) => {
+        const names = pName.split(' / ');
+        const tns = [...new Set(names.map(n => _tm[n]).filter(Boolean))];
+        return tns.join(' / ');
+      };
+      t1Team = getTeam(player1Name);
+      t2Team = getTeam(player2Name);
+    }
+
+    const t1Short = t1Team || player1Name.split(' / ')[0].slice(0, 3) + 'Team';
+    const t2Short = t2Team || player2Name.split(' / ')[0].slice(0, 3) + 'Team';
 
     let setsHTML = `
       <div class="flex items-center gap-2 justify-center mb-1">
         <span class="w-16"></span>
-        <span class="w-14 text-center text-xs font-bold text-green-600">${this.escapeHtml(t1Short)}</span>
+        <span class="w-14 text-center text-xs font-bold text-green-600 truncate">${this.escapeHtml(t1Short)}</span>
         <span class="w-3"></span>
-        <span class="w-14 text-center text-xs font-bold text-blue-600">${this.escapeHtml(t2Short)}</span>
+        <span class="w-14 text-center text-xs font-bold text-blue-600 truncate">${this.escapeHtml(t2Short)}</span>
       </div>`;
     for (let i = 0; i < setCount; i++) {
       const s1 = match.scores ? (match.scores[i]?.[0] ?? '') : '';
@@ -49,11 +59,15 @@ const Results = {
         <h3 class="text-lg font-bold text-center mb-4">스코어 입력</h3>
         <div class="space-y-1.5 mb-4">
           <div class="bg-green-50 rounded-xl px-3 py-2 text-center">
-            <span class="font-semibold text-green-700 text-xs sm:text-sm">${t1Html}</span>
+            ${t1Team ? `<div class="font-bold text-green-700 text-sm">${this.escapeHtml(t1Team)}</div>
+              <div class="text-green-600 text-[11px] mt-0.5 opacity-70">${this.escapeHtml(player1Name)}</div>` :
+              `<span class="font-semibold text-green-700 text-xs sm:text-sm">${this.formatTeamHtml(player1Name, tournament.isCustom)}</span>`}
           </div>
           <div class="text-center text-xs text-gray-400 font-medium">vs</div>
           <div class="bg-blue-50 rounded-xl px-3 py-2 text-center">
-            <span class="font-semibold text-blue-700 text-xs sm:text-sm">${t2Html}</span>
+            ${t2Team ? `<div class="font-bold text-blue-700 text-sm">${this.escapeHtml(t2Team)}</div>
+              <div class="text-blue-600 text-[11px] mt-0.5 opacity-70">${this.escapeHtml(player2Name)}</div>` :
+              `<span class="font-semibold text-blue-700 text-xs sm:text-sm">${this.formatTeamHtml(player2Name, tournament.isCustom)}</span>`}
           </div>
         </div>
         <div class="space-y-3 mb-5">${setsHTML}</div>
@@ -65,10 +79,12 @@ const Results = {
       </div>`;
 
     document.body.appendChild(modal);
+    lockScroll();
 
-    modal.querySelector('#score-cancel').onclick = () => modal.remove();
+    const closeModal = () => { modal.remove(); unlockScroll(); };
+    modal.querySelector('#score-cancel').onclick = closeModal;
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.remove();
+      if (e.target === modal) closeModal();
     });
 
     modal.querySelector('#score-save').onclick = () => {
@@ -105,7 +121,7 @@ const Results = {
         setsWon: result.setsWon,
       });
 
-      modal.remove();
+      closeModal();
     };
 
     // 첫 번째 입력에 포커스
@@ -159,13 +175,21 @@ const Results = {
   },
 
   // 팀 문자열("A / B")을 NTRP 포함 HTML로 변환
-  formatTeamHtml(teamStr) {
+  formatTeamHtml(teamStr, isCustom) {
     const allPlayers = Storage.getPlayers();
     const names = teamStr.split(' / ');
     return names.map(name => {
       const pd = allPlayers.find(p => p.name === name);
-      const ntrp = (pd?.ntrp || 2.5).toFixed(1);
-      return `${this.escapeHtml(name)}<span class="text-yellow-600 text-xs ml-0.5">${ntrp}</span>`;
+      let badge = '';
+      if (isCustom) {
+        if (pd) {
+          badge = `<span class="ml-0.5">${genderBadge(pd.gender, 'text')}</span>`;
+        }
+      } else {
+        const ntrp = (pd?.ntrp || 2.5).toFixed(1);
+        badge = `<span class="text-yellow-600 text-xs ml-0.5">${ntrp}</span>`;
+      }
+      return `${this.escapeHtml(name)}${badge}`;
     }).join(' <span class="text-gray-300 mx-0.5">/</span> ');
   },
 

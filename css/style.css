@@ -253,6 +253,17 @@ header {
   min-height: 80px;
 }
 
+/* 멤버 본인 매치 하이라이트 */
+.my-match .match-card,
+.my-match.schedule-match-card {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+/* 스코어 바 */
+.match-score-bar {
+  min-height: 28px;
+}
+
 /* 모바일 최적화 */
 @media (max-width: 640px) {
   /* 대진표: 모바일에서 1열로 */
@@ -660,6 +671,29 @@ html.dark .schedule-match-card {
 html.dark .border-green-200 {
   border-color: #166534 !important;
 }
+
+/* 멤버 본인 매치 하이라이트 (다크모드) */
+html.dark .my-match .match-card,
+html.dark .my-match.schedule-match-card {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4), 0 2px 8px rgba(59, 130, 246, 0.2) !important;
+  border-color: #3b82f6 !important;
+}
+
+/* 스코어 바 (다크모드) */
+html.dark .match-score-bar {
+  background-color: rgba(31, 41, 55, 0.5) !important;
+  border-color: rgba(75, 85, 99, 0.4) !important;
+}
+
+/* 스코어 색상 (다크모드) */
+html.dark .match-score.text-green-600 { color: #4ade80 !important; }
+html.dark .match-score.text-green-700 { color: #4ade80 !important; }
+html.dark .match-score.text-gray-400 { color: #9ca3af !important; }
+html.dark .match-score.text-gray-500 { color: #9ca3af !important; }
+html.dark .match-score.bg-green-100 { background-color: rgba(22, 163, 74, 0.15) !important; }
+html.dark .match-score.bg-gray-100 { background-color: rgba(107, 114, 128, 0.15) !important; }
+html.dark .match-score.bg-yellow-100 { background-color: rgba(202, 138, 4, 0.15) !important; }
+html.dark .match-score.text-yellow-600 { color: #facc15 !important; }
 
 /* 멤버 교환 선택 */
 html.dark .swap-player:hover {

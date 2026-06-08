@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="color-scheme" content="only light">
   <meta name="theme-color" content="#ffffff" id="meta-theme-color">
-  <title>ESSTC</title>
+  <title>해태클럽</title>
   <script>
     // 페이지 렌더 전 테마 적용 (깜빡임 방지)
     (function() {
@@ -64,7 +64,7 @@
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
             <span class="header-logo-bg inline-flex w-7 h-7 rounded-lg flex-shrink-0"></span>
-            ESSTC
+            해태클럽
           </h2>
           <button id="menu-close" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition text-gray-400">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -118,7 +118,7 @@
           <!-- 중앙: 로고 -->
           <h1 class="text-lg font-extrabold bg-gradient-to-r from-green-800 to-green-700 bg-clip-text text-transparent flex items-center gap-1.5">
             <span class="header-logo-bg inline-flex w-7 h-7 rounded-lg flex-shrink-0"></span>
-            <span>ESSTC</span>
+            <span>해태클럽</span>
           </h1>
           <!-- 우측: 테마 전환 + 로그아웃 -->
           <div class="flex items-center gap-1">
@@ -159,6 +159,10 @@
             class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-700 active:bg-green-50/50 rounded-t-lg">
             대진표
           </button>
+          <button data-tab="stats"
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-700 active:bg-green-50/50 rounded-t-lg">
+            통계
+          </button>
         </nav>
       </div>
     </header>
@@ -172,6 +176,7 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/roles-config.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/utils.js"></script>
   <script src="js/results.js"></script>
   <script src="js/players.js"></script>
   <script src="js/tournament.js"></script>
@@ -179,6 +184,7 @@
   <script src="js/schedule.js"></script>
   <script src="js/custom-bracket.js"></script>
   <script src="js/calendar.js"></script>
+  <script src="js/stats.js"></script>
   <script src="js/app.js"></script>
   <script src="js/auth.js"></script>
   <script>

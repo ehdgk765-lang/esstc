@@ -69,8 +69,8 @@ const Auth = {
           <div class="relative inline-block mb-4">
             <div class="auth-logo-bg w-28 h-28 rounded-3xl mx-auto" role="img" aria-label="Tennis"></div>
           </div>
-          <h1 class="text-2xl font-extrabold bg-gradient-to-r from-green-800 to-green-700 bg-clip-text text-transparent">ESSTC</h1>
-          <p class="text-sm text-gray-400 mt-1">은평 더블에스 클럽에 오신 것을 환영합니다!</p>
+          <h1 class="text-2xl font-extrabold bg-gradient-to-r from-green-800 to-green-700 bg-clip-text text-transparent">Happy Tennis</h1>
+          <p class="text-sm text-gray-400 mt-1">해태 클럽에 오신 것을 환영합니다!</p>
         </div>
 
         <!-- 로그인 카드 -->

@@ -3,6 +3,7 @@ const Storage = {
   KEYS: {
     PLAYERS: 'tennis_players',
     TOURNAMENTS: 'tennis_tournaments',
+    TEAMS: 'tennis_teams',
     EVENTS: 'tennis_events',
     COURTS: 'tennis_courts',
   },
@@ -39,6 +40,21 @@ const Storage = {
     }
     const result = this.set(this.KEYS.PLAYERS, players);
     this.syncToFirestore('players', players);
+    return result;
+  },
+
+  // 팀 관련
+  getTeams() {
+    return this.get(this.KEYS.TEAMS) || [];
+  },
+
+  saveTeams(teams) {
+    if (typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
+      console.warn('멤버는 팀 목록을 수정할 수 없습니다.');
+      return false;
+    }
+    const result = this.set(this.KEYS.TEAMS, teams);
+    this.syncToFirestore('teams', teams);
     return result;
   },
 
@@ -221,6 +237,7 @@ const Storage = {
     // 이전 세션 데이터 잔존 방지: Firestore 로드 전 localStorage 초기화
     localStorage.removeItem(this.KEYS.PLAYERS);
     localStorage.removeItem(this.KEYS.TOURNAMENTS);
+    localStorage.removeItem(this.KEYS.TEAMS);
     localStorage.removeItem(this.KEYS.EVENTS);
     localStorage.removeItem(this.KEYS.COURTS);
 
@@ -229,12 +246,14 @@ const Storage = {
         base.doc('players').get(),
         base.doc('tournaments').get(),
         base.doc('events').get(),
-        base.doc('courts').get()
+        base.doc('courts').get(),
+        base.doc('teams').get()
       ]);
       var pDoc = results[0];
       var tDoc = results[1];
       var eDoc = results[2];
       var cDoc = results[3];
+      var tmDoc = results[4];
 
       if (pDoc.exists) {
         var d = pDoc.data();
@@ -248,6 +267,7 @@ const Storage = {
         // 멤버: 공유 데이터가 아직 없으면 빈 상태
         localStorage.setItem(this.KEYS.PLAYERS, JSON.stringify([]));
         localStorage.setItem(this.KEYS.TOURNAMENTS, JSON.stringify([]));
+        localStorage.setItem(this.KEYS.TEAMS, JSON.stringify([]));
         localStorage.setItem(this.KEYS.EVENTS, JSON.stringify([]));
         localStorage.setItem(this.KEYS.COURTS, JSON.stringify([]));
         return;
@@ -283,6 +303,15 @@ const Storage = {
         var localC = this.getCourts();
         if (localC.length > 0) this.syncToFirestore('courts', localC);
       }
+
+      if (tmDoc.exists) {
+        var dtm = tmDoc.data();
+        var tmItems = dtm.json ? JSON.parse(dtm.json) : (dtm.items || []);
+        localStorage.setItem(this.KEYS.TEAMS, JSON.stringify(tmItems));
+      } else if (!RolesConfig.isMember()) {
+        var localTm = this.getTeams();
+        if (localTm.length > 0) this.syncToFirestore('teams', localTm);
+      }
     } catch (err) {
       console.error('Firestore load error:', err);
     }
@@ -300,17 +329,20 @@ const Storage = {
         userBase.doc('players').get(),
         userBase.doc('tournaments').get(),
         userBase.doc('events').get(),
-        userBase.doc('courts').get()
+        userBase.doc('courts').get(),
+        userBase.doc('teams').get()
       ]);
       var pDoc = results[0];
       var tDoc = results[1];
       var eDoc = results[2];
       var cDoc = results[3];
+      var tmDoc = results[4];
 
       var players = [];
       var tournaments = [];
       var events = [];
       var courts = [];
+      var teams = [];
 
       if (pDoc.exists) {
         var d = pDoc.data();
@@ -328,17 +360,23 @@ const Storage = {
         var dc = cDoc.data();
         courts = dc.json ? JSON.parse(dc.json) : (dc.items || []);
       }
+      if (tmDoc.exists) {
+        var dtm = tmDoc.data();
+        teams = dtm.json ? JSON.parse(dtm.json) : (dtm.items || []);
+      }
 
       // 공유 경로에 저장
       await Promise.all([
         sharedBase.doc('players').set({ json: JSON.stringify(players) }),
         sharedBase.doc('tournaments').set({ json: JSON.stringify(tournaments) }),
         sharedBase.doc('events').set({ json: JSON.stringify(events) }),
-        sharedBase.doc('courts').set({ json: JSON.stringify(courts) })
+        sharedBase.doc('courts').set({ json: JSON.stringify(courts) }),
+        sharedBase.doc('teams').set({ json: JSON.stringify(teams) })
       ]);
 
       localStorage.setItem(this.KEYS.PLAYERS, JSON.stringify(players));
       localStorage.setItem(this.KEYS.TOURNAMENTS, JSON.stringify(tournaments));
+      localStorage.setItem(this.KEYS.TEAMS, JSON.stringify(teams));
       localStorage.setItem(this.KEYS.EVENTS, JSON.stringify(events));
       localStorage.setItem(this.KEYS.COURTS, JSON.stringify(courts));
       // console.log('마이그레이션 완료');
@@ -417,14 +455,27 @@ const Storage = {
       var newJson = JSON.stringify(items);
       if (current !== newJson) {
         localStorage.setItem(self.KEYS.COURTS, newJson);
-        // console.log('실시간 동기화: 코트 데이터 업데이트');
         self._onRemoteChange();
       }
     }, function(err) {
       console.error('Courts realtime sync error:', err);
     });
 
-    // console.log('실시간 동기화 시작');
+    // 팀 데이터 실시간 리스너
+    this._unsubTeams = base.doc('teams').onSnapshot(function(doc) {
+      if (doc.metadata.hasPendingWrites) return;
+      if (!doc.exists) return;
+      var d = doc.data();
+      var items = d.json ? JSON.parse(d.json) : (d.items || []);
+      var current = localStorage.getItem(self.KEYS.TEAMS);
+      var newJson = JSON.stringify(items);
+      if (current !== newJson) {
+        localStorage.setItem(self.KEYS.TEAMS, newJson);
+        self._onRemoteChange();
+      }
+    }, function(err) {
+      console.error('Teams realtime sync error:', err);
+    });
   },
 
   stopRealtimeSync() {
@@ -444,7 +495,10 @@ const Storage = {
       this._unsubCourts();
       this._unsubCourts = null;
     }
-    // console.log('실시간 동기화 중지');
+    if (this._unsubTeams) {
+      this._unsubTeams();
+      this._unsubTeams = null;
+    }
   },
 
   // 원격 변경 시 UI 갱신 (debounce 300ms + 로컬 쓰기 직후 무시)

@@ -4,6 +4,7 @@ const CustomBracket = {
     bracketSize: 8,
     setCount: 1,
     isDoubles: false,
+    isTeamMode: false,
     tournamentName: '',
     placements: {},   // singles: { slotIdx: "name" }, doubles: { slotIdx: "A / B" }
   },
@@ -13,7 +14,9 @@ const CustomBracket = {
       bracketSize: 8,
       setCount: 1,
       isDoubles: false,
+      isTeamMode: false,
       tournamentName: '',
+      gameDate: '',
       placements: {},
     };
   },
@@ -31,7 +34,19 @@ const CustomBracket = {
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">경기 방식</label>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">대회 날짜</label>
+          <input type="date" id="cb-date" value="${st.gameDate || new Date().toISOString().slice(0, 10)}"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-semibold text-gray-700">경기 방식</label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" id="cb-team-mode" ${st.isTeamMode ? 'checked' : ''} class="w-3.5 h-3.5 text-green-600 rounded border-gray-300 focus:ring-green-500">
+              <span class="text-xs text-gray-500">팀전</span>
+            </label>
+          </div>
           <div class="flex gap-3">
             ${[false, true].map(d => `
               <label class="flex-1 cursor-pointer">
@@ -89,6 +104,15 @@ const CustomBracket = {
         </button>
       </form>`);
 
+    // Bind 팀전 toggle
+    const teamModeCb = container.querySelector('#cb-team-mode');
+    if (teamModeCb) {
+      teamModeCb.onchange = () => {
+        this._state.isTeamMode = teamModeCb.checked;
+        this.renderBracketPreview(container.querySelector('#cb-bracket-preview'));
+      };
+    }
+
     // Bind doubles toggle
     container.querySelectorAll('input[name="cb-doubles"]').forEach(r => {
       r.onchange = () => {
@@ -122,6 +146,7 @@ const CustomBracket = {
     container.querySelector('#custom-bracket-form').onsubmit = (e) => {
       e.preventDefault();
       this._state.tournamentName = container.querySelector('#cb-name').value.trim();
+      this._state.gameDate = container.querySelector('#cb-date').value || new Date().toISOString().slice(0, 10);
       this._state.setCount = parseInt(container.querySelector('input[name="cb-setCount"]:checked').value);
 
       const tournament = this.createTournament();
@@ -220,12 +245,11 @@ const CustomBracket = {
     const scrollContainer = previewContainer.querySelector('.bracket-container');
     const scrollHint = previewContainer.querySelector('.bracket-scroll-hint');
     if (scrollContainer && scrollHint) {
-      const checkScroll = () => {
+      scrollContainer.onscroll = () => {
         const atEnd = scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 10;
         scrollHint.classList.toggle('scrolled-end', atEnd);
       };
-      scrollContainer.onscroll = checkScroll;
-      checkScroll();
+      scrollContainer.onscroll();
     }
   },
 
@@ -234,10 +258,22 @@ const CustomBracket = {
     const borderClass = isFirst ? 'border-b border-gray-100' : '';
 
     if (playerName) {
+      let teamBadge = '';
+      if (this._state.isTeamMode) {
+        const _teamMap = buildTeamMap();
+        const names = playerName.split(' / ');
+        const tns = [...new Set(names.map(n => _teamMap[n]).filter(Boolean))];
+        if (tns.length > 0) {
+          teamBadge = tns.map(tn => `<span class="text-xs px-1 py-0.5 rounded bg-green-50 text-green-600 border border-green-200 whitespace-nowrap flex-shrink-0">${Results.escapeHtml(tn)}</span>`).join(' ');
+        }
+      }
       return `
         <div class="match-player flex items-center justify-between px-3 py-2 ${borderClass} cursor-pointer hover:bg-green-50 transition cb-slot" data-slot="${index}">
-          <span class="truncate text-sm text-gray-800 font-medium">${Results.escapeHtml(playerName)}</span>
-          <button type="button" class="ml-2 text-red-400 hover:text-red-600 text-xs cb-remove" data-slot="${index}">✕</button>
+          <div class="flex items-center gap-1 min-w-0">
+            <span class="truncate text-sm text-gray-800 font-medium">${Results.escapeHtml(playerName)}</span>
+            ${teamBadge}
+          </div>
+          <button type="button" class="ml-2 text-red-400 hover:text-red-600 text-xs cb-remove flex-shrink-0" data-slot="${index}">✕</button>
         </div>`;
     }
     return `
@@ -271,7 +307,7 @@ const CustomBracket = {
   _commitPick(slotIndex, value, previewContainer) {
     this._state.placements[slotIndex] = value;
     const existing = document.querySelector('.cb-player-picker');
-    if (existing) existing.remove();
+    if (existing) { existing.remove(); unlockScroll(); }
     this.renderBracketPreview(previewContainer);
     this._updatePlacementCount(previewContainer.closest('form')?.parentElement || previewContainer.parentElement);
   },
@@ -280,8 +316,9 @@ const CustomBracket = {
     const existing = document.querySelector('.cb-player-picker');
     if (existing) existing.remove();
 
-    const allPlayers = Storage.getPlayers();
+    const allPlayers = Storage.getPlayers().sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     const placedNames = this.getPlacedNames();
+    const teamMap = buildTeamMap();
 
     const picker = document.createElement('div');
     picker.className = 'cb-player-picker fixed inset-0 z-50 flex items-end sm:items-center justify-center';
@@ -305,12 +342,14 @@ const CustomBracket = {
           <div class="overflow-y-auto flex-1 divide-y divide-gray-50">
             ${allPlayers.map(p => {
               const isPlaced = placedNames.has(p.name);
+              const tn = teamMap[p.name];
               return `
                 <div class="cb-pick-option flex items-center px-3 py-2.5 ${isPlaced ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-green-50'} transition"
                   data-name="${Results.escapeHtml(p.name)}" data-placed="${isPlaced}">
                   <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
-                  <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-medium ${p.gender === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}">${p.gender === 'M' ? '남' : '여'}</span>
+                  <span class="ml-2">${genderBadge(p.gender)}</span>
                   <span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
+                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-600 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isPlaced ? '<span class="ml-auto text-xs text-gray-400">배치됨</span>' : ''}
                 </div>`;
             }).join('')}
@@ -321,16 +360,17 @@ const CustomBracket = {
       </div>`;
 
     document.body.appendChild(picker);
-    picker.addEventListener('click', (e) => { if (e.target === picker) picker.remove(); });
-    picker.querySelector('.cb-picker-cancel').onclick = () => picker.remove();
+    lockScroll();
+    picker.addEventListener('click', (e) => { if (e.target === picker) { picker.remove(); unlockScroll(); } });
+    picker.querySelector('.cb-picker-cancel').onclick = () => { picker.remove(); unlockScroll(); };
 
     const searchInput = picker.querySelector('#cb-custom-name');
     searchInput.focus();
 
     searchInput.oninput = () => {
-      const q = searchInput.value.trim().toLowerCase();
+      const q = searchInput.value.trim();
       picker.querySelectorAll('.cb-pick-option').forEach(opt => {
-        opt.style.display = (!q || opt.dataset.name.toLowerCase().includes(q)) ? '' : 'none';
+        opt.style.display = (!q || matchesKoreanSearch(opt.dataset.name, q)) ? '' : 'none';
       });
     };
 
@@ -355,7 +395,8 @@ const CustomBracket = {
     const existing = document.querySelector('.cb-player-picker');
     if (existing) existing.remove();
 
-    const allPlayers = Storage.getPlayers();
+    const allPlayers = Storage.getPlayers().sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    const teamMap = buildTeamMap();
     const usedNames = this._getPlacedPlayerNames();
     // 기존 배치에서 현재 슬롯 멤버는 제외 (재선택 가능)
     const currentVal = this._state.placements[slotIndex];
@@ -385,7 +426,7 @@ const CustomBracket = {
                 return `<div class="cb-doubles-slot flex items-center justify-between px-3 py-2 border-2 border-green-400 bg-green-50 rounded-xl" data-idx="${i}">
                   <div class="flex items-center gap-1 min-w-0">
                     <span class="text-sm font-medium text-gray-800 truncate">${Results.escapeHtml(name)}</span>
-                    ${pd ? `<span class="text-xs px-1 py-0.5 rounded font-medium ${pd.gender === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'} flex-shrink-0">${pd.gender === 'M' ? '남' : '여'}</span>` : ''}
+                    ${pd ? `<span class="flex-shrink-0">${genderBadge(pd.gender)}</span>` : ''}
                   </div>
                   <button type="button" class="cb-doubles-remove ml-1 text-red-400 hover:text-red-600 text-xs flex-shrink-0" data-idx="${i}">✕</button>
                 </div>`;
@@ -398,7 +439,7 @@ const CustomBracket = {
 
           <div class="mb-3">
             <div class="flex gap-2">
-              <input type="text" id="cb-doubles-search" placeholder="이름 검색 또는 직접 입력..."
+              <input type="text" autocomplete="off" id="cb-doubles-search" placeholder="이름 검색 또는 직접 입력..."
                 class="cb-picker-search flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
               <button type="button" id="cb-doubles-custom-add"
                 class="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition whitespace-nowrap">추가</button>
@@ -410,12 +451,14 @@ const CustomBracket = {
             <div class="overflow-y-auto flex-1 divide-y divide-gray-50">
               ${allPlayers.map(p => {
                 const isUsed = allUsed.has(p.name);
+                const tn = teamMap[p.name];
                 return `
                   <div class="cb-pick-option flex items-center px-3 py-2.5 ${isUsed ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-green-50'} transition"
                     data-name="${Results.escapeHtml(p.name)}" data-used="${isUsed}">
                     <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
-                    <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-medium ${p.gender === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}">${p.gender === 'M' ? '남' : '여'}</span>
+                    <span class="ml-2">${genderBadge(p.gender)}</span>
                     <span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
+                    ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-600 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
                     ${isUsed ? '<span class="ml-auto text-xs text-gray-400">선택됨</span>' : ''}
                   </div>`;
               }).join('')}
@@ -430,7 +473,7 @@ const CustomBracket = {
     };
 
     const refreshPicker = () => {
-      picker.innerHTML = renderPickerContent();
+      patchDOM(picker, renderPickerContent());
       bindPickerEvents();
     };
 
@@ -442,15 +485,15 @@ const CustomBracket = {
     };
 
     const bindPickerEvents = () => {
-      picker.querySelector('.cb-picker-cancel').onclick = () => picker.remove();
+      picker.querySelector('.cb-picker-cancel').onclick = () => { picker.remove(); unlockScroll(); };
 
       const searchInput = picker.querySelector('#cb-doubles-search');
       if (searchInput) searchInput.focus();
 
       searchInput.oninput = () => {
-        const q = searchInput.value.trim().toLowerCase();
+        const q = searchInput.value.trim();
         picker.querySelectorAll('.cb-pick-option').forEach(opt => {
-          opt.style.display = (!q || opt.dataset.name.toLowerCase().includes(q)) ? '' : 'none';
+          opt.style.display = (!q || matchesKoreanSearch(opt.dataset.name, q)) ? '' : 'none';
         });
       };
 
@@ -494,7 +537,8 @@ const CustomBracket = {
 
     picker.innerHTML = renderPickerContent();
     document.body.appendChild(picker);
-    picker.addEventListener('click', (e) => { if (e.target === picker) picker.remove(); });
+    lockScroll();
+    picker.addEventListener('click', (e) => { if (e.target === picker) { picker.remove(); unlockScroll(); } });
     bindPickerEvents();
   },
 
@@ -540,6 +584,7 @@ const CustomBracket = {
       format: 'tournament',
       setCount,
       isDoubles,
+      gameDate: this._state.gameDate || new Date().toISOString().slice(0, 10),
       players: nonNull,
       status: 'active',
       createdAt: new Date().toISOString(),
