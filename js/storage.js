@@ -138,16 +138,16 @@ const Storage = {
     return result;
   },
 
-  // 정규 운동 여부 판별
+  // 정규 일정 여부 판별
   isRegularEvent(ev) {
-    return ev && ev.title && ev.title.indexOf('정규 운동') >= 0;
+    return ev && ev.title && ev.title.indexOf('정규 일정') >= 0;
   },
 
-  // 단일 이벤트 추가 (멤버도 호출 가능, 정규 운동 제외) - Firestore Transaction 기반
+  // 단일 이벤트 추가 (멤버도 호출 가능, 정규 일정 제외) - Firestore Transaction 기반
   async addEvent(newEvent) {
     var self = this;
     if (this.isRegularEvent(newEvent) && typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
-      console.warn('멤버는 정규 운동 일정을 추가할 수 없습니다.');
+      console.warn('멤버는 정규 일정 일정을 추가할 수 없습니다.');
       return false;
     }
     var base = this._getBase();
@@ -194,7 +194,7 @@ const Storage = {
     return true;
   },
 
-  // 단일 이벤트 수정 (멤버도 호출 가능, 정규 운동 제외) - Firestore Transaction 기반
+  // 단일 이벤트 수정 (멤버도 호출 가능, 정규 일정 제외) - Firestore Transaction 기반
   async editEvent(eventId, updatedFields) {
     var self = this;
     var base = this._getBase();
@@ -212,7 +212,7 @@ const Storage = {
           }
           for (var i = 0; i < events.length; i++) {
             if (events[i].id === eventId) {
-              // 멤버 수정 제한: 정규 운동 불가 + 본인 등록 일정만 수정 가능
+              // 멤버 수정 제한: 정규 일정 불가 + 본인 등록 일정만 수정 가능
               if (typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
                 if (self.isRegularEvent(events[i])) return;
                 var myName = typeof App !== 'undefined' ? App.getMemberName() : '';
@@ -274,7 +274,7 @@ const Storage = {
     return true;
   },
 
-  // 단일 이벤트 삭제 (멤버도 호출 가능, 정규 운동 제외) - Firestore Transaction 기반
+  // 단일 이벤트 삭제 (멤버도 호출 가능, 정규 일정 제외) - Firestore Transaction 기반
   async removeEvent(eventId) {
     var self = this;
     var base = this._getBase();
@@ -290,7 +290,7 @@ const Storage = {
             var d = doc.data();
             events = d.json ? JSON.parse(d.json) : (d.items || []);
           }
-          // 멤버 삭제 제한: 정규 운동 불가 + 본인 등록 일정만 삭제 가능
+          // 멤버 삭제 제한: 정규 일정 불가 + 본인 등록 일정만 삭제 가능
           var target = events.find(function(e) { return e.id === eventId; });
           if (target && typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
             if (self.isRegularEvent(target)) { finalEvents = events; return; }

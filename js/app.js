@@ -253,10 +253,10 @@ const App = {
     patchDOM(container,
       '<div class="max-w-lg mx-auto">' +
         '<h2 class="text-2xl font-bold text-gray-800 mb-6">설정</h2>' +
-        // 정규 운동 등록
+        // 정규 일정 등록
         '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-100/30 border border-white/60 mb-4">' +
           '<div class="px-4 py-3">' +
-            '<h3 class="font-semibold text-gray-700 text-sm mb-3">정규 운동 등록</h3>' +
+            '<h3 class="font-semibold text-gray-700 text-sm mb-3">정규 일정 등록</h3>' +
             '<div class="flex items-center gap-2">' +
               '<select id="reg-year-select" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700">' +
                 '<option value="' + (curYear - 1) + '">' + (curYear - 1) + '년</option>' +
@@ -266,14 +266,14 @@ const App = {
               '<select id="reg-month-select" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700">' +
                 monthOptions +
               '</select>' +
-              '<button id="reg-exercise-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-blue-200/50">정규 운동 등록</button>' +
+              '<button id="reg-exercise-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-blue-200/50">정규 일정 등록</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
-        // 정규 운동 확인
+        // 정규 일정 확인
         '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-100/30 border border-white/60 mb-4">' +
           '<div class="px-4 py-3">' +
-            '<h3 class="font-semibold text-gray-700 text-sm mb-3">정규 운동 확인</h3>' +
+            '<h3 class="font-semibold text-gray-700 text-sm mb-3">정규 일정 확인</h3>' +
             '<div class="flex items-center gap-2 mb-2">' +
               '<select id="reg-check-year" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700">' +
                 '<option value="' + (curYear - 1) + '">' + (curYear - 1) + '년</option>' +
@@ -293,7 +293,7 @@ const App = {
                   }).join('')) +
               '</select>' +
               '<select id="reg-check-time" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700"></select>' +
-              '<button id="reg-check-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-blue-200/50">정규 운동 확인</button>' +
+              '<button id="reg-check-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-blue-200/50">정규 일정 확인</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -366,7 +366,7 @@ const App = {
                 }).join('')) +
           '</div>' +
         '</div>' +
-        // 역할 관리
+        /* [역할 관리 - 비활성화] 필요 시 주석 해제하여 사용
         '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-100/30 border border-white/60 mt-4">' +
           '<div class="px-4 py-3 border-b border-gray-100">' +
             '<h3 class="font-semibold text-gray-700 text-sm mb-2">역할 관리</h3>' +
@@ -383,8 +383,10 @@ const App = {
             '<p class="text-gray-400 text-center py-4 text-sm">불러오는 중...</p>' +
           '</div>' +
         '</div>' +
+        */
       '</div>');
 
+    /* [역할 관리 - 비활성화] 필요 시 주석 해제하여 사용
     // 역할 목록 로드
     self._loadRoleList();
 
@@ -414,6 +416,7 @@ const App = {
     roleEmailInput.onkeydown = function(e) {
       if (e.key === 'Enter') addRole();
     };
+    */
 
     // 코트 추가
     var courtInput = document.getElementById('court-name-input');
@@ -564,7 +567,7 @@ const App = {
       };
     });
 
-    // 정규 운동 등록 버튼
+    // 정규 일정 등록 버튼
     var regBtn = document.getElementById('reg-exercise-btn');
     if (regBtn) {
       regBtn.onclick = function() {
@@ -574,7 +577,7 @@ const App = {
       };
     }
 
-    // 정규 운동 확인 - 일(day) 옵션 동적 생성
+    // 정규 일정 확인 - 일(day) 옵션 동적 생성
     var regCheckYear = document.getElementById('reg-check-year');
     var regCheckMonth = document.getElementById('reg-check-month');
     var regCheckDay = document.getElementById('reg-check-day');
@@ -630,7 +633,7 @@ const App = {
     regCheckYear.onchange = updateDayOptions;
     regCheckMonth.onchange = updateDayOptions;
 
-    // 정규 운동 확인 - 코트 선택 시 시간대 옵션 동적 갱신
+    // 정규 일정 확인 - 코트 선택 시 시간대 옵션 동적 갱신
     var regCheckCourt = document.getElementById('reg-check-court');
     var regCheckTime = document.getElementById('reg-check-time');
     function updateTimeOptions() {
@@ -659,7 +662,7 @@ const App = {
     updateTimeOptions();
     regCheckCourt.onchange = updateTimeOptions;
 
-    // 정규 운동 확인 버튼
+    // 정규 일정 확인 버튼
     var regCheckBtn = document.getElementById('reg-check-btn');
     if (regCheckBtn) {
       regCheckBtn.onclick = function() {
@@ -698,7 +701,7 @@ const App = {
       (court.slots || []).forEach(function(slot) {
         var timeLabel = slot.startTime.replace(':00', '') + '~' + slot.endTime.replace(':00', '');
         templates.push({
-          title: court.name + ' ' + timeLabel + ' 정규 운동',
+          title: court.name + ' ' + timeLabel + ' 정규 일정',
           startTime: slot.startTime,
           endTime: slot.endTime,
           color: slot.color
@@ -741,7 +744,7 @@ const App = {
     }
 
     if (newCount === 0) {
-      alert((month + 1) + '월 주말 정규 운동이 이미 모두 등록되어 있습니다.');
+      alert((month + 1) + '월 주말 정규 일정이 이미 모두 등록되어 있습니다.');
       return;
     }
 
@@ -752,7 +755,7 @@ const App = {
     });
 
     Storage.saveEvents(events);
-    alert((month + 1) + '월 주말 정규 운동 ' + newCount + '건이 등록되었습니다.');
+    alert((month + 1) + '월 주말 정규 일정 ' + newCount + '건이 등록되었습니다.');
   },
 
   handleRegularExerciseCheck(year, month, day, court, time) {
@@ -1547,11 +1550,11 @@ const App = {
           <label class="block text-sm font-semibold text-gray-700 mb-2">시간 설정</label>
           <div class="flex items-center gap-2">
             <select id="start-time" class="flex-1 px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 bg-white">
-              ${this.generateTimeOptions('08:00')}
+              ${this.generateTimeOptions('06:00')}
             </select>
             <span class="text-gray-500 font-medium">~</span>
             <select id="end-time" class="flex-1 px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 bg-white">
-              ${this.generateTimeOptions('10:00')}
+              ${this.generateTimeOptions('09:00')}
             </select>
           </div>
           <p id="time-info" class="text-xs text-gray-500 mt-1"></p>
