@@ -4,6 +4,7 @@ const NTRP_VALUES = [2.0, 2.5, 3.0, 3.5, 4.0];
 const Players = {
   render(container) {
     const players = Storage.getPlayers();
+    players.sort(function(a, b) { return (a.name || '').localeCompare(b.name || '', 'ko'); });
     const males = players.filter(p => p.gender === 'M');
     const females = players.filter(p => p.gender === 'F');
 
