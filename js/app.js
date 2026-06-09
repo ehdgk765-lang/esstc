@@ -144,6 +144,26 @@ const App = {
     if (settingsBtn) {
       settingsBtn.classList.toggle('hidden', !RolesConfig.isAdmin());
     }
+
+    // 멤버: 좌측 메뉴 버튼 숨기고 멤버 정보 표시
+    var menuBtn = document.getElementById('menu-btn');
+    var memberHeaderInfo = document.getElementById('member-header-info');
+    if (menuBtn && memberHeaderInfo) {
+      if (RolesConfig.isMember()) {
+        menuBtn.classList.add('hidden');
+        memberHeaderInfo.classList.remove('hidden');
+        memberHeaderInfo.classList.add('flex');
+        var nameEl = document.getElementById('member-header-name');
+        if (nameEl) {
+          var mName = this.getMemberName();
+          nameEl.textContent = (mName || '멤버') + '님';
+        }
+      } else {
+        menuBtn.classList.remove('hidden');
+        memberHeaderInfo.classList.add('hidden');
+        memberHeaderInfo.classList.remove('flex');
+      }
+    }
   },
 
   bindTabs() {
