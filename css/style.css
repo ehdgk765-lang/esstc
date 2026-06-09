@@ -319,10 +319,11 @@ header {
 
   /* 모달 작은 화면 대응 */
   #score-modal > div {
-    margin: 8px;
+    margin: 0;
     padding: 16px !important;
-    max-height: 90vh;
+    padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* 순위표 글자 크기 */

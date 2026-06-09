@@ -11,7 +11,7 @@ const Results = {
 
     const modal = document.createElement('div');
     modal.id = 'score-modal';
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4';
 
     const player1Name = match.player1 || 'BYE';
     const player2Name = match.player2 || 'BYE';
@@ -54,7 +54,7 @@ const Results = {
     }
 
     modal.innerHTML = `
-      <div class="bg-white/95 backdrop-blur-md rounded-t-2xl sm:rounded-2xl shadow-2xl shadow-blue-100/30 max-w-sm w-full p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
+      <div class="score-modal-inner bg-white/95 backdrop-blur-md rounded-t-2xl sm:rounded-2xl shadow-2xl shadow-blue-100/30 max-w-sm w-full p-5 sm:p-6 overflow-y-auto">
         <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
         <h3 class="text-lg font-bold text-center mb-4">스코어 입력</h3>
         <div class="space-y-1.5 mb-4">
@@ -81,7 +81,34 @@ const Results = {
     document.body.appendChild(modal);
     lockScroll();
 
-    const closeModal = () => { modal.remove(); unlockScroll(); };
+    // 모바일 키보드 대응: visualViewport로 모달 높이 동적 조정
+    const innerDiv = modal.querySelector('.score-modal-inner');
+    const adjustForKeyboard = () => {
+      if (window.visualViewport) {
+        const vh = window.visualViewport.height;
+        const offsetTop = window.visualViewport.offsetTop;
+        modal.style.height = vh + 'px';
+        modal.style.top = offsetTop + 'px';
+        modal.style.bottom = 'auto';
+        innerDiv.style.maxHeight = (vh - 16) + 'px';
+      }
+    };
+    if (window.visualViewport) {
+      adjustForKeyboard();
+      window.visualViewport.addEventListener('resize', adjustForKeyboard);
+      window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+    } else {
+      innerDiv.style.maxHeight = '90vh';
+    }
+
+    const closeModal = () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustForKeyboard);
+        window.visualViewport.removeEventListener('scroll', adjustForKeyboard);
+      }
+      modal.remove();
+      unlockScroll();
+    };
     modal.querySelector('#score-cancel').onclick = closeModal;
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
@@ -185,7 +212,7 @@ const Results = {
         if (pd) {
           badge = `<span class="ml-0.5">${genderBadge(pd.gender, 'text')}</span>`;
         }
-      } else {
+      } else if (!RolesConfig.isMember()) {
         const ntrp = (pd?.ntrp || 2.5).toFixed(1);
         badge = `<span class="text-yellow-600 text-xs ml-0.5">${ntrp}</span>`;
       }

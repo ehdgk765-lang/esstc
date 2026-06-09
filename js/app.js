@@ -42,10 +42,11 @@ const App = {
 
     var modal = document.createElement('div');
     modal.id = 'member-name-modal';
-    modal.className = 'fixed inset-0 z-[60] flex items-center justify-center p-4';
+    modal.className = 'fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4';
     modal.innerHTML =
       '<div class="absolute inset-0 bg-black/50"></div>' +
-      '<div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">' +
+      '<div class="member-name-inner relative bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4 overflow-y-auto">' +
+        '<div class="w-10 h-1 bg-gray-300 rounded-full mx-auto sm:hidden"></div>' +
         '<button id="member-name-close" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition" title="닫기">' +
           '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
         '</button>' +
@@ -58,6 +59,32 @@ const App = {
 
     document.body.appendChild(modal);
     lockScroll();
+
+    // 모바일 키보드 대응: visualViewport로 모달 높이 동적 조정
+    var innerDiv = modal.querySelector('.member-name-inner');
+    var adjustForKeyboard = function() {
+      if (window.visualViewport) {
+        var vh = window.visualViewport.height;
+        var offsetTop = window.visualViewport.offsetTop;
+        modal.style.height = vh + 'px';
+        modal.style.top = offsetTop + 'px';
+        modal.style.bottom = 'auto';
+        innerDiv.style.maxHeight = (vh - 16) + 'px';
+      }
+    };
+    if (window.visualViewport) {
+      adjustForKeyboard();
+      window.visualViewport.addEventListener('resize', adjustForKeyboard);
+      window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+    } else {
+      innerDiv.style.maxHeight = '90vh';
+    }
+    modal._vpCleanup = function() {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustForKeyboard);
+        window.visualViewport.removeEventListener('scroll', adjustForKeyboard);
+      }
+    };
 
     setTimeout(function() {
       document.getElementById('member-name-input').focus();
@@ -82,6 +109,7 @@ const App = {
 
       self.setMemberName(found);
       self.applyRoleUI();
+      if (modal._vpCleanup) modal._vpCleanup();
       modal.remove();
       unlockScroll();
       self.navigate(RolesConfig.getDefaultTab());
@@ -95,6 +123,7 @@ const App = {
       }
     });
     document.getElementById('member-name-close').addEventListener('click', function() {
+      if (modal._vpCleanup) modal._vpCleanup();
       modal.remove();
       unlockScroll();
       localStorage.removeItem(Storage.KEYS.PLAYERS);

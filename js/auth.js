@@ -32,6 +32,7 @@ const Auth = {
         // 실시간 동기화 시작
         Storage.startRealtimeSync();
 
+        if (authEl._vpCleanup) authEl._vpCleanup();
         authEl.style.display = 'none';
         appEl.style.display = '';
         if (!this.initialized) {
@@ -57,8 +58,9 @@ const Auth = {
   renderLogin() {
     const container = document.getElementById('auth-container');
     container.innerHTML = `
+      <div class="min-h-full flex items-center justify-center py-8 relative">
       <!-- 테마 토글 -->
-      <button id="auth-theme-toggle" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-xl bg-white/30 backdrop-blur-sm border border-white/40 hover:bg-white/50 transition-all" title="테마 전환" aria-label="테마 전환">
+      <button id="auth-theme-toggle" class="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-xl bg-white/30 backdrop-blur-sm border border-white/40 hover:bg-white/50 transition-all" title="테마 전환" aria-label="테마 전환">
         <svg class="auth-icon-sun w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
         </svg>
@@ -69,7 +71,7 @@ const Auth = {
 
       <div class="w-full max-w-sm mx-auto px-6">
         <!-- 로고 영역 -->
-        <div class="text-center mb-8">
+        <div id="auth-logo-section" class="text-center mb-8 transition-all duration-200 overflow-hidden">
           <div class="relative inline-block mb-4">
             <div class="auth-logo-bg w-28 h-28 rounded-3xl mx-auto" role="img" aria-label="Tennis"></div>
           </div>
@@ -114,6 +116,7 @@ const Auth = {
           <span id="auth-toggle-text">계정이 없으신가요?</span>
           <button type="button" id="auth-toggle-btn" class="text-blue-700 font-bold hover:underline ml-1">회원가입</button>
         </p>-->
+      </div>
       </div>`;
 
     // 로그인 페이지 테마 토글
@@ -142,6 +145,38 @@ const Auth = {
       if (iconMoon) iconMoon.style.display = isDark ? 'block' : 'none';
       if (metaColor) metaColor.content = isDark ? '#1e293b' : '#ffffff';
     };
+
+    // 모바일 키보드 대응: 키보드가 올라오면 로고 축소 + 컨테이너 리사이즈
+    if (window.visualViewport) {
+      const logoSection = container.querySelector('#auth-logo-section');
+      const initialHeight = window.visualViewport.height;
+      const handleAuthViewport = () => {
+        const vh = window.visualViewport.height;
+        const isKeyboard = vh < initialHeight * 0.75;
+        container.style.height = vh + 'px';
+        container.style.top = window.visualViewport.offsetTop + 'px';
+        if (logoSection) {
+          if (isKeyboard) {
+            logoSection.style.maxHeight = '0';
+            logoSection.style.marginBottom = '0';
+            logoSection.style.opacity = '0';
+          } else {
+            logoSection.style.maxHeight = '';
+            logoSection.style.marginBottom = '';
+            logoSection.style.opacity = '';
+          }
+        }
+      };
+      window.visualViewport.addEventListener('resize', handleAuthViewport);
+      window.visualViewport.addEventListener('scroll', handleAuthViewport);
+      // 로그아웃 시 정리를 위해 저장
+      container._vpCleanup = () => {
+        window.visualViewport.removeEventListener('resize', handleAuthViewport);
+        window.visualViewport.removeEventListener('scroll', handleAuthViewport);
+        container.style.height = '';
+        container.style.top = '';
+      };
+    }
 
     // 이메일 기억하기: 저장된 이메일 복원
     const emailInput = container.querySelector('#auth-email');
