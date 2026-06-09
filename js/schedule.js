@@ -1266,7 +1266,7 @@ const Schedule = {
     let selectedGameType = isSingles ? 'MS' : 'XD';
 
     const modal = document.createElement('div');
-    modal.className = 'add-match-modal fixed inset-0 z-50 flex items-end sm:items-center justify-center';
+    modal.className = 'add-match-modal fixed inset-0 z-50 flex items-center justify-center p-4';
     modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
 
     const renderModal = () => {
@@ -1534,7 +1534,7 @@ const Schedule = {
     const pickerTitle = allowedTeam ? `멤버 선택 — ${Results.escapeHtml(allowedTeam)}` : '멤버 선택';
 
     const picker = document.createElement('div');
-    picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-end sm:items-center justify-center';
+    picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-center justify-center p-4';
     picker.style.backgroundColor = 'rgba(0,0,0,0.5)';
     picker.innerHTML = `
       <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 max-h-[70vh] flex flex-col">
@@ -1649,7 +1649,7 @@ const Schedule = {
       : `멤버 교체 — ${Results.escapeHtml(oldName)}`;
 
     const picker = document.createElement('div');
-    picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-end sm:items-center justify-center';
+    picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-center justify-center p-4';
     picker.style.backgroundColor = 'rgba(0,0,0,0.5)';
     picker.innerHTML = `
       <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 max-h-[70vh] flex flex-col">
@@ -1718,7 +1718,7 @@ const Schedule = {
     if (existing) existing.remove();
 
     const modal = document.createElement('div');
-    modal.className = 'change-gametype-modal fixed inset-0 z-50 flex items-end sm:items-center justify-center';
+    modal.className = 'change-gametype-modal fixed inset-0 z-50 flex items-center justify-center p-4';
     modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
     modal.innerHTML = `
       <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-5">

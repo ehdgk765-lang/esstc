@@ -57,6 +57,7 @@ const App = {
       '</div>';
 
     document.body.appendChild(modal);
+    lockScroll();
 
     setTimeout(function() {
       document.getElementById('member-name-input').focus();
@@ -82,6 +83,7 @@ const App = {
       self.setMemberName(found);
       self.applyRoleUI();
       modal.remove();
+      unlockScroll();
       self.navigate(RolesConfig.getDefaultTab());
     }
 
@@ -94,6 +96,7 @@ const App = {
     });
     document.getElementById('member-name-close').addEventListener('click', function() {
       modal.remove();
+      unlockScroll();
       localStorage.removeItem(Storage.KEYS.PLAYERS);
       localStorage.removeItem(Storage.KEYS.TOURNAMENTS);
       localStorage.removeItem(Storage.KEYS.EVENTS);

@@ -11,7 +11,7 @@ const Results = {
 
     const modal = document.createElement('div');
     modal.id = 'score-modal';
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
 
     const player1Name = match.player1 || 'BYE';
     const player2Name = match.player2 || 'BYE';

@@ -321,7 +321,7 @@ const CustomBracket = {
     const teamMap = buildTeamMap();
 
     const picker = document.createElement('div');
-    picker.className = 'cb-player-picker fixed inset-0 z-50 flex items-end sm:items-center justify-center';
+    picker.className = 'cb-player-picker fixed inset-0 z-50 flex items-center justify-center p-4';
     picker.style.backgroundColor = 'rgba(0,0,0,0.5)';
     picker.innerHTML = `
       <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 max-h-[70vh] flex flex-col">
@@ -407,7 +407,7 @@ const CustomBracket = {
     const picked = [null, null]; // 2명 선택
 
     const picker = document.createElement('div');
-    picker.className = 'cb-player-picker fixed inset-0 z-50 flex items-end sm:items-center justify-center';
+    picker.className = 'cb-player-picker fixed inset-0 z-50 flex items-center justify-center p-4';
     picker.style.backgroundColor = 'rgba(0,0,0,0.5)';
 
     const renderPickerContent = () => {
