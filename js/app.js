@@ -234,13 +234,12 @@ const App = {
             '</div>' +
             '<div class="flex items-center gap-2">' +
               '<select id="reg-check-court" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-700 focus:border-green-700">' +
-                '<option value="선정">선정</option>' +
-                '<option value="장미">장미</option>' +
+                (courts.length === 0 ? '<option value="">코트 없음</option>' :
+                  courts.map(function(c) {
+                    return '<option value="' + self._escapeHtml(c.name) + '">' + self._escapeHtml(c.name) + '</option>';
+                  }).join('')) +
               '</select>' +
-              '<select id="reg-check-time" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-700 focus:border-green-700">' +
-                '<option value="06~09">06~09</option>' +
-                '<option value="09~12">09~12</option>' +
-              '</select>' +
+              '<select id="reg-check-time" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-green-700 focus:border-green-700"></select>' +
               '<button id="reg-check-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-blue-200/50">정규 운동 확인</button>' +
             '</div>' +
           '</div>' +
@@ -257,16 +256,58 @@ const App = {
           '<div class="px-4 py-2 border-b border-gray-100 bg-gray-50/50">' +
             '<span class="text-xs text-gray-500">등록 코트 ' + courts.length + '면</span>' +
           '</div>' +
-          '<div id="court-list" class="divide-y divide-gray-50">' +
+          '<div id="court-list" class="divide-y divide-gray-100">' +
             (courts.length === 0
               ? '<p class="text-gray-400 text-center py-8">등록된 코트가 없습니다.</p>'
               : courts.map(function(c, i) {
-                  return '<div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition">' +
-                    '<div class="flex items-center gap-3 min-w-0">' +
-                      '<span class="w-7 h-7 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">' + (i + 1) + '</span>' +
-                      '<span class="text-gray-800 font-medium truncate">' + self._escapeHtml(c.name) + '</span>' +
+                  var slots = c.slots || [];
+                  var colorOptions = Calendar.COLORS.map(function(col) {
+                    return '<option value="' + col.value + '">' + col.label + '</option>';
+                  }).join('');
+                  var startTimeOptions = '';
+                  var endTimeOptions = '';
+                  for (var h = 5; h <= 23; h++) {
+                    var hh = String(h).padStart(2, '0') + ':00';
+                    startTimeOptions += '<option value="' + hh + '"' + (hh === '06:00' ? ' selected' : '') + '>' + hh + '</option>';
+                    endTimeOptions += '<option value="' + hh + '"' + (hh === '09:00' ? ' selected' : '') + '>' + hh + '</option>';
+                  }
+                  return '<div class="px-4 py-3">' +
+                    '<div class="flex items-center justify-between">' +
+                      '<div class="flex items-center gap-3 min-w-0">' +
+                        '<span class="w-7 h-7 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">' + (i + 1) + '</span>' +
+                        '<span class="text-gray-800 font-medium truncate">' + self._escapeHtml(c.name) + '</span>' +
+                        (slots.length > 0 ? '<span class="text-gray-400 text-xs ml-1">' + slots.length + '개</span>' : '') +
+                      '</div>' +
+                      '<div class="flex items-center gap-1 flex-shrink-0 ml-2">' +
+                        '<button class="toggle-slot-btn text-gray-400 hover:text-gray-600 rounded-lg px-2 py-1 transition text-xs" data-court-id="' + c.id + '">시간대</button>' +
+                        '<button class="delete-court-btn text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg px-3 py-1 transition text-sm" data-id="' + c.id + '">삭제</button>' +
+                      '</div>' +
                     '</div>' +
-                    '<button class="delete-court-btn text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg px-3 py-1 transition text-sm flex-shrink-0 ml-2" data-id="' + c.id + '">삭제</button>' +
+                    // 슬롯 영역 (접힌 상태로 시작)
+                    '<div class="slot-area hidden" data-court-id="' + c.id + '">' +
+                      // 슬롯 목록
+                      (slots.length > 0
+                        ? '<div class="mt-2 ml-10 space-y-1">' +
+                            slots.map(function(s, si) {
+                              var colObj = Calendar.COLORS.find(function(col) { return col.value === s.color; }) || Calendar.COLORS[0];
+                              return '<div class="flex items-center gap-2 text-xs">' +
+                                '<span class="w-3 h-3 rounded-full ' + colObj.dot + ' flex-shrink-0"></span>' +
+                                '<span class="text-gray-600">' + s.startTime + ' ~ ' + s.endTime + '</span>' +
+                                '<span class="text-gray-400">(' + colObj.label + ')</span>' +
+                                '<button class="delete-slot-btn text-red-300 hover:text-red-500 transition" data-court-id="' + c.id + '" data-slot-index="' + si + '">x</button>' +
+                              '</div>';
+                            }).join('') +
+                          '</div>'
+                        : '') +
+                      // 슬롯 추가 UI
+                      '<div class="mt-2 ml-10 flex items-center gap-1.5 flex-wrap">' +
+                        '<select class="slot-start-time px-2 py-1.5 border border-gray-200 rounded-lg text-xs bg-white" data-court-id="' + c.id + '">' + startTimeOptions + '</select>' +
+                        '<span class="text-gray-400 text-xs">~</span>' +
+                        '<select class="slot-end-time px-2 py-1.5 border border-gray-200 rounded-lg text-xs bg-white" data-court-id="' + c.id + '">' + endTimeOptions + '</select>' +
+                        '<select class="slot-color px-2 py-1.5 border border-gray-200 rounded-lg text-xs bg-white" data-court-id="' + c.id + '">' + colorOptions + '</select>' +
+                        '<button class="add-slot-btn px-2.5 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700 active:scale-[0.97] transition-all flex-shrink-0" data-court-id="' + c.id + '">+</button>' +
+                      '</div>' +
+                    '</div>' +
                   '</div>';
                 }).join('')) +
           '</div>' +
@@ -315,10 +356,10 @@ const App = {
       addRoleBtn.textContent = '추가';
     };
 
-    addRoleBtn.addEventListener('click', addRole);
-    roleEmailInput.addEventListener('keydown', function(e) {
+    addRoleBtn.onclick = addRole;
+    roleEmailInput.onkeydown = function(e) {
       if (e.key === 'Enter') addRole();
-    });
+    };
 
     // 코트 추가
     var courtInput = document.getElementById('court-name-input');
@@ -332,34 +373,86 @@ const App = {
         alert('이미 등록된 코트입니다.');
         return;
       }
-      courts.push({ id: Storage.generateId(), name: name });
+      courts.push({ id: Storage.generateId(), name: name, slots: [] });
       Storage.saveCourts(courts);
       self.renderSettings(container);
     };
 
-    addCourtBtn.addEventListener('click', addCourt);
-    courtInput.addEventListener('keydown', function(e) {
+    addCourtBtn.onclick = addCourt;
+    courtInput.onkeydown = function(e) {
       if (e.key === 'Enter') addCourt();
-    });
+    };
 
-    // 코트 삭제
+    // 코트 삭제 (onclick 할당으로 중복 방지)
     container.querySelectorAll('.delete-court-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
+      btn.onclick = function() {
         if (!confirm('이 코트를 삭제하시겠습니까?')) return;
         var courts = Storage.getCourts().filter(function(c) { return c.id !== btn.dataset.id; });
         Storage.saveCourts(courts);
         self.renderSettings(container);
-      });
+      };
+    });
+
+    // 슬롯 영역 토글
+    container.querySelectorAll('.toggle-slot-btn').forEach(function(btn) {
+      btn.onclick = function() {
+        var area = container.querySelector('.slot-area[data-court-id="' + btn.dataset.courtId + '"]');
+        if (area) area.classList.toggle('hidden');
+      };
+    });
+
+    // 슬롯 추가
+    container.querySelectorAll('.add-slot-btn').forEach(function(btn) {
+      btn.onclick = function() {
+        var courtId = btn.dataset.courtId;
+        var row = btn.parentElement;
+        var startTime = row.querySelector('.slot-start-time').value;
+        var endTime = row.querySelector('.slot-end-time').value;
+        var color = row.querySelector('.slot-color').value;
+        if (startTime >= endTime) {
+          alert('종료 시간은 시작 시간보다 뒤여야 합니다.');
+          return;
+        }
+        var courts = Storage.getCourts();
+        var court = courts.find(function(c) { return c.id === courtId; });
+        if (!court) return;
+        if (!court.slots) court.slots = [];
+        var dup = court.slots.some(function(s) {
+          return s.startTime === startTime && s.endTime === endTime;
+        });
+        if (dup) {
+          alert('같은 시간대의 슬롯이 이미 등록되어 있습니다.');
+          return;
+        }
+        court.slots.push({ startTime: startTime, endTime: endTime, color: color });
+        court.slots.sort(function(a, b) { return a.startTime.localeCompare(b.startTime); });
+        Storage.saveCourts(courts);
+        self.renderSettings(container);
+      };
+    });
+
+    // 슬롯 삭제
+    container.querySelectorAll('.delete-slot-btn').forEach(function(btn) {
+      btn.onclick = function() {
+        var courtId = btn.dataset.courtId;
+        var slotIndex = parseInt(btn.dataset.slotIndex);
+        var courts = Storage.getCourts();
+        var court = courts.find(function(c) { return c.id === courtId; });
+        if (!court || !court.slots) return;
+        court.slots.splice(slotIndex, 1);
+        Storage.saveCourts(courts);
+        self.renderSettings(container);
+      };
     });
 
     // 정규 운동 등록 버튼
     var regBtn = document.getElementById('reg-exercise-btn');
     if (regBtn) {
-      regBtn.addEventListener('click', function() {
+      regBtn.onclick = function() {
         var year = parseInt(document.getElementById('reg-year-select').value);
         var month = parseInt(document.getElementById('reg-month-select').value);
         self.handleRegularExercise(container, year, month);
-      });
+      };
     }
 
     // 정규 운동 확인 - 일(day) 옵션 동적 생성
@@ -415,20 +508,49 @@ const App = {
       }
     }
     updateDayOptions();
-    regCheckYear.addEventListener('change', updateDayOptions);
-    regCheckMonth.addEventListener('change', updateDayOptions);
+    regCheckYear.onchange = updateDayOptions;
+    regCheckMonth.onchange = updateDayOptions;
+
+    // 정규 운동 확인 - 코트 선택 시 시간대 옵션 동적 갱신
+    var regCheckCourt = document.getElementById('reg-check-court');
+    var regCheckTime = document.getElementById('reg-check-time');
+    function updateTimeOptions() {
+      var courtName = regCheckCourt.value;
+      var allCourts = Storage.getCourts();
+      var court = allCourts.find(function(c) { return c.name === courtName; });
+      var slots = court && court.slots ? court.slots : [];
+      var prevTime = regCheckTime.value;
+      regCheckTime.innerHTML = '';
+      if (slots.length === 0) {
+        var opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '슬롯 없음';
+        regCheckTime.appendChild(opt);
+      } else {
+        slots.forEach(function(s) {
+          var label = s.startTime.replace(':00', '') + '~' + s.endTime.replace(':00', '');
+          var opt = document.createElement('option');
+          opt.value = label;
+          opt.textContent = label;
+          if (label === prevTime) opt.selected = true;
+          regCheckTime.appendChild(opt);
+        });
+      }
+    }
+    updateTimeOptions();
+    regCheckCourt.onchange = updateTimeOptions;
 
     // 정규 운동 확인 버튼
     var regCheckBtn = document.getElementById('reg-check-btn');
     if (regCheckBtn) {
-      regCheckBtn.addEventListener('click', function() {
+      regCheckBtn.onclick = function() {
         var year = parseInt(regCheckYear.value);
         var month = parseInt(regCheckMonth.value);
         var day = parseInt(regCheckDay.value);
         var court = document.getElementById('reg-check-court').value;
         var time = document.getElementById('reg-check-time').value;
         self.handleRegularExerciseCheck(year, month, day, court, time);
-      });
+      };
     }
   },
 
@@ -450,12 +572,25 @@ const App = {
       return;
     }
 
-    // 주말별 3개 일정 정의
-    var templates = [
-      { title: '장미 06~09 정규 운동', startTime: '06:00', endTime: '09:00', color: 'pink' },
-      { title: '선정 06~09 정규 운동', startTime: '06:00', endTime: '09:00', color: 'blue' },
-      { title: '선정 09~12 정규 운동', startTime: '09:00', endTime: '12:00', color: 'orange' },
-    ];
+    // 코트 관리에서 등록된 코트+슬롯 기반으로 일정 템플릿 생성
+    var courts = Storage.getCourts();
+    var templates = [];
+    courts.forEach(function(court) {
+      (court.slots || []).forEach(function(slot) {
+        var timeLabel = slot.startTime.replace(':00', '') + '~' + slot.endTime.replace(':00', '');
+        templates.push({
+          title: court.name + ' ' + timeLabel + ' 정규 운동',
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          color: slot.color
+        });
+      });
+    });
+
+    if (templates.length === 0) {
+      alert('등록된 코트에 시간대 슬롯이 없습니다. 코트 관리에서 슬롯을 먼저 추가해주세요.');
+      return;
+    }
 
     var events = Storage.getEvents();
 
@@ -516,7 +651,7 @@ const App = {
     if (satDay >= 1 && satDay <= daysInMonth) weekendDays.push({ day: satDay, dow: 6 });
     if (sunDay >= 1 && sunDay <= daysInMonth) weekendDays.push({ day: sunDay, dow: 0 });
 
-    // 이벤트 제목 매칭 키워드: "선정 06~09" or "장미 09~12" 등
+    // 이벤트 제목 매칭 키워드: "{코트명} {시간대}" 형식
     var titleKeyword = court + ' ' + time;
     var events = Storage.getEvents();
     var mm = String(month + 1).padStart(2, '0');
