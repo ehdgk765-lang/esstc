@@ -29,21 +29,21 @@ const CustomBracket = {
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">대회명</label>
           <input type="text" id="cb-name" required maxlength="30"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
             placeholder="예: 2024년 봄 정기대회" value="${Results.escapeHtml(st.tournamentName)}">
         </div>
 
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">대회 날짜</label>
           <input type="date" id="cb-date" value="${st.gameDate || new Date().toISOString().slice(0, 10)}"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700">
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
         </div>
 
         <div>
           <div class="flex items-center justify-between mb-2">
             <label class="block text-sm font-semibold text-gray-700">경기 방식</label>
             <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="checkbox" id="cb-team-mode" ${st.isTeamMode ? 'checked' : ''} class="w-3.5 h-3.5 text-green-700 rounded border-gray-300 focus:ring-green-700">
+              <input type="checkbox" id="cb-team-mode" ${st.isTeamMode ? 'checked' : ''} class="w-3.5 h-3.5 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
               <span class="text-xs text-gray-500">팀전</span>
             </label>
           </div>
@@ -51,7 +51,7 @@ const CustomBracket = {
             ${[false, true].map(d => `
               <label class="flex-1 cursor-pointer">
                 <input type="radio" name="cb-doubles" value="${d}" ${d === st.isDoubles ? 'checked' : ''} class="sr-only peer">
-                <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-green-500 peer-checked:bg-green-50 transition">
+                <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
                   <span class="font-semibold text-gray-800">${d ? '복식' : '단식'}</span>
                   <div class="text-xs text-gray-500">${d ? '팀당 2명' : '팀당 1명'}</div>
                 </div>
@@ -66,7 +66,7 @@ const CustomBracket = {
             ${[1, 3, 5].map(n => `
               <label class="flex-1 cursor-pointer">
                 <input type="radio" name="cb-setCount" value="${n}" ${n === st.setCount ? 'checked' : ''} class="sr-only peer">
-                <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-green-500 peer-checked:bg-green-50 transition">
+                <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
                   <span class="font-semibold text-gray-800">${n}세트</span>
                   <div class="text-xs text-gray-500">${Math.ceil(n / 2)}세트 선승</div>
                 </div>
@@ -81,7 +81,7 @@ const CustomBracket = {
             ${[4, 8, 16, 32].map(n => `
               <label class="flex-1 cursor-pointer">
                 <input type="radio" name="cb-size" value="${n}" ${n === st.bracketSize ? 'checked' : ''} class="sr-only peer">
-                <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-green-500 peer-checked:bg-green-50 transition">
+                <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
                   <span class="font-semibold text-gray-800">${n}팀</span>
                 </div>
               </label>
@@ -99,7 +99,7 @@ const CustomBracket = {
         </div>
 
         <button type="submit"
-          class="w-full py-3 bg-gradient-to-r from-green-700 to-green-800 text-white rounded-xl hover:from-green-800 hover:to-green-900 active:scale-[0.98] transition-all font-semibold text-lg shadow-md shadow-green-300/50">
+          class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-semibold text-lg shadow-md shadow-blue-200/50">
           대회 생성
         </button>
       </form>`);
@@ -264,11 +264,11 @@ const CustomBracket = {
         const names = playerName.split(' / ');
         const tns = [...new Set(names.map(n => _teamMap[n]).filter(Boolean))];
         if (tns.length > 0) {
-          teamBadge = tns.map(tn => `<span class="text-xs px-1 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 whitespace-nowrap flex-shrink-0">${Results.escapeHtml(tn)}</span>`).join(' ');
+          teamBadge = tns.map(tn => `<span class="text-xs px-1 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap flex-shrink-0">${Results.escapeHtml(tn)}</span>`).join(' ');
         }
       }
       return `
-        <div class="match-player flex items-center justify-between px-3 py-2 ${borderClass} cursor-pointer hover:bg-green-50 transition cb-slot" data-slot="${index}">
+        <div class="match-player flex items-center justify-between px-3 py-2 ${borderClass} cursor-pointer hover:bg-blue-50 transition cb-slot" data-slot="${index}">
           <div class="flex items-center gap-1 min-w-0">
             <span class="truncate text-sm text-gray-800 font-medium">${Results.escapeHtml(playerName)}</span>
             ${teamBadge}
@@ -277,7 +277,7 @@ const CustomBracket = {
         </div>`;
     }
     return `
-      <div class="match-player flex items-center px-3 py-2 ${borderClass} cursor-pointer hover:bg-green-50 transition cb-slot" data-slot="${index}">
+      <div class="match-player flex items-center px-3 py-2 ${borderClass} cursor-pointer hover:bg-blue-50 transition cb-slot" data-slot="${index}">
         <span class="truncate text-sm text-gray-300 italic">팀 선택...</span>
       </div>`;
   },
@@ -331,9 +331,9 @@ const CustomBracket = {
         <div class="mb-3">
           <div class="flex gap-2">
             <input type="text" id="cb-custom-name" placeholder="직접 입력..."
-              class="cb-picker-search flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-green-700 focus:border-green-700">
+              class="cb-picker-search flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
             <button type="button" id="cb-custom-add"
-              class="px-4 py-2 bg-green-700 text-white rounded-xl text-sm font-medium hover:bg-green-800 transition whitespace-nowrap">추가</button>
+              class="px-4 py-2 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition whitespace-nowrap">추가</button>
           </div>
         </div>
 
@@ -344,12 +344,12 @@ const CustomBracket = {
               const isPlaced = placedNames.has(p.name);
               const tn = teamMap[p.name];
               return `
-                <div class="cb-pick-option flex items-center px-3 py-2.5 ${isPlaced ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-green-50'} transition"
+                <div class="cb-pick-option flex items-center px-3 py-2.5 ${isPlaced ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'} transition"
                   data-name="${Results.escapeHtml(p.name)}" data-placed="${isPlaced}">
                   <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                   <span class="ml-2">${genderBadge(p.gender)}</span>
                   <span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
-                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-700 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
+                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isPlaced ? '<span class="ml-auto text-xs text-gray-400">배치됨</span>' : ''}
                 </div>`;
             }).join('')}
@@ -423,7 +423,7 @@ const CustomBracket = {
             ${picked.map((name, i) => {
               if (name) {
                 const pd = allPlayers.find(p => p.name === name);
-                return `<div class="cb-doubles-slot flex items-center justify-between px-3 py-2 border-2 border-green-400 bg-green-50 rounded-xl" data-idx="${i}">
+                return `<div class="cb-doubles-slot flex items-center justify-between px-3 py-2 border-2 border-blue-400 bg-blue-50 rounded-xl" data-idx="${i}">
                   <div class="flex items-center gap-1 min-w-0">
                     <span class="text-sm font-medium text-gray-800 truncate">${Results.escapeHtml(name)}</span>
                     ${pd ? `<span class="flex-shrink-0">${genderBadge(pd.gender)}</span>` : ''}
@@ -440,9 +440,9 @@ const CustomBracket = {
           <div class="mb-3">
             <div class="flex gap-2">
               <input type="text" autocomplete="off" id="cb-doubles-search" placeholder="이름 검색 또는 직접 입력..."
-                class="cb-picker-search flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                class="cb-picker-search flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
               <button type="button" id="cb-doubles-custom-add"
-                class="px-4 py-2 bg-green-700 text-white rounded-xl text-sm font-medium hover:bg-green-800 transition whitespace-nowrap">추가</button>
+                class="px-4 py-2 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition whitespace-nowrap">추가</button>
             </div>
           </div>
 
@@ -453,12 +453,12 @@ const CustomBracket = {
                 const isUsed = allUsed.has(p.name);
                 const tn = teamMap[p.name];
                 return `
-                  <div class="cb-pick-option flex items-center px-3 py-2.5 ${isUsed ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-green-50'} transition"
+                  <div class="cb-pick-option flex items-center px-3 py-2.5 ${isUsed ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'} transition"
                     data-name="${Results.escapeHtml(p.name)}" data-used="${isUsed}">
                     <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                     <span class="ml-2">${genderBadge(p.gender)}</span>
                     <span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
-                    ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-green-50 text-green-700 border border-green-200">${Results.escapeHtml(tn)}</span>` : ''}
+                    ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
                     ${isUsed ? '<span class="ml-auto text-xs text-gray-400">선택됨</span>' : ''}
                   </div>`;
               }).join('')}
@@ -467,7 +467,7 @@ const CustomBracket = {
 
           <div class="flex gap-2 mt-3">
             <button type="button" class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition cb-picker-cancel">취소</button>
-            <button type="button" class="flex-1 py-2 bg-green-700 text-white rounded-xl text-sm font-medium hover:bg-green-800 transition cb-doubles-confirm ${picked[0] && picked[1] ? '' : 'opacity-50 cursor-not-allowed'}" ${picked[0] && picked[1] ? '' : 'disabled'}>확인</button>
+            <button type="button" class="flex-1 py-2 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition cb-doubles-confirm ${picked[0] && picked[1] ? '' : 'opacity-50 cursor-not-allowed'}" ${picked[0] && picked[1] ? '' : 'disabled'}>확인</button>
           </div>
         </div>`;
     };

@@ -6,7 +6,7 @@ const Calendar = {
 
   // 색상 옵션
   COLORS: [
-    { value: 'green', label: '초록', bg: 'bg-green-100', dot: 'bg-green-500', text: 'text-green-700' },
+    { value: 'green', label: '초록', bg: 'bg-emerald-100', dot: 'bg-emerald-500', text: 'text-emerald-700' },
     { value: 'blue', label: '파랑', bg: 'bg-blue-100', dot: 'bg-blue-500', text: 'text-blue-700' },
     { value: 'red', label: '빨강', bg: 'bg-red-100', dot: 'bg-red-500', text: 'text-red-700' },
     { value: 'yellow', label: '노랑', bg: 'bg-yellow-100', dot: 'bg-yellow-500', text: 'text-yellow-700' },
@@ -71,7 +71,7 @@ const Calendar = {
         '<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">' +
           '<div class="flex items-center justify-between mb-3">' +
             '<h3 class="font-bold text-gray-800">' + this._formatDisplayDate(this._selectedDate) + '</h3>' +
-            (isClubUser ? '<button id="cal-add-event" class="px-3 py-1.5 bg-green-700 text-white text-xs font-semibold rounded-lg hover:bg-green-800 transition">+ 일정 추가</button>' : '') +
+            (isClubUser ? '<button id="cal-add-event" class="px-3 py-1.5 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 transition">+ 일정 추가</button>' : '') +
           '</div>' +
           '<div id="cal-events-list">' + eventsList + '</div>' +
         '</div>' +
@@ -184,7 +184,7 @@ const Calendar = {
         } else if (isWaiting) {
           attendBtn = '<button class="cal-waitlist-btn mt-2 w-full py-1.5 text-xs font-semibold rounded-lg border border-yellow-300 text-yellow-600 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition" data-id="' + ev.id + '">대기 취소</button>';
         } else if (!isFull) {
-          attendBtn = '<button class="cal-attend-btn mt-2 w-full py-1.5 text-xs font-semibold rounded-lg bg-green-700 text-white hover:bg-green-800 transition" data-id="' + ev.id + '">참석</button>';
+          attendBtn = '<button class="cal-attend-btn mt-2 w-full py-1.5 text-xs font-semibold rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition" data-id="' + ev.id + '">참석</button>';
         } else {
           attendBtn = '<button class="cal-waitlist-btn mt-2 w-full py-1.5 text-xs font-semibold rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition" data-id="' + ev.id + '">대기 신청</button>';
         }
@@ -381,50 +381,50 @@ const Calendar = {
         // 제목 + 코트 (한 줄로 합침)
         '<div class="flex gap-1.5">' +
           (courts.length > 0 ?
-            '<select id="event-court-select" class="px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-green-700 transition bg-white flex-shrink-0">' + courtOptions + '</select>'
+            '<select id="event-court-select" class="px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-blue-700 transition bg-white flex-shrink-0">' + courtOptions + '</select>'
           : '') +
-          '<input type="text" autocomplete="off" id="event-title" class="flex-1 min-w-0 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-green-700 transition" placeholder="일정 제목" value="' + this._escapeAttr(ev.title) + '">' +
+          '<input type="text" autocomplete="off" id="event-title" class="flex-1 min-w-0 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-blue-700 transition" placeholder="일정 제목" value="' + this._escapeAttr(ev.title) + '">' +
         '</div>' +
         // 날짜 + 인원 (한 줄)
         '<div class="flex gap-1.5 items-center">' +
-          '<input type="date" id="event-date" class="flex-1 min-w-0 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-green-700 transition" value="' + ev.date + '">' +
+          '<input type="date" id="event-date" class="flex-1 min-w-0 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-blue-700 transition" value="' + ev.date + '">' +
           '<span class="text-xs text-gray-400 flex-shrink-0">인원</span>' +
-          '<input type="number" id="event-max" class="w-14 px-2 py-1.5 border border-gray-200 rounded-lg text-xs text-center focus:outline-none focus:border-green-700 transition" min="0" value="' + (ev.maxParticipants || 0) + '">' +
+          '<input type="number" id="event-max" class="w-14 px-2 py-1.5 border border-gray-200 rounded-lg text-xs text-center focus:outline-none focus:border-blue-700 transition" min="0" value="' + (ev.maxParticipants || 0) + '">' +
         '</div>' +
         // 시간 범위
         '<div>' +
           '<div class="space-y-1.5">' +
             '<div class="flex items-center gap-1">' +
               '<span class="text-xs text-gray-400 w-6 flex-shrink-0">시작</span>' +
-              '<select id="event-start-hour" class="px-1.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-green-700 transition bg-white">' + startHOpts + '</select>' +
+              '<select id="event-start-hour" class="px-1.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-blue-700 transition bg-white">' + startHOpts + '</select>' +
               '<span class="text-gray-300 text-xs">:</span>' +
-              '<input type="number" id="event-start-min" class="w-12 px-1.5 py-1.5 border border-gray-200 rounded-lg text-xs text-center focus:outline-none focus:border-green-700 transition" min="0" max="59" placeholder="00" value="' + (ev.startTime ? startM : '') + '">' +
-              '<button type="button" class="min-quick-btn px-2 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-600 hover:bg-green-50 transition" data-target="event-start-min" data-val="00">:00</button>' +
-              '<button type="button" class="min-quick-btn px-2 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-600 hover:bg-green-50 transition" data-target="event-start-min" data-val="30">:30</button>' +
+              '<input type="number" id="event-start-min" class="w-12 px-1.5 py-1.5 border border-gray-200 rounded-lg text-xs text-center focus:outline-none focus:border-blue-700 transition" min="0" max="59" placeholder="00" value="' + (ev.startTime ? startM : '') + '">' +
+              '<button type="button" class="min-quick-btn px-2 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-blue-600 hover:bg-blue-50 transition" data-target="event-start-min" data-val="00">:00</button>' +
+              '<button type="button" class="min-quick-btn px-2 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-blue-600 hover:bg-blue-50 transition" data-target="event-start-min" data-val="30">:30</button>' +
             '</div>' +
             '<div class="flex items-center gap-1">' +
               '<span class="text-xs text-gray-400 w-6 flex-shrink-0">종료</span>' +
-              '<select id="event-end-hour" class="px-1.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-green-700 transition bg-white">' + endHOpts + '</select>' +
+              '<select id="event-end-hour" class="px-1.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-blue-700 transition bg-white">' + endHOpts + '</select>' +
               '<span class="text-gray-300 text-xs">:</span>' +
-              '<input type="number" id="event-end-min" class="w-12 px-1.5 py-1.5 border border-gray-200 rounded-lg text-xs text-center focus:outline-none focus:border-green-700 transition" min="0" max="59" placeholder="00" value="' + (ev.endTime ? endM : '') + '">' +
-              '<button type="button" class="min-quick-btn px-2 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-600 hover:bg-green-50 transition" data-target="event-end-min" data-val="00">:00</button>' +
-              '<button type="button" class="min-quick-btn px-2 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-green-600 hover:bg-green-50 transition" data-target="event-end-min" data-val="30">:30</button>' +
+              '<input type="number" id="event-end-min" class="w-12 px-1.5 py-1.5 border border-gray-200 rounded-lg text-xs text-center focus:outline-none focus:border-blue-700 transition" min="0" max="59" placeholder="00" value="' + (ev.endTime ? endM : '') + '">' +
+              '<button type="button" class="min-quick-btn px-2 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-blue-600 hover:bg-blue-50 transition" data-target="event-end-min" data-val="00">:00</button>' +
+              '<button type="button" class="min-quick-btn px-2 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:border-blue-600 hover:bg-blue-50 transition" data-target="event-end-min" data-val="30">:30</button>' +
             '</div>' +
           '</div>' +
           '<div class="flex flex-wrap gap-1 mt-1.5" id="time-presets">' +
-            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-green-600 hover:text-green-700 hover:bg-green-50 transition" data-start="06:00" data-end="08:00">06~08</button>' +
-            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-green-600 hover:text-green-700 hover:bg-green-50 transition" data-start="08:00" data-end="10:00">08~10</button>' +
-            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-green-600 hover:text-green-700 hover:bg-green-50 transition" data-start="10:00" data-end="12:00">10~12</button>' +
-            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-green-600 hover:text-green-700 hover:bg-green-50 transition" data-start="12:00" data-end="14:00">12~14</button>' +
-            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-green-600 hover:text-green-700 hover:bg-green-50 transition" data-start="14:00" data-end="16:00">14~16</button>' +
-            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-green-600 hover:text-green-700 hover:bg-green-50 transition" data-start="16:00" data-end="18:00">16~18</button>' +
-            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-green-600 hover:text-green-700 hover:bg-green-50 transition" data-start="18:00" data-end="20:00">18~20</button>' +
-            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-green-600 hover:text-green-700 hover:bg-green-50 transition" data-start="20:00" data-end="22:00">20~22</button>' +
+            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition" data-start="06:00" data-end="08:00">06~08</button>' +
+            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition" data-start="08:00" data-end="10:00">08~10</button>' +
+            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition" data-start="10:00" data-end="12:00">10~12</button>' +
+            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition" data-start="12:00" data-end="14:00">12~14</button>' +
+            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition" data-start="14:00" data-end="16:00">14~16</button>' +
+            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition" data-start="16:00" data-end="18:00">16~18</button>' +
+            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition" data-start="18:00" data-end="20:00">18~20</button>' +
+            '<button type="button" class="time-preset-btn px-2 py-0.5 text-xs rounded border border-gray-200 text-gray-500 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition" data-start="20:00" data-end="22:00">20~22</button>' +
           '</div>' +
         '</div>' +
         // 메모
         '<div>' +
-          '<textarea id="event-desc" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-green-700 transition resize-none" rows="1" placeholder="메모 (선택)">' + this._escapeHtml(ev.description || '') + '</textarea>' +
+          '<textarea id="event-desc" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-blue-700 transition resize-none" rows="1" placeholder="메모 (선택)">' + this._escapeHtml(ev.description || '') + '</textarea>' +
         '</div>' +
         // 색상
         '<div class="flex items-center gap-2">' +
@@ -434,7 +434,7 @@ const Calendar = {
         // 버튼
         '<div class="flex gap-2 pt-1">' +
           '<button id="cal-modal-cancel" class="flex-1 px-3 py-2 bg-gray-100 text-gray-600 text-xs font-semibold rounded-lg hover:bg-gray-200 transition">취소</button>' +
-          '<button id="cal-modal-save" class="flex-1 px-3 py-2 bg-green-700 text-white text-xs font-semibold rounded-lg hover:bg-green-800 transition">' + (isEdit ? '수정' : '추가') + '</button>' +
+          '<button id="cal-modal-save" class="flex-1 px-3 py-2 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 transition">' + (isEdit ? '수정' : '추가') + '</button>' +
         '</div>' +
         '</div>' +
       '</div>';
@@ -458,7 +458,7 @@ const Calendar = {
     }
 
     // 분 하이라이트 갱신 헬퍼
-    var activeMinCls = ['border-green-700', 'bg-green-50', 'text-green-700'];
+    var activeMinCls = ['border-blue-700', 'bg-blue-50', 'text-blue-700'];
     function refreshMinBtns() {
       modal.querySelectorAll('.min-quick-btn').forEach(function(b) {
         var target = document.getElementById(b.dataset.target);
@@ -498,9 +498,9 @@ const Calendar = {
         document.getElementById('event-end-min').value = ep[1];
         // 선택된 프리셋 하이라이트
         modal.querySelectorAll('.time-preset-btn').forEach(function(b) {
-          b.classList.remove('border-green-700', 'bg-green-50', 'text-green-700');
+          b.classList.remove('border-blue-700', 'bg-blue-50', 'text-blue-700');
         });
-        this.classList.add('border-green-700', 'bg-green-50', 'text-green-700');
+        this.classList.add('border-blue-700', 'bg-blue-50', 'text-blue-700');
         refreshMinBtns();
       });
     });
@@ -510,7 +510,7 @@ const Calendar = {
     if (ev.startTime && ev.endTime) {
       modal.querySelectorAll('.time-preset-btn').forEach(function(btn) {
         if (btn.dataset.start === ev.startTime && btn.dataset.end === ev.endTime) {
-          btn.classList.add('border-green-700', 'bg-green-50', 'text-green-700');
+          btn.classList.add('border-blue-700', 'bg-blue-50', 'text-blue-700');
         }
       });
     }

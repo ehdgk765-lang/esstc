@@ -73,38 +73,38 @@ const Auth = {
           <div class="relative inline-block mb-4">
             <div class="auth-logo-bg w-28 h-28 rounded-3xl mx-auto" role="img" aria-label="Tennis"></div>
           </div>
-          <h1 class="text-2xl font-extrabold bg-gradient-to-r from-green-800 to-green-700 bg-clip-text text-transparent">Happy Tennis</h1>
+          <h1 class="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Happy Tennis</h1>
           <p class="text-sm text-gray-400 mt-1">해태 클럽에 오신 것을 환영합니다!</p>
         </div>
 
         <!-- 로그인 카드 -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-green-200/50 p-6 border border-white/60">
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-blue-200/50 p-6 border border-white/60">
           <form id="auth-form" class="space-y-4">
             <div>
               <label class="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">아이디</label>
               <input type="email" id="auth-email" required
-                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 focus:bg-white transition"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 focus:bg-white transition"
                 placeholder="email@example.com">
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">비밀번호</label>
               <input type="password" id="auth-password" required minlength="6"
-                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 focus:bg-white transition"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 focus:bg-white transition"
                 placeholder="6자 이상">
             </div>
             <div id="auth-confirm-wrap" style="display:none">
               <label class="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">비밀번호 확인</label>
               <input type="password" id="auth-password-confirm" minlength="6"
-                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 focus:bg-white transition"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 focus:bg-white transition"
                 placeholder="비밀번호를 다시 입력">
             </div>
             <label class="flex items-center justify-end gap-1.5 cursor-pointer select-none">
-              <input type="checkbox" id="auth-remember" class="w-4 h-4 rounded border-gray-300 text-green-700 focus:ring-green-700 accent-green-700">
+              <input type="checkbox" id="auth-remember" class="w-4 h-4 rounded border-gray-300 text-blue-700 focus:ring-blue-700 accent-blue-700">
               <span class="text-xs text-gray-400">아이디 기억하기</span>
             </label>
             <p id="auth-error" class="text-sm text-red-500 hidden"></p>
             <button type="submit" id="auth-submit-btn"
-              class="w-full py-3.5 bg-gradient-to-r from-green-700 to-green-800 text-white rounded-xl hover:from-green-800 hover:to-green-900 active:scale-[0.98] transition-all font-bold text-lg shadow-md shadow-green-300">
+              class="w-full py-3.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-bold text-lg shadow-md shadow-blue-200">
               로그인
             </button>
           </form>
@@ -112,7 +112,7 @@ const Auth = {
 
         <!--<p class="text-center text-sm text-gray-400 mt-5">
           <span id="auth-toggle-text">계정이 없으신가요?</span>
-          <button type="button" id="auth-toggle-btn" class="text-green-700 font-bold hover:underline ml-1">회원가입</button>
+          <button type="button" id="auth-toggle-btn" class="text-blue-700 font-bold hover:underline ml-1">회원가입</button>
         </p>-->
       </div>`;
 

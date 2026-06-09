@@ -9,7 +9,7 @@ const Stats = {
     if (tournaments.length === 0) {
       patchDOM(container, `
         <div class="max-w-lg mx-auto text-center py-12">
-          <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-50/30 border border-white/60 p-8">
+          <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-50/30 border border-white/60 p-8">
             <div class="text-5xl mb-4">📊</div>
             <h2 class="text-xl font-bold text-gray-800 mb-2">통계가 없습니다</h2>
             <p class="text-gray-500">완료된 대진표가 있으면 통계가 표시됩니다.</p>
@@ -33,12 +33,12 @@ const Stats = {
         <div class="flex gap-2 mb-6">
           <button data-stats-mode="monthly"
             class="sub-tab flex-1 px-4 py-2 rounded-full text-sm font-semibold transition
-            ${this._viewMode === 'monthly' ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+            ${this._viewMode === 'monthly' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
             월별 통계
           </button>
           <button data-stats-mode="total"
             class="sub-tab flex-1 px-4 py-2 rounded-full text-sm font-semibold transition
-            ${this._viewMode === 'total' ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+            ${this._viewMode === 'total' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
             전체 통계
           </button>
         </div>
@@ -159,7 +159,7 @@ const Stats = {
           <button data-month="${key}"
             class="month-select-btn px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition
             ${key === this._selectedMonth
-              ? 'bg-green-100 text-green-700 border border-green-300'
+              ? 'bg-blue-100 text-blue-700 border border-blue-300'
               : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100'}">
             ${this._formatMonthLabel(key)}
             <span class="text-xs opacity-60">(${groups[key].length})</span>
@@ -208,7 +208,7 @@ const Stats = {
     const allPlayersData = Storage.getPlayers();
 
     container.innerHTML = `
-      <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-50/30 border border-white/60 overflow-hidden mb-4">
+      <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-50/30 border border-white/60 overflow-hidden mb-4">
         <div class="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
           <span class="font-semibold text-gray-700 text-sm">메달 순위</span>
         </div>
@@ -241,7 +241,7 @@ const Stats = {
                 <td class="text-center px-2 py-2 font-bold text-yellow-600">${m.gold || '-'}</td>
                 <td class="text-center px-2 py-2 font-bold text-gray-400">${m.silver || '-'}</td>
                 <td class="text-center px-2 py-2 font-bold text-orange-600">${m.bronze || '-'}</td>
-                <td class="text-center px-2 py-2 font-bold text-green-700">${m.total}</td>
+                <td class="text-center px-2 py-2 font-bold text-blue-700">${m.total}</td>
               </tr>`;
             }).join('')}
           </tbody>
@@ -253,7 +253,7 @@ const Stats = {
     const allPlayersData = Storage.getPlayers();
 
     container.innerHTML = `
-      <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-green-50/30 border border-white/60 overflow-hidden mb-4">
+      <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-50/30 border border-white/60 overflow-hidden mb-4">
         <div class="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
           <span class="font-semibold text-gray-700 text-sm">참여 순위</span>
         </div>

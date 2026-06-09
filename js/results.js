@@ -29,15 +29,15 @@ const Results = {
       t2Team = getTeam(player2Name);
     }
 
-    const t1Short = t1Team || player1Name.split(' / ')[0].slice(0, 3) + 'Team';
-    const t2Short = t2Team || player2Name.split(' / ')[0].slice(0, 3) + 'Team';
+    const t1Short = t1Team || player1Name.split(' / ')[0].slice(0, 3) + ' 팀';
+    const t2Short = t2Team || player2Name.split(' / ')[0].slice(0, 3) + ' 팀';
 
     let setsHTML = `
       <div class="flex items-center gap-2 justify-center mb-1">
         <span class="w-16"></span>
-        <span class="w-14 text-center text-xs font-bold text-green-700 truncate">${this.escapeHtml(t1Short)}</span>
+        <span class="w-14 text-center text-xs font-bold text-blue-700 truncate">${this.escapeHtml(t1Short)}</span>
         <span class="w-3"></span>
-        <span class="w-14 text-center text-xs font-bold text-blue-600 truncate">${this.escapeHtml(t2Short)}</span>
+        <span class="w-14 text-center text-xs font-bold text-violet-600 truncate">${this.escapeHtml(t2Short)}</span>
       </div>`;
     for (let i = 0; i < setCount; i++) {
       const s1 = match.scores ? (match.scores[i]?.[0] ?? '') : '';
@@ -45,36 +45,36 @@ const Results = {
       setsHTML += `
         <div class="flex items-center gap-2 justify-center">
           <span class="text-sm text-gray-500 w-16">세트 ${i + 1}</span>
-          <input type="number" min="0" max="7" class="score-input w-14 h-10 text-center border-2 border-green-300 bg-green-50 rounded-lg text-lg font-bold text-green-700 focus:ring-2 focus:ring-green-700 focus:border-green-700"
+          <input type="number" min="0" max="7" class="score-input w-14 h-10 text-center border-2 border-blue-300 bg-blue-50 rounded-lg text-lg font-bold text-blue-700 focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
             data-set="${i}" data-player="0" value="${s1}" placeholder="0">
           <span class="text-gray-400 font-bold">:</span>
-          <input type="number" min="0" max="7" class="score-input w-14 h-10 text-center border-2 border-blue-300 bg-blue-50 rounded-lg text-lg font-bold text-blue-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          <input type="number" min="0" max="7" class="score-input w-14 h-10 text-center border-2 border-violet-300 bg-violet-50 rounded-lg text-lg font-bold text-violet-700 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
             data-set="${i}" data-player="1" value="${s2}" placeholder="0">
         </div>`;
     }
 
     modal.innerHTML = `
-      <div class="bg-white/95 backdrop-blur-md rounded-t-2xl sm:rounded-2xl shadow-2xl shadow-green-100/30 max-w-sm w-full p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
+      <div class="bg-white/95 backdrop-blur-md rounded-t-2xl sm:rounded-2xl shadow-2xl shadow-blue-100/30 max-w-sm w-full p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
         <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
         <h3 class="text-lg font-bold text-center mb-4">스코어 입력</h3>
         <div class="space-y-1.5 mb-4">
-          <div class="bg-green-50 rounded-xl px-3 py-2 text-center">
-            ${t1Team ? `<div class="font-bold text-green-700 text-sm">${this.escapeHtml(t1Team)}</div>
-              <div class="text-green-700 text-[11px] mt-0.5 opacity-70">${this.escapeHtml(player1Name)}</div>` :
-              `<span class="font-semibold text-green-700 text-xs sm:text-sm">${this.formatTeamHtml(player1Name, tournament.isCustom)}</span>`}
+          <div class="bg-blue-50 rounded-xl px-3 py-2 text-center">
+            ${t1Team ? `<div class="font-bold text-blue-700 text-sm">${this.escapeHtml(t1Team)}</div>
+              <div class="text-blue-700 text-[11px] mt-0.5 opacity-70">${this.escapeHtml(player1Name)}</div>` :
+              `<span class="font-semibold text-blue-700 text-xs sm:text-sm">${this.formatTeamHtml(player1Name, tournament.isCustom)}</span>`}
           </div>
           <div class="text-center text-xs text-gray-400 font-medium">vs</div>
-          <div class="bg-blue-50 rounded-xl px-3 py-2 text-center">
-            ${t2Team ? `<div class="font-bold text-blue-700 text-sm">${this.escapeHtml(t2Team)}</div>
-              <div class="text-blue-600 text-[11px] mt-0.5 opacity-70">${this.escapeHtml(player2Name)}</div>` :
-              `<span class="font-semibold text-blue-700 text-xs sm:text-sm">${this.formatTeamHtml(player2Name, tournament.isCustom)}</span>`}
+          <div class="bg-violet-50 rounded-xl px-3 py-2 text-center">
+            ${t2Team ? `<div class="font-bold text-violet-700 text-sm">${this.escapeHtml(t2Team)}</div>
+              <div class="text-violet-600 text-[11px] mt-0.5 opacity-70">${this.escapeHtml(player2Name)}</div>` :
+              `<span class="font-semibold text-violet-700 text-xs sm:text-sm">${this.formatTeamHtml(player2Name, tournament.isCustom)}</span>`}
           </div>
         </div>
         <div class="space-y-3 mb-5">${setsHTML}</div>
         <div id="score-error" class="text-red-500 text-sm text-center mb-3 hidden"></div>
         <div class="flex gap-3">
           <button id="score-cancel" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 active:bg-gray-300 transition font-medium">취소</button>
-          <button id="score-save" class="flex-1 px-4 py-3 bg-green-700 text-white rounded-xl hover:bg-green-800 active:bg-green-900 transition font-medium">저장</button>
+          <button id="score-save" class="flex-1 px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 active:bg-blue-700 transition font-medium">저장</button>
         </div>
       </div>`;
 

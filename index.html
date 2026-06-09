@@ -46,10 +46,10 @@
   </script>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gradient-to-br from-white via-green-50/40 to-gray-50 min-h-screen">
+<body class="bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 min-h-screen">
 
   <!-- 로그인 페이지 -->
-  <div id="auth-container" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-white via-green-50 to-gray-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+  <div id="auth-container" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-white via-blue-50 to-gray-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
     <div class="text-center text-gray-400">로딩 중...</div>
   </div>
 
@@ -74,19 +74,19 @@
         </div>
         <!-- 메뉴 항목 -->
         <nav class="flex-1 space-y-1">
-          <button id="menu-home" class="menu-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-green-50 hover:text-green-800 transition">
+          <button id="menu-home" class="menu-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-800 transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/>
             </svg>
             <span>홈</span>
           </button>
-          <button id="menu-calendar" class="menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-green-50 hover:text-green-800 transition">
+          <button id="menu-calendar" class="menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-800 transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
             <span>일정 보기</span>
           </button>
-          <button id="menu-settings" class="menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-green-50 hover:text-green-800 transition hidden">
+          <button id="menu-settings" class="menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-800 transition hidden">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -106,13 +106,13 @@
       </div>
     </aside>
     <!-- 헤더 -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-green-200/60 sticky top-0 z-40 shadow-sm shadow-green-200/30">
+    <header class="bg-white/80 backdrop-blur-md border-b border-blue-200/60 sticky top-0 z-40 shadow-sm shadow-blue-200/30">
       <div class="max-w-4xl mx-auto px-4">
         <div class="flex items-center py-3">
           <!-- 좌측 영역 -->
           <div class="flex-1 flex items-center">
             <!-- 메뉴 버튼 (관리자용) -->
-            <button id="menu-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-green-50 transition" title="메뉴" aria-label="메뉴 열기">
+            <button id="menu-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-blue-50 transition" title="메뉴" aria-label="메뉴 열기">
               <svg class="w-[18px] h-[18px] text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
               </svg>
@@ -124,7 +124,7 @@
             </div>
           </div>
           <!-- 중앙: 로고 -->
-          <h1 id="header-logo" class="text-lg font-extrabold bg-gradient-to-r from-green-800 to-green-700 bg-clip-text text-transparent flex items-center gap-1.5 cursor-pointer select-none flex-shrink-0">
+          <h1 id="header-logo" class="text-lg font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-1.5 cursor-pointer select-none flex-shrink-0">
             <span class="header-logo-bg inline-flex w-7 h-7 rounded-lg flex-shrink-0"></span>
             <span>해태클럽</span>
           </h1>
@@ -143,27 +143,27 @@
         <!-- 탭 네비게이션 -->
         <nav class="flex -mb-px gap-0.5">
           <button data-tab="players"
-            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-700 active:bg-green-50/50 rounded-t-lg">
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-blue-700 active:bg-blue-50/50 rounded-t-lg">
             멤버 관리
           </button>
           <button data-tab="create"
-            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-700 active:bg-green-50/50 rounded-t-lg">
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-blue-700 active:bg-blue-50/50 rounded-t-lg">
             대회 만들기
           </button>
           <button data-tab="schedule"
-            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-700 active:bg-green-50/50 rounded-t-lg">
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-blue-700 active:bg-blue-50/50 rounded-t-lg">
             대진표 만들기
           </button>
           <button data-tab="calendar"
-            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-700 active:bg-green-50/50 rounded-t-lg">
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-blue-700 active:bg-blue-50/50 rounded-t-lg">
             일정 보기
           </button>
           <button data-tab="active"
-            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-700 active:bg-green-50/50 rounded-t-lg">
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-blue-700 active:bg-blue-50/50 rounded-t-lg">
             대진표
           </button>
           <button data-tab="stats"
-            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-green-700 active:bg-green-50/50 rounded-t-lg">
+            class="flex-1 min-w-0 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold text-center border-b-2 border-transparent transition whitespace-nowrap text-gray-400 hover:text-blue-700 active:bg-blue-50/50 rounded-t-lg">
             통계
           </button>
         </nav>
