@@ -274,12 +274,14 @@ const Calendar = {
 
     // 참석 버튼
     container.querySelectorAll('.cal-attend-btn').forEach(function(btn) {
-      btn.onclick = function(e) {
+      btn.onclick = async function(e) {
         e.stopPropagation();
         var id = this.dataset.id;
         var memberName = App.getMemberName();
         if (!memberName) return;
-        var result = Storage.toggleAttendance(id, memberName);
+        btn.disabled = true;
+        var result = await Storage.toggleAttendance(id, memberName);
+        btn.disabled = false;
         if (result === 'full') {
           alert('참석 인원이 마감되었습니다.');
           return;
@@ -305,12 +307,14 @@ const Calendar = {
 
     // 대기 신청/취소 버튼
     container.querySelectorAll('.cal-waitlist-btn').forEach(function(btn) {
-      btn.onclick = function(e) {
+      btn.onclick = async function(e) {
         e.stopPropagation();
         var id = this.dataset.id;
         var memberName = App.getMemberName();
         if (!memberName) return;
-        Storage.toggleWaitlist(id, memberName);
+        btn.disabled = true;
+        await Storage.toggleWaitlist(id, memberName);
+        btn.disabled = false;
         self.render(self._container);
       };
     });
@@ -614,8 +618,8 @@ const Calendar = {
 
     document.getElementById('cal-cancel-overlay').addEventListener('click', closeModal);
     document.getElementById('cal-cancel-no').addEventListener('click', closeModal);
-    document.getElementById('cal-cancel-yes').addEventListener('click', function() {
-      Storage.toggleAttendance(eventId, memberName);
+    document.getElementById('cal-cancel-yes').addEventListener('click', async function() {
+      await Storage.toggleAttendance(eventId, memberName);
       closeModal();
       self.render(self._container);
     });

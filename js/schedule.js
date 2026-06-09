@@ -661,11 +661,11 @@ const Schedule = {
       // 대진표 이름 수정
       const titleEl = container.querySelector('#schedule-title');
       if (titleEl) {
-        titleEl.onclick = () => {
+        titleEl.onclick = async () => {
           const newName = prompt('대진표 이름을 입력하세요', tournament.name);
           if (newName !== null && newName.trim() !== '') {
             tournament.name = newName.trim();
-            Storage.updateTournament(tournament);
+            await Storage.updateTournament(tournament);
             this.render(container, tournament);
           }
         };
@@ -679,7 +679,7 @@ const Schedule = {
     // 멤버 이름 탭 → 선택/교환 (관리자만)
     container.querySelectorAll('.swap-player').forEach(el => {
       if (RolesConfig.isMember()) { el.style.cursor = 'default'; return; }
-      el.onclick = (e) => {
+      el.onclick = async (e) => {
         e.stopPropagation(); // 카드 클릭(스코어) 방지
 
         const data = {
@@ -788,7 +788,7 @@ const Schedule = {
             tgtMatch[tgtKey] = tgtTeam.join(' / ');
           }
 
-          Storage.updateTournament(tournament);
+          await Storage.updateTournament(tournament);
           this.render(container, tournament);
         }
       };
@@ -810,7 +810,7 @@ const Schedule = {
         if (isMember && !this._isMyMatch(match)) return;
         const matchId = match.id;
         const tournamentId = tournament.id;
-        Results.showScoreModal(match, { setCount: 1, allowDraw: true, isTeamMode: tournament.isTeamMode, isCustom: tournament.isCustom }, (result) => {
+        Results.showScoreModal(match, { setCount: 1, allowDraw: true, isTeamMode: tournament.isTeamMode, isCustom: tournament.isCustom }, async (result) => {
           // 최신 대회 데이터를 다시 읽어서 해당 매치만 패치 (동시 접속 데이터 유실 방지)
           const freshTournament = Storage.getTournamentById(tournamentId);
           if (!freshTournament) return;
@@ -827,7 +827,7 @@ const Schedule = {
             freshTournament.status = 'completed';
             freshTournament.completedAt = new Date().toISOString();
           }
-          Storage.updateTournament(freshTournament);
+          await Storage.updateTournament(freshTournament);
           this.render(container, freshTournament);
         });
       };
@@ -836,7 +836,7 @@ const Schedule = {
     // 대진 삭제 (X 버튼, 관리자만)
     container.querySelectorAll('.delete-match-btn').forEach(btn => {
       if (RolesConfig.isMember()) return;
-      btn.onclick = (e) => {
+      btn.onclick = async (e) => {
         e.stopPropagation();
         const si = +btn.dataset.slotIdx;
         const mi = +btn.dataset.matchIdx;
@@ -845,7 +845,7 @@ const Schedule = {
         const label = `${match.player1} vs ${match.player2}`;
         if (!confirm(`이 대진을 삭제하시겠습니까?\n${label}`)) return;
         tournament.timeSlots[si].matches.splice(mi, 1);
-        Storage.updateTournament(tournament);
+        await Storage.updateTournament(tournament);
         this.render(container, tournament);
       };
     });
@@ -880,7 +880,7 @@ const Schedule = {
         card.classList.add('ring-2', 'ring-green-700');
       };
       card.ondragleave = () => card.classList.remove('ring-2', 'ring-green-700');
-      card.ondrop = (e) => {
+      card.ondrop = async (e) => {
         e.preventDefault();
         card.classList.remove('ring-2', 'ring-green-700');
         if (_dragType !== 'card') return;
@@ -925,7 +925,7 @@ const Schedule = {
         [srcSlot.matches[mi], tgtSlot.matches[tMI]] = [tgtSlot.matches[tMI], srcSlot.matches[mi]];
         srcSlot.matches[mi].court = srcCourt;
         tgtSlot.matches[tMI].court = tgtCourt;
-        Storage.updateTournament(tournament);
+        await Storage.updateTournament(tournament);
         this.render(container, tournament);
       };
     });
@@ -935,13 +935,13 @@ const Schedule = {
     const handles = container.querySelectorAll('.slot-drag-handle');
 
     // 시간대 교환 실행
-    const swapSlots = (srcIdx, tgtIdx) => {
+    const swapSlots = async (srcIdx, tgtIdx) => {
       if (srcIdx === tgtIdx) return;
       const srcMatches = tournament.timeSlots[srcIdx].matches;
       const tgtMatches = tournament.timeSlots[tgtIdx].matches;
       tournament.timeSlots[srcIdx].matches = tgtMatches;
       tournament.timeSlots[tgtIdx].matches = srcMatches;
-      Storage.updateTournament(tournament);
+      await Storage.updateTournament(tournament);
       this.render(container, tournament);
     };
 
@@ -1379,7 +1379,7 @@ const Schedule = {
         r.onchange = () => { selectedGameType = r.value; };
       });
 
-      modal.querySelector('.am-submit').onclick = () => {
+      modal.querySelector('.am-submit').onclick = async () => {
         const { t1p1, t1p2, t2p1, t2p2 } = selected;
         if (isSingles) {
           if (!t1p1 || !t2p1) {
@@ -1460,7 +1460,7 @@ const Schedule = {
           tournament.status = 'active';
           tournament.completedAt = null;
         }
-        Storage.updateTournament(tournament);
+        await Storage.updateTournament(tournament);
         modal.remove(); unlockScroll();
         this.render(container, tournament);
       };
@@ -1698,13 +1698,13 @@ const Schedule = {
     };
 
     picker.querySelectorAll('.amp-option').forEach(opt => {
-      opt.onclick = () => {
+      opt.onclick = async () => {
         if (opt.dataset.disabled === 'true') return;
         const newName = opt.dataset.name;
         const names = match[playerKey].split(' / ');
         names[pos] = newName;
         match[playerKey] = names.join(' / ');
-        Storage.updateTournament(tournament);
+        await Storage.updateTournament(tournament);
         closePicker2();
         onDone();
         this.render(container, tournament);
@@ -1744,9 +1744,9 @@ const Schedule = {
     modal.querySelector('.cgt-cancel').onclick = closeGtModal;
 
     modal.querySelectorAll('.cgt-option').forEach(btn => {
-      btn.onclick = () => {
+      btn.onclick = async () => {
         match.gameType = btn.dataset.type;
-        Storage.updateTournament(tournament);
+        await Storage.updateTournament(tournament);
         closeGtModal();
         this.render(container, tournament);
       };

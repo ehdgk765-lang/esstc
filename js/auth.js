@@ -16,6 +16,10 @@ const Auth = {
         if (lastUid && lastUid !== user.uid) {
           localStorage.removeItem(Storage.KEYS.PLAYERS);
           localStorage.removeItem(Storage.KEYS.TOURNAMENTS);
+          localStorage.removeItem(Storage.KEYS.EVENTS);
+          localStorage.removeItem(Storage.KEYS.COURTS);
+          localStorage.removeItem(Storage.KEYS.TEAMS);
+          localStorage.removeItem('tennis_member_name');
         }
         localStorage.setItem('tennis_last_uid', user.uid);
 
@@ -216,6 +220,7 @@ const Auth = {
       localStorage.removeItem(Storage.KEYS.TOURNAMENTS);
       localStorage.removeItem(Storage.KEYS.EVENTS);
       localStorage.removeItem(Storage.KEYS.COURTS);
+      localStorage.removeItem(Storage.KEYS.TEAMS);
       localStorage.removeItem('tennis_last_uid');
       localStorage.removeItem('tennis_member_name');
       fbAuth.signOut();

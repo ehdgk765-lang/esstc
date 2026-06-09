@@ -211,7 +211,7 @@ const Tournament = {
         // 멤버는 본인 매치만 입력 가능
         if (isMember && !this._isMyMatch(match)) return;
 
-        Results.showScoreModal(match, tournament, (result) => {
+        Results.showScoreModal(match, tournament, async (result) => {
           // 최신 대회 데이터를 다시 읽어서 해당 매치만 패치 (동시 접속 데이터 유실 방지)
           const freshTournament = Storage.getTournamentById(tournament.id);
           if (!freshTournament) return;
@@ -242,7 +242,7 @@ const Tournament = {
             freshTournament.completedAt = new Date().toISOString();
           }
 
-          Storage.updateTournament(freshTournament);
+          await Storage.updateTournament(freshTournament);
           this.render(container, freshTournament);
         });
       };

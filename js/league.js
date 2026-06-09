@@ -212,7 +212,7 @@ const League = {
         const match = rounds[round].find(m => m.id === matchId);
         if (!match || match.scores) return;
 
-        Results.showScoreModal(match, { ...tournament, allowDraw: true }, (result) => {
+        Results.showScoreModal(match, { ...tournament, allowDraw: true }, async (result) => {
           // 최신 대회 데이터를 다시 읽어서 해당 매치만 패치 (동시 접속 데이터 유실 방지)
           const freshTournament = Storage.getTournamentById(tournament.id);
           if (!freshTournament) return;
@@ -221,7 +221,7 @@ const League = {
           freshMatch.scores = result.scores;
           freshMatch.winner = result.winner;
 
-          Storage.updateTournament(freshTournament);
+          await Storage.updateTournament(freshTournament);
           this.render(container, freshTournament);
         });
       };

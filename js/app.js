@@ -98,6 +98,7 @@ const App = {
       localStorage.removeItem(Storage.KEYS.TOURNAMENTS);
       localStorage.removeItem(Storage.KEYS.EVENTS);
       localStorage.removeItem(Storage.KEYS.COURTS);
+      localStorage.removeItem(Storage.KEYS.TEAMS);
       localStorage.removeItem('tennis_last_uid');
       localStorage.removeItem('tennis_member_name');
       fbAuth.signOut();

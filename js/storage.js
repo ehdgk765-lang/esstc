@@ -74,9 +74,42 @@ const Storage = {
     return tournaments.find(t => t.id === id) || null;
   },
 
-  updateTournament(updatedTournament) {
-    const tournaments = this.getTournaments();
-    const index = tournaments.findIndex(t => t.id === updatedTournament.id);
+  async updateTournament(updatedTournament) {
+    var self = this;
+    var base = this._getBase();
+    if (!base) return this._updateTournamentLocal(updatedTournament);
+
+    var docRef = base.doc('tournaments');
+    try {
+      var finalTournaments = null;
+      await fbDb.runTransaction(function(transaction) {
+        return transaction.get(docRef).then(function(doc) {
+          var tournaments = [];
+          if (doc.exists) {
+            var d = doc.data();
+            tournaments = d.json ? JSON.parse(d.json) : (d.items || []);
+          }
+          var index = tournaments.findIndex(function(t) { return t.id === updatedTournament.id; });
+          if (index !== -1) {
+            tournaments[index] = updatedTournament;
+            transaction.set(docRef, { json: JSON.stringify(tournaments) });
+            finalTournaments = tournaments;
+          }
+        });
+      });
+      if (finalTournaments) {
+        localStorage.setItem(self.KEYS.TOURNAMENTS, JSON.stringify(finalTournaments));
+      }
+      return true;
+    } catch (err) {
+      console.error('updateTournament transaction error:', err);
+      return this._updateTournamentLocal(updatedTournament);
+    }
+  },
+
+  _updateTournamentLocal(updatedTournament) {
+    var tournaments = this.getTournaments();
+    var index = tournaments.findIndex(function(t) { return t.id === updatedTournament.id; });
     if (index !== -1) {
       tournaments[index] = updatedTournament;
       this.saveTournaments(tournaments);
@@ -105,9 +138,42 @@ const Storage = {
     return result;
   },
 
-  // 멤버 참석/취소 (멤버도 호출 가능)
-  toggleAttendance(eventId, memberName) {
-    var events = this.getEvents();
+  // 멤버 참석/취소 (멤버도 호출 가능) - Firestore Transaction 기반
+  async toggleAttendance(eventId, memberName) {
+    var self = this;
+    var base = this._getBase();
+    if (!base) return this._applyToggleAttendance(this.getEvents(), eventId, memberName, true);
+
+    var docRef = base.doc('events');
+    try {
+      var finalEvents = null;
+      var result = await fbDb.runTransaction(function(transaction) {
+        return transaction.get(docRef).then(function(doc) {
+          var events = [];
+          if (doc.exists) {
+            var d = doc.data();
+            events = d.json ? JSON.parse(d.json) : (d.items || []);
+          }
+          var toggleResult = self._applyToggleAttendance(events, eventId, memberName, false);
+          if (toggleResult.changed) {
+            transaction.set(docRef, { json: JSON.stringify(events) });
+          }
+          finalEvents = events;
+          return toggleResult.result;
+        });
+      });
+      if (finalEvents) {
+        localStorage.setItem(self.KEYS.EVENTS, JSON.stringify(finalEvents));
+      }
+      return result;
+    } catch (err) {
+      console.error('toggleAttendance transaction error:', err);
+      return this._applyToggleAttendance(this.getEvents(), eventId, memberName, true);
+    }
+  },
+
+  // 참석 토글 핵심 로직 (events 배열을 직접 수정)
+  _applyToggleAttendance(events, eventId, memberName, saveLocal) {
     for (var i = 0; i < events.length; i++) {
       if (events[i].id === eventId) {
         var ev = events[i];
@@ -115,19 +181,15 @@ const Storage = {
         if (!ev.waitlist) ev.waitlist = [];
         var idx = ev.participants.indexOf(memberName);
         if (idx >= 0) {
-          // 참석 취소
           ev.participants.splice(idx, 1);
-          // 대기자 첫 번째 자동 승격
           if (ev.waitlist.length > 0) {
             var promoted = ev.waitlist.shift();
             ev.participants.push(promoted);
           }
         } else {
-          // 참석 - 인원 제한 확인
           if (ev.maxParticipants > 0 && ev.participants.length >= ev.maxParticipants) {
-            return 'full';
+            return { changed: false, result: 'full' };
           }
-          // 같은 날짜 + 같은 시작 시간 중복 참석 확인
           var evStart = ev.startTime || ev.time || '';
           if (evStart) {
             for (var j = 0; j < events.length; j++) {
@@ -137,45 +199,78 @@ const Storage = {
               if (otherStart === evStart) {
                 var otherP = events[j].participants || [];
                 if (otherP.indexOf(memberName) >= 0) {
-                  return { conflict: true, title: events[j].title };
+                  return { changed: false, result: { conflict: true, title: events[j].title } };
                 }
               }
             }
           }
           ev.participants.push(memberName);
-          // 대기 목록에 있었으면 제거
           var wIdx = ev.waitlist.indexOf(memberName);
           if (wIdx >= 0) ev.waitlist.splice(wIdx, 1);
         }
-        this.set(this.KEYS.EVENTS, events);
-        this.syncToFirestore('events', events);
-        return true;
+        if (saveLocal) {
+          this.set(this.KEYS.EVENTS, events);
+          this.syncToFirestore('events', events);
+        }
+        return { changed: true, result: true };
       }
     }
-    return false;
+    return { changed: false, result: false };
   },
 
-  // 대기 신청/취소 (멤버도 호출 가능)
-  toggleWaitlist(eventId, memberName) {
-    var events = this.getEvents();
+  // 대기 신청/취소 (멤버도 호출 가능) - Firestore Transaction 기반
+  async toggleWaitlist(eventId, memberName) {
+    var self = this;
+    var base = this._getBase();
+    if (!base) return this._applyToggleWaitlist(this.getEvents(), eventId, memberName, true);
+
+    var docRef = base.doc('events');
+    try {
+      var finalEvents = null;
+      var result = await fbDb.runTransaction(function(transaction) {
+        return transaction.get(docRef).then(function(doc) {
+          var events = [];
+          if (doc.exists) {
+            var d = doc.data();
+            events = d.json ? JSON.parse(d.json) : (d.items || []);
+          }
+          var toggleResult = self._applyToggleWaitlist(events, eventId, memberName, false);
+          if (toggleResult.changed) {
+            transaction.set(docRef, { json: JSON.stringify(events) });
+          }
+          finalEvents = events;
+          return toggleResult.result;
+        });
+      });
+      if (finalEvents) {
+        localStorage.setItem(self.KEYS.EVENTS, JSON.stringify(finalEvents));
+      }
+      return result;
+    } catch (err) {
+      console.error('toggleWaitlist transaction error:', err);
+      return this._applyToggleWaitlist(this.getEvents(), eventId, memberName, true);
+    }
+  },
+
+  _applyToggleWaitlist(events, eventId, memberName, saveLocal) {
     for (var i = 0; i < events.length; i++) {
       if (events[i].id === eventId) {
         var ev = events[i];
         if (!ev.waitlist) ev.waitlist = [];
         var idx = ev.waitlist.indexOf(memberName);
         if (idx >= 0) {
-          // 대기 취소
           ev.waitlist.splice(idx, 1);
         } else {
-          // 대기 신청
           ev.waitlist.push(memberName);
         }
-        this.set(this.KEYS.EVENTS, events);
-        this.syncToFirestore('events', events);
-        return true;
+        if (saveLocal) {
+          this.set(this.KEYS.EVENTS, events);
+          this.syncToFirestore('events', events);
+        }
+        return { changed: true, result: true };
       }
     }
-    return false;
+    return { changed: false, result: false };
   },
 
   // 코트 관련
@@ -205,7 +300,6 @@ const Storage = {
   _unsubEvents: null,
   _unsubCourts: null,
   _remoteChangeTimer: null,
-  _localWriteTs: 0,
 
   // Firestore 경로 분기: 클럽 사용자(admin/member) → 공유, 그 외 → per-user
   _getBase() {
@@ -221,7 +315,6 @@ const Storage = {
   syncToFirestore(docName, data) {
     var base = this._getBase();
     if (!base) return;
-    this._localWriteTs = Date.now();
     base.doc(docName)
       .set({ json: JSON.stringify(data || []) })
       .catch(function(err) { console.error('Firestore sync error:', err); });
@@ -394,6 +487,9 @@ const Storage = {
     if (!base) return;
     var self = this;
 
+    // 페이지 복귀 시 최신 데이터 동기화
+    this._setupVisibilityListener();
+
     // 데이터 실시간 리스너
     this._unsubPlayers = base.doc('players').onSnapshot(function(doc) {
       if (doc.metadata.hasPendingWrites) return;
@@ -499,13 +595,40 @@ const Storage = {
       this._unsubTeams();
       this._unsubTeams = null;
     }
+    this._removeVisibilityListener();
   },
 
-  // 원격 변경 시 UI 갱신 (debounce 300ms + 로컬 쓰기 직후 무시)
+  // 페이지 복귀 시 Firestore에서 최신 데이터 재로드
+  _visibilityHandler: null,
+
+  _setupVisibilityListener() {
+    var self = this;
+    this._removeVisibilityListener();
+    this._visibilityHandler = function() {
+      if (document.visibilityState !== 'visible') return;
+      if (!fbAuth.currentUser) return;
+      // 백그라운드에서 복귀 시 Firestore → localStorage 재로드 + 실시간 리스너 재연결
+      self.loadFromFirestore().then(function() {
+        self.stopRealtimeSync();
+        self.startRealtimeSync();
+        self._onRemoteChange();
+      }).catch(function(err) {
+        console.error('Visibility reload error:', err);
+      });
+    };
+    document.addEventListener('visibilitychange', this._visibilityHandler);
+  },
+
+  _removeVisibilityListener() {
+    if (this._visibilityHandler) {
+      document.removeEventListener('visibilitychange', this._visibilityHandler);
+      this._visibilityHandler = null;
+    }
+  },
+
+  // 원격 변경 시 UI 갱신 (debounce 300ms)
   _onRemoteChange() {
     var self = this;
-    // 로컬 쓰기 직후 500ms 이내면 무시 (자기 자신의 변경)
-    if (Date.now() - this._localWriteTs < 500) return;
     // debounce: 여러 snapshot이 연달아 오면 마지막 것만 처리
     if (this._remoteChangeTimer) clearTimeout(this._remoteChangeTimer);
     this._remoteChangeTimer = setTimeout(function() {
