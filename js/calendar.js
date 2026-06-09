@@ -30,7 +30,8 @@ const Calendar = {
     }
 
     var events = Storage.getEvents();
-    var canEdit = !RolesConfig.isMember();
+    var isAdmin = !RolesConfig.isMember();
+    var isClubUser = RolesConfig.isClubUser();
 
     var year = this._currentMonth.getFullYear();
     var month = this._currentMonth.getMonth();
@@ -40,7 +41,7 @@ const Calendar = {
     var calendarGrid = this._buildCalendarGrid(year, month, events);
     // 선택 날짜 일정 목록
     var dayEvents = this._getEventsForDate(events, this._selectedDate);
-    var eventsList = this._buildEventsList(dayEvents, canEdit);
+    var eventsList = this._buildEventsList(dayEvents, isAdmin);
 
     patchDOM(container,
       '<div class="max-w-lg mx-auto">' +
@@ -70,7 +71,7 @@ const Calendar = {
         '<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">' +
           '<div class="flex items-center justify-between mb-3">' +
             '<h3 class="font-bold text-gray-800">' + this._formatDisplayDate(this._selectedDate) + '</h3>' +
-            (canEdit ? '<button id="cal-add-event" class="px-3 py-1.5 bg-green-700 text-white text-xs font-semibold rounded-lg hover:bg-green-800 transition">+ 일정 추가</button>' : '') +
+            (isClubUser ? '<button id="cal-add-event" class="px-3 py-1.5 bg-green-700 text-white text-xs font-semibold rounded-lg hover:bg-green-800 transition">+ 일정 추가</button>' : '') +
           '</div>' +
           '<div id="cal-events-list">' + eventsList + '</div>' +
         '</div>' +
@@ -125,7 +126,7 @@ const Calendar = {
     return html;
   },
 
-  _buildEventsList(dayEvents, canEdit) {
+  _buildEventsList(dayEvents, isAdmin) {
     if (dayEvents.length === 0) {
       return '<p class="text-sm text-gray-400 text-center py-4">등록된 일정이 없습니다.</p>';
     }
@@ -196,20 +197,28 @@ const Calendar = {
                     '<div class="font-semibold text-sm ' + color.text + '">' + this._escapeHtml(ev.title) + '</div>' +
                     (this._formatTimeRange(ev) ? '<div class="text-xs text-gray-500 mt-0.5">' + this._formatTimeRange(ev) + '</div>' : '') +
                     (ev.description ? '<div class="text-xs text-gray-500 mt-1">' + this._escapeHtml(ev.description) + '</div>' : '') +
+                    (ev.createdBy ? '<div class="text-xs text-gray-400 mt-1">' + this._escapeHtml(ev.createdBy) + '등록</div>' : '') +
                     attendInfo +
                     namesList +
                     waitlistHtml +
                   '</div>' +
-                  (canEdit ?
-                    '<div class="flex gap-1 flex-shrink-0">' +
-                      '<button class="cal-edit-btn w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/60 transition text-gray-400" data-id="' + ev.id + '" title="수정">' +
-                        '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>' +
-                      '</button>' +
-                      '<button class="cal-delete-btn w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-100 transition text-gray-400 hover:text-red-500" data-id="' + ev.id + '" title="삭제">' +
-                        '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
-                      '</button>' +
-                    '</div>'
-                  : '') +
+                  (function() {
+                    var isRegular = Storage.isRegularEvent(ev);
+                    var isCreator = memberName && ev.createdBy === memberName;
+                    var canEditThis = isAdmin || (isCreator && !isRegular);
+                    var canDeleteThis = isAdmin || (isCreator && !isRegular);
+                    if (!canEditThis && !canDeleteThis) return '';
+                    return '<div class="flex gap-1 flex-shrink-0">' +
+                      (canEditThis ?
+                        '<button class="cal-edit-btn w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/60 transition text-gray-400" data-id="' + ev.id + '" title="수정">' +
+                          '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>' +
+                        '</button>' : '') +
+                      (canDeleteThis ?
+                        '<button class="cal-delete-btn w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-100 transition text-gray-400 hover:text-red-500" data-id="' + ev.id + '" title="삭제">' +
+                          '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
+                        '</button>' : '') +
+                    '</div>';
+                  })() +
                 '</div>' +
                 attendBtn +
               '</div>';
@@ -259,14 +268,14 @@ const Calendar = {
       };
     });
 
-    // 삭제 버튼
+    // 삭제 버튼 (Transaction 기반)
     container.querySelectorAll('.cal-delete-btn').forEach(function(btn) {
-      btn.onclick = function(e) {
+      btn.onclick = async function(e) {
         e.stopPropagation();
         var id = this.dataset.id;
         if (confirm('이 일정을 삭제하시겠습니까?')) {
-          var events = Storage.getEvents().filter(function(e) { return e.id !== id; });
-          Storage.saveEvents(events);
+          btn.disabled = true;
+          await Storage.removeEvent(id);
           self.render(self._container);
         }
       };
@@ -521,8 +530,8 @@ const Calendar = {
     document.getElementById('cal-modal-overlay').addEventListener('click', closeModal);
     document.getElementById('cal-modal-cancel').addEventListener('click', closeModal);
 
-    // 저장
-    document.getElementById('cal-modal-save').addEventListener('click', function() {
+    // 저장 (Transaction 기반)
+    document.getElementById('cal-modal-save').addEventListener('click', async function() {
       var title = document.getElementById('event-title').value.trim();
       var date = document.getElementById('event-date').value;
       var sh = document.getElementById('event-start-hour').value;
@@ -547,26 +556,26 @@ const Calendar = {
         return;
       }
 
-      var events = Storage.getEvents();
+      var saveBtn = document.getElementById('cal-modal-save');
+      saveBtn.disabled = true;
+      saveBtn.textContent = '저장 중...';
 
       if (isEdit) {
-        // 수정
-        for (var i = 0; i < events.length; i++) {
-          if (events[i].id === existingEvent.id) {
-            events[i].title = title;
-            events[i].date = date;
-            events[i].startTime = startTime;
-            events[i].endTime = endTime;
-            delete events[i].time;
-            events[i].description = desc;
-            events[i].color = color;
-            events[i].maxParticipants = maxP;
-            break;
-          }
-        }
+        // 수정 (Transaction)
+        var updatedFields = {
+          title: title,
+          date: date,
+          startTime: startTime,
+          endTime: endTime,
+          description: desc,
+          color: color,
+          maxParticipants: maxP
+        };
+        await Storage.editEvent(existingEvent.id, updatedFields);
       } else {
-        // 추가
-        events.push({
+        // 추가 (Transaction)
+        var creatorName = App.getMemberName() || '관리자';
+        var newEvent = {
           id: Storage.generateId(),
           title: title,
           date: date,
@@ -576,17 +585,12 @@ const Calendar = {
           color: color,
           maxParticipants: maxP,
           participants: [],
-          waitlist: []
-        });
+          waitlist: [],
+          createdBy: creatorName
+        };
+        await Storage.addEvent(newEvent);
       }
 
-      // 날짜순 정렬
-      events.sort(function(a, b) {
-        if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-        return (a.startTime || a.time || '').localeCompare(b.startTime || b.time || '');
-      });
-
-      Storage.saveEvents(events);
       self._selectedDate = date;
       closeModal();
       self.render(self._container);

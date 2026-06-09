@@ -138,6 +138,194 @@ const Storage = {
     return result;
   },
 
+  // 정규 운동 여부 판별
+  isRegularEvent(ev) {
+    return ev && ev.title && ev.title.indexOf('정규 운동') >= 0;
+  },
+
+  // 단일 이벤트 추가 (멤버도 호출 가능, 정규 운동 제외) - Firestore Transaction 기반
+  async addEvent(newEvent) {
+    var self = this;
+    if (this.isRegularEvent(newEvent) && typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
+      console.warn('멤버는 정규 운동 일정을 추가할 수 없습니다.');
+      return false;
+    }
+    var base = this._getBase();
+    if (!base) return this._addEventLocal(newEvent);
+
+    var docRef = base.doc('events');
+    try {
+      var finalEvents = null;
+      await fbDb.runTransaction(function(transaction) {
+        return transaction.get(docRef).then(function(doc) {
+          var events = [];
+          if (doc.exists) {
+            var d = doc.data();
+            events = d.json ? JSON.parse(d.json) : (d.items || []);
+          }
+          events.push(newEvent);
+          events.sort(function(a, b) {
+            if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+            return (a.startTime || a.time || '').localeCompare(b.startTime || b.time || '');
+          });
+          transaction.set(docRef, { json: JSON.stringify(events) });
+          finalEvents = events;
+        });
+      });
+      if (finalEvents) {
+        localStorage.setItem(self.KEYS.EVENTS, JSON.stringify(finalEvents));
+      }
+      return true;
+    } catch (err) {
+      console.error('addEvent transaction error:', err);
+      return this._addEventLocal(newEvent);
+    }
+  },
+
+  _addEventLocal(newEvent) {
+    var events = this.getEvents();
+    events.push(newEvent);
+    events.sort(function(a, b) {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      return (a.startTime || a.time || '').localeCompare(b.startTime || b.time || '');
+    });
+    this.set(this.KEYS.EVENTS, events);
+    this.syncToFirestore('events', events);
+    return true;
+  },
+
+  // 단일 이벤트 수정 (멤버도 호출 가능, 정규 운동 제외) - Firestore Transaction 기반
+  async editEvent(eventId, updatedFields) {
+    var self = this;
+    var base = this._getBase();
+    if (!base) return this._editEventLocal(eventId, updatedFields);
+
+    var docRef = base.doc('events');
+    try {
+      var finalEvents = null;
+      await fbDb.runTransaction(function(transaction) {
+        return transaction.get(docRef).then(function(doc) {
+          var events = [];
+          if (doc.exists) {
+            var d = doc.data();
+            events = d.json ? JSON.parse(d.json) : (d.items || []);
+          }
+          for (var i = 0; i < events.length; i++) {
+            if (events[i].id === eventId) {
+              // 멤버 수정 제한: 정규 운동 불가 + 본인 등록 일정만 수정 가능
+              if (typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
+                if (self.isRegularEvent(events[i])) return;
+                var myName = typeof App !== 'undefined' ? App.getMemberName() : '';
+                if (!events[i].createdBy || events[i].createdBy !== myName) return;
+              }
+              for (var key in updatedFields) {
+                if (updatedFields.hasOwnProperty(key)) {
+                  events[i][key] = updatedFields[key];
+                }
+              }
+              // 구버전 time 필드 정리
+              if (updatedFields.startTime !== undefined) delete events[i].time;
+              break;
+            }
+          }
+          events.sort(function(a, b) {
+            if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+            return (a.startTime || a.time || '').localeCompare(b.startTime || b.time || '');
+          });
+          transaction.set(docRef, { json: JSON.stringify(events) });
+          finalEvents = events;
+        });
+      });
+      if (finalEvents) {
+        localStorage.setItem(self.KEYS.EVENTS, JSON.stringify(finalEvents));
+      }
+      return true;
+    } catch (err) {
+      console.error('editEvent transaction error:', err);
+      return this._editEventLocal(eventId, updatedFields);
+    }
+  },
+
+  _editEventLocal(eventId, updatedFields) {
+    var events = this.getEvents();
+    for (var i = 0; i < events.length; i++) {
+      if (events[i].id === eventId) {
+        if (typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
+          if (this.isRegularEvent(events[i])) return false;
+          var myName = typeof App !== 'undefined' ? App.getMemberName() : '';
+          if (!events[i].createdBy || events[i].createdBy !== myName) return false;
+        }
+        for (var key in updatedFields) {
+          if (updatedFields.hasOwnProperty(key)) {
+            events[i][key] = updatedFields[key];
+          }
+        }
+        // 구버전 time 필드 정리
+        if (updatedFields.startTime !== undefined) delete events[i].time;
+        break;
+      }
+    }
+    events.sort(function(a, b) {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      return (a.startTime || a.time || '').localeCompare(b.startTime || b.time || '');
+    });
+    this.set(this.KEYS.EVENTS, events);
+    this.syncToFirestore('events', events);
+    return true;
+  },
+
+  // 단일 이벤트 삭제 (멤버도 호출 가능, 정규 운동 제외) - Firestore Transaction 기반
+  async removeEvent(eventId) {
+    var self = this;
+    var base = this._getBase();
+    if (!base) return this._removeEventLocal(eventId);
+
+    var docRef = base.doc('events');
+    try {
+      var finalEvents = null;
+      await fbDb.runTransaction(function(transaction) {
+        return transaction.get(docRef).then(function(doc) {
+          var events = [];
+          if (doc.exists) {
+            var d = doc.data();
+            events = d.json ? JSON.parse(d.json) : (d.items || []);
+          }
+          // 멤버 삭제 제한: 정규 운동 불가 + 본인 등록 일정만 삭제 가능
+          var target = events.find(function(e) { return e.id === eventId; });
+          if (target && typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
+            if (self.isRegularEvent(target)) { finalEvents = events; return; }
+            var myName = typeof App !== 'undefined' ? App.getMemberName() : '';
+            if (!target.createdBy || target.createdBy !== myName) { finalEvents = events; return; }
+          }
+          events = events.filter(function(e) { return e.id !== eventId; });
+          transaction.set(docRef, { json: JSON.stringify(events) });
+          finalEvents = events;
+        });
+      });
+      if (finalEvents) {
+        localStorage.setItem(self.KEYS.EVENTS, JSON.stringify(finalEvents));
+      }
+      return true;
+    } catch (err) {
+      console.error('removeEvent transaction error:', err);
+      return this._removeEventLocal(eventId);
+    }
+  },
+
+  _removeEventLocal(eventId) {
+    var events = this.getEvents();
+    var target = events.find(function(e) { return e.id === eventId; });
+    if (target && typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
+      if (this.isRegularEvent(target)) return false;
+      var myName = typeof App !== 'undefined' ? App.getMemberName() : '';
+      if (!target.createdBy || target.createdBy !== myName) return false;
+    }
+    events = events.filter(function(e) { return e.id !== eventId; });
+    this.set(this.KEYS.EVENTS, events);
+    this.syncToFirestore('events', events);
+    return true;
+  },
+
   // 멤버 참석/취소 (멤버도 호출 가능) - Firestore Transaction 기반
   async toggleAttendance(eventId, memberName) {
     var self = this;
