@@ -307,7 +307,7 @@ const CustomBracket = {
   _commitPick(slotIndex, value, previewContainer) {
     this._state.placements[slotIndex] = value;
     const existing = document.querySelector('.cb-player-picker');
-    if (existing) { existing.remove(); unlockScroll(); }
+    if (existing) { if (existing._vpCleanup) existing._vpCleanup(); existing.remove(); unlockScroll(); }
     this.renderBracketPreview(previewContainer);
     this._updatePlacementCount(previewContainer.closest('form')?.parentElement || previewContainer.parentElement);
   },
@@ -321,10 +321,10 @@ const CustomBracket = {
     const teamMap = buildTeamMap();
 
     const picker = document.createElement('div');
-    picker.className = 'cb-player-picker fixed inset-0 z-50 flex items-center justify-center p-4';
+    picker.className = 'cb-player-picker fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4';
     picker.style.backgroundColor = 'rgba(0,0,0,0.5)';
     picker.innerHTML = `
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 max-h-[70vh] flex flex-col">
+      <div class="cb-inner bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 flex flex-col overflow-y-auto">
         <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
         <h3 class="text-lg font-bold text-center mb-3">멤버 선택</h3>
 
@@ -361,8 +361,42 @@ const CustomBracket = {
 
     document.body.appendChild(picker);
     lockScroll();
-    picker.addEventListener('click', (e) => { if (e.target === picker) { picker.remove(); unlockScroll(); } });
-    picker.querySelector('.cb-picker-cancel').onclick = () => { picker.remove(); unlockScroll(); };
+
+    // 모바일 키보드 대응
+    const cbInner = picker.querySelector('.cb-inner');
+    const adjustCbPicker = () => {
+      if (window.visualViewport) {
+        const vh = window.visualViewport.height;
+        const offsetTop = window.visualViewport.offsetTop;
+        picker.style.height = vh + 'px';
+        picker.style.top = offsetTop + 'px';
+        picker.style.bottom = 'auto';
+        cbInner.style.maxHeight = (vh - 16) + 'px';
+      }
+    };
+    if (window.visualViewport) {
+      adjustCbPicker();
+      window.visualViewport.addEventListener('resize', adjustCbPicker);
+      window.visualViewport.addEventListener('scroll', adjustCbPicker);
+    } else {
+      cbInner.style.maxHeight = '70vh';
+    }
+
+    const closeCbPicker = () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustCbPicker);
+        window.visualViewport.removeEventListener('scroll', adjustCbPicker);
+      }
+      picker.remove(); unlockScroll();
+    };
+    picker._vpCleanup = () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustCbPicker);
+        window.visualViewport.removeEventListener('scroll', adjustCbPicker);
+      }
+    };
+    picker.addEventListener('click', (e) => { if (e.target === picker) closeCbPicker(); });
+    picker.querySelector('.cb-picker-cancel').onclick = () => closeCbPicker();
 
     const searchInput = picker.querySelector('#cb-custom-name');
     searchInput.focus();
@@ -407,7 +441,7 @@ const CustomBracket = {
     const picked = [null, null]; // 2명 선택
 
     const picker = document.createElement('div');
-    picker.className = 'cb-player-picker fixed inset-0 z-50 flex items-center justify-center p-4';
+    picker.className = 'cb-player-picker fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4';
     picker.style.backgroundColor = 'rgba(0,0,0,0.5)';
 
     const renderPickerContent = () => {
@@ -415,7 +449,7 @@ const CustomBracket = {
       const allUsed = new Set([...usedNames, ...pickedSet]);
 
       return `
-        <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 max-h-[70vh] flex flex-col">
+        <div class="cb-inner bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 flex flex-col overflow-y-auto">
           <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
           <h3 class="text-lg font-bold text-center mb-3">복식 팀 구성</h3>
 
@@ -485,7 +519,7 @@ const CustomBracket = {
     };
 
     const bindPickerEvents = () => {
-      picker.querySelector('.cb-picker-cancel').onclick = () => { picker.remove(); unlockScroll(); };
+      picker.querySelector('.cb-picker-cancel').onclick = () => { if (picker._vpCleanup) picker._vpCleanup(); picker.remove(); unlockScroll(); };
 
       const searchInput = picker.querySelector('#cb-doubles-search');
       if (searchInput) searchInput.focus();
@@ -538,7 +572,37 @@ const CustomBracket = {
     picker.innerHTML = renderPickerContent();
     document.body.appendChild(picker);
     lockScroll();
-    picker.addEventListener('click', (e) => { if (e.target === picker) { picker.remove(); unlockScroll(); } });
+
+    // 모바일 키보드 대응
+    const adjustDbPicker = () => {
+      if (window.visualViewport) {
+        const vh = window.visualViewport.height;
+        const offsetTop = window.visualViewport.offsetTop;
+        picker.style.height = vh + 'px';
+        picker.style.top = offsetTop + 'px';
+        picker.style.bottom = 'auto';
+        const cbInner2 = picker.querySelector('.cb-inner');
+        if (cbInner2) cbInner2.style.maxHeight = (vh - 16) + 'px';
+      }
+    };
+    if (window.visualViewport) {
+      adjustDbPicker();
+      window.visualViewport.addEventListener('resize', adjustDbPicker);
+      window.visualViewport.addEventListener('scroll', adjustDbPicker);
+    } else {
+      const cbInner2 = picker.querySelector('.cb-inner');
+      if (cbInner2) cbInner2.style.maxHeight = '70vh';
+    }
+    picker._vpCleanup = () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustDbPicker);
+        window.visualViewport.removeEventListener('scroll', adjustDbPicker);
+      }
+    };
+
+    picker.addEventListener('click', (e) => {
+      if (e.target === picker) { picker._vpCleanup(); picker.remove(); unlockScroll(); }
+    });
     bindPickerEvents();
   },
 

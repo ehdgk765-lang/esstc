@@ -1266,7 +1266,7 @@ const Schedule = {
     let selectedGameType = isSingles ? 'MS' : 'XD';
 
     const modal = document.createElement('div');
-    modal.className = 'add-match-modal fixed inset-0 z-50 flex items-center justify-center p-4';
+    modal.className = 'add-match-modal fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4';
     modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
 
     const renderModal = () => {
@@ -1291,7 +1291,7 @@ const Schedule = {
       };
 
       return `
-        <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full p-5 max-h-[85vh] overflow-y-auto">
+        <div class="am-modal-inner bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full p-5 overflow-y-auto">
           <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
           <h3 class="text-lg font-bold text-center mb-4">대진 추가</h3>
           <div class="space-y-4">
@@ -1367,7 +1367,7 @@ const Schedule = {
     };
 
     const bindModalEvents = () => {
-      modal.querySelector('.am-cancel').onclick = () => { modal.remove(); unlockScroll(); };
+      modal.querySelector('.am-cancel').onclick = () => { closeAddMatch(); };
 
       // 코트/시간대/경기종류 선택 상태 추적
       modal.querySelectorAll('input[name="am-court"]').forEach(r => {
@@ -1461,7 +1461,7 @@ const Schedule = {
           tournament.completedAt = null;
         }
         await Storage.updateTournament(tournament);
-        modal.remove(); unlockScroll();
+        closeAddMatch();
         this.render(container, tournament);
       };
 
@@ -1496,7 +1496,35 @@ const Schedule = {
     modal.innerHTML = renderModal();
     document.body.appendChild(modal);
     lockScroll();
-    modal.addEventListener('click', (e) => { if (e.target === modal) { modal.remove(); unlockScroll(); } });
+
+    // 모바일 키보드 대응: visualViewport로 모달 높이 동적 조정
+    const amInnerDiv = modal.querySelector('.am-modal-inner');
+    const adjustForKeyboard = () => {
+      if (window.visualViewport) {
+        const vh = window.visualViewport.height;
+        const offsetTop = window.visualViewport.offsetTop;
+        modal.style.height = vh + 'px';
+        modal.style.top = offsetTop + 'px';
+        modal.style.bottom = 'auto';
+        if (amInnerDiv) amInnerDiv.style.maxHeight = (vh - 16) + 'px';
+      }
+    };
+    if (window.visualViewport) {
+      adjustForKeyboard();
+      window.visualViewport.addEventListener('resize', adjustForKeyboard);
+      window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+    } else {
+      if (amInnerDiv) amInnerDiv.style.maxHeight = '85vh';
+    }
+    const closeAddMatch = () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustForKeyboard);
+        window.visualViewport.removeEventListener('scroll', adjustForKeyboard);
+      }
+      modal.remove(); unlockScroll();
+    };
+
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeAddMatch(); });
     bindModalEvents();
   },
 
@@ -1534,10 +1562,10 @@ const Schedule = {
     const pickerTitle = allowedTeam ? `멤버 선택 — ${Results.escapeHtml(allowedTeam)}` : '멤버 선택';
 
     const picker = document.createElement('div');
-    picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-center justify-center p-4';
+    picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4';
     picker.style.backgroundColor = 'rgba(0,0,0,0.5)';
     picker.innerHTML = `
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 max-h-[70vh] flex flex-col">
+      <div class="amp-inner bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 flex flex-col overflow-y-auto">
         <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
         <h3 class="text-lg font-bold text-center mb-3">${pickerTitle}</h3>
         <div class="mb-3">
@@ -1574,7 +1602,34 @@ const Schedule = {
 
     document.body.appendChild(picker);
     lockScroll();
-    const closePicker = () => { picker.remove(); unlockScroll(); };
+
+    // 모바일 키보드 대응
+    const ampInner = picker.querySelector('.amp-inner');
+    const adjustPicker = () => {
+      if (window.visualViewport) {
+        const vh = window.visualViewport.height;
+        const offsetTop = window.visualViewport.offsetTop;
+        picker.style.height = vh + 'px';
+        picker.style.top = offsetTop + 'px';
+        picker.style.bottom = 'auto';
+        ampInner.style.maxHeight = (vh - 16) + 'px';
+      }
+    };
+    if (window.visualViewport) {
+      adjustPicker();
+      window.visualViewport.addEventListener('resize', adjustPicker);
+      window.visualViewport.addEventListener('scroll', adjustPicker);
+    } else {
+      ampInner.style.maxHeight = '70vh';
+    }
+
+    const closePicker = () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustPicker);
+        window.visualViewport.removeEventListener('scroll', adjustPicker);
+      }
+      picker.remove(); unlockScroll();
+    };
     picker.addEventListener('click', (e) => { if (e.target === picker) closePicker(); });
     picker.querySelector('.amp-cancel').onclick = closePicker;
 
@@ -1649,10 +1704,10 @@ const Schedule = {
       : `멤버 교체 — ${Results.escapeHtml(oldName)}`;
 
     const picker = document.createElement('div');
-    picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-center justify-center p-4';
+    picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4';
     picker.style.backgroundColor = 'rgba(0,0,0,0.5)';
     picker.innerHTML = `
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 max-h-[70vh] flex flex-col">
+      <div class="amp-inner bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 flex flex-col overflow-y-auto">
         <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
         <h3 class="text-lg font-bold text-center mb-3">${pickerTitle}</h3>
         <div class="mb-3">
@@ -1684,7 +1739,34 @@ const Schedule = {
 
     document.body.appendChild(picker);
     lockScroll();
-    const closePicker2 = () => { picker.remove(); unlockScroll(); };
+
+    // 모바일 키보드 대응
+    const ampInner2 = picker.querySelector('.amp-inner');
+    const adjustPicker2 = () => {
+      if (window.visualViewport) {
+        const vh = window.visualViewport.height;
+        const offsetTop = window.visualViewport.offsetTop;
+        picker.style.height = vh + 'px';
+        picker.style.top = offsetTop + 'px';
+        picker.style.bottom = 'auto';
+        ampInner2.style.maxHeight = (vh - 16) + 'px';
+      }
+    };
+    if (window.visualViewport) {
+      adjustPicker2();
+      window.visualViewport.addEventListener('resize', adjustPicker2);
+      window.visualViewport.addEventListener('scroll', adjustPicker2);
+    } else {
+      ampInner2.style.maxHeight = '70vh';
+    }
+
+    const closePicker2 = () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustPicker2);
+        window.visualViewport.removeEventListener('scroll', adjustPicker2);
+      }
+      picker.remove(); unlockScroll();
+    };
     picker.addEventListener('click', (e) => { if (e.target === picker) { closePicker2(); onDone(); } });
     picker.querySelector('.amp-cancel').onclick = () => { closePicker2(); onDone(); };
 

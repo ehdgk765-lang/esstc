@@ -372,10 +372,11 @@ const Calendar = {
     // 모달 HTML
     var modal = document.createElement('div');
     modal.id = 'cal-modal';
-    modal.className = 'fixed inset-0 z-[60] flex items-center justify-center p-4';
+    modal.className = 'fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4';
     modal.innerHTML =
       '<div class="absolute inset-0 bg-black/40" id="cal-modal-overlay"></div>' +
-      '<div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm max-h-[85vh] overflow-y-auto">' +
+      '<div class="cal-modal-inner relative bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-sm overflow-y-auto">' +
+        '<div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-3 sm:hidden"></div>' +
         '<div class="p-4 space-y-2.5">' +
         '<h3 class="text-base font-bold text-gray-800">' + (isEdit ? '일정 수정' : '일정 추가') + '</h3>' +
         // 제목 + 코트 (한 줄로 합침)
@@ -441,6 +442,26 @@ const Calendar = {
 
     document.body.appendChild(modal);
     lockScroll();
+
+    // 모바일 키보드 대응: visualViewport로 모달 높이 동적 조정
+    var innerDiv = modal.querySelector('.cal-modal-inner');
+    var adjustForKeyboard = function() {
+      if (window.visualViewport) {
+        var vh = window.visualViewport.height;
+        var offsetTop = window.visualViewport.offsetTop;
+        modal.style.height = vh + 'px';
+        modal.style.top = offsetTop + 'px';
+        modal.style.bottom = 'auto';
+        innerDiv.style.maxHeight = (vh - 16) + 'px';
+      }
+    };
+    if (window.visualViewport) {
+      adjustForKeyboard();
+      window.visualViewport.addEventListener('resize', adjustForKeyboard);
+      window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+    } else {
+      innerDiv.style.maxHeight = '85vh';
+    }
 
     // 제목 입력에 포커스
     setTimeout(function() {
@@ -517,6 +538,10 @@ const Calendar = {
 
     // 닫기
     function closeModal() {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustForKeyboard);
+        window.visualViewport.removeEventListener('scroll', adjustForKeyboard);
+      }
       modal.remove();
       unlockScroll();
     }

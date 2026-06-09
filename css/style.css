@@ -317,8 +317,12 @@ header {
     gap: 4px;
   }
 
-  /* 모달 작은 화면 대응 */
-  #score-modal > div {
+  /* 모달 작은 화면 대응 - 공통 bottom-sheet 스타일 */
+  #score-modal > div,
+  #cal-modal .cal-modal-inner,
+  .add-match-modal .am-modal-inner,
+  .am-player-picker .amp-inner,
+  .cb-player-picker .cb-inner {
     margin: 0;
     padding: 16px !important;
     padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
