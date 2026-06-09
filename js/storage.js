@@ -288,6 +288,275 @@ const Storage = {
     return result;
   },
 
+  // 코트 이름 변경 + 이벤트 제목 일괄 수정 (Firestore Transaction 기반)
+  async renameCourtInEvents(oldName, newName) {
+    var self = this;
+    var base = this._getBase();
+    if (!base) {
+      // Firestore 미사용 시 로컬 처리
+      return this._renameCourtInEventsLocal(oldName, newName);
+    }
+
+    var eventsDocRef = base.doc('events');
+    try {
+      var finalEvents = null;
+      await fbDb.runTransaction(function(transaction) {
+        return transaction.get(eventsDocRef).then(function(doc) {
+          var events = [];
+          if (doc.exists) {
+            var d = doc.data();
+            events = d.json ? JSON.parse(d.json) : (d.items || []);
+          }
+          var prefix = oldName + ' ';
+          var changed = false;
+          events.forEach(function(ev) {
+            if (ev.title && ev.title.indexOf(prefix) === 0) {
+              ev.title = newName + ev.title.substring(oldName.length);
+              changed = true;
+            }
+          });
+          if (changed) {
+            transaction.set(eventsDocRef, { json: JSON.stringify(events) });
+          }
+          finalEvents = events;
+        });
+      });
+      if (finalEvents) {
+        localStorage.setItem(self.KEYS.EVENTS, JSON.stringify(finalEvents));
+      }
+      return true;
+    } catch (err) {
+      console.error('renameCourtInEvents transaction error:', err);
+      return this._renameCourtInEventsLocal(oldName, newName);
+    }
+  },
+
+  _renameCourtInEventsLocal(oldName, newName) {
+    var events = this.getEvents();
+    var prefix = oldName + ' ';
+    var changed = false;
+    events.forEach(function(ev) {
+      if (ev.title && ev.title.indexOf(prefix) === 0) {
+        ev.title = newName + ev.title.substring(oldName.length);
+        changed = true;
+      }
+    });
+    if (changed) {
+      this.set(this.KEYS.EVENTS, events);
+      this.syncToFirestore('events', events);
+    }
+    return true;
+  },
+
+  // 멤버 이름 변경 - 모든 데이터 일괄 수정 (Firestore Transaction 기반)
+  // players, events, tournaments, teams 4개 문서를 원자적으로 수정
+  async renameMember(oldName, newName) {
+    var self = this;
+    var base = this._getBase();
+    if (!base) {
+      return this._renameMemberLocal(oldName, newName);
+    }
+
+    var playersRef = base.doc('players');
+    var eventsRef = base.doc('events');
+    var tournamentsRef = base.doc('tournaments');
+    var teamsRef = base.doc('teams');
+
+    try {
+      var result = { players: null, events: null, tournaments: null, teams: null };
+      await fbDb.runTransaction(function(transaction) {
+        return Promise.all([
+          transaction.get(playersRef),
+          transaction.get(eventsRef),
+          transaction.get(tournamentsRef),
+          transaction.get(teamsRef)
+        ]).then(function(docs) {
+          var parse = function(doc) {
+            if (!doc.exists) return [];
+            var d = doc.data();
+            return d.json ? JSON.parse(d.json) : (d.items || []);
+          };
+          var players = parse(docs[0]);
+          var events = parse(docs[1]);
+          var tournaments = parse(docs[2]);
+          var teams = parse(docs[3]);
+
+          // 1) players: name 필드 변경
+          players.forEach(function(p) {
+            if (p.name === oldName) p.name = newName;
+          });
+
+          // 2) events: participants, waitlist 변경
+          events.forEach(function(ev) {
+            if (ev.participants) {
+              for (var i = 0; i < ev.participants.length; i++) {
+                if (ev.participants[i] === oldName) ev.participants[i] = newName;
+              }
+            }
+            if (ev.waitlist) {
+              for (var i = 0; i < ev.waitlist.length; i++) {
+                if (ev.waitlist[i] === oldName) ev.waitlist[i] = newName;
+              }
+            }
+          });
+
+          // 3) tournaments: players 배열 + 모든 매치의 player1, player2, winner
+          var replaceInField = function(val) {
+            if (!val) return val;
+            if (val === oldName) return newName;
+            // 복식 형식: "이름1 / 이름2"
+            var parts = val.split(' / ');
+            var changed = false;
+            for (var i = 0; i < parts.length; i++) {
+              if (parts[i] === oldName) { parts[i] = newName; changed = true; }
+            }
+            return changed ? parts.join(' / ') : val;
+          };
+          tournaments.forEach(function(t) {
+            // players 배열
+            if (t.players) {
+              for (var i = 0; i < t.players.length; i++) {
+                t.players[i] = replaceInField(t.players[i]);
+              }
+            }
+            // 토너먼트/리그 rounds
+            if (t.rounds) {
+              t.rounds.forEach(function(round) {
+                var matches = Array.isArray(round) ? round : (round.matches || []);
+                matches.forEach(function(m) {
+                  if (m.player1) m.player1 = replaceInField(m.player1);
+                  if (m.player2) m.player2 = replaceInField(m.player2);
+                  if (m.winner) m.winner = replaceInField(m.winner);
+                });
+              });
+            }
+            // 스케줄 timeSlots
+            if (t.timeSlots) {
+              t.timeSlots.forEach(function(slot) {
+                (slot.matches || []).forEach(function(m) {
+                  if (m.player1) m.player1 = replaceInField(m.player1);
+                  if (m.player2) m.player2 = replaceInField(m.player2);
+                  if (m.winner) m.winner = replaceInField(m.winner);
+                });
+              });
+            }
+          });
+
+          // 4) teams: members 배열
+          teams.forEach(function(team) {
+            if (team.members) {
+              for (var i = 0; i < team.members.length; i++) {
+                if (team.members[i] === oldName) team.members[i] = newName;
+              }
+            }
+          });
+
+          transaction.set(playersRef, { json: JSON.stringify(players) });
+          transaction.set(eventsRef, { json: JSON.stringify(events) });
+          transaction.set(tournamentsRef, { json: JSON.stringify(tournaments) });
+          transaction.set(teamsRef, { json: JSON.stringify(teams) });
+
+          result.players = players;
+          result.events = events;
+          result.tournaments = tournaments;
+          result.teams = teams;
+        });
+      });
+
+      // 트랜잭션 성공 시 localStorage 갱신
+      if (result.players) localStorage.setItem(self.KEYS.PLAYERS, JSON.stringify(result.players));
+      if (result.events) localStorage.setItem(self.KEYS.EVENTS, JSON.stringify(result.events));
+      if (result.tournaments) localStorage.setItem(self.KEYS.TOURNAMENTS, JSON.stringify(result.tournaments));
+      if (result.teams) localStorage.setItem(self.KEYS.TEAMS, JSON.stringify(result.teams));
+
+      return true;
+    } catch (err) {
+      console.error('renameMember transaction error:', err);
+      return this._renameMemberLocal(oldName, newName);
+    }
+  },
+
+  _renameMemberLocal(oldName, newName) {
+    var replaceInField = function(val) {
+      if (!val) return val;
+      if (val === oldName) return newName;
+      var parts = val.split(' / ');
+      var changed = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (parts[i] === oldName) { parts[i] = newName; changed = true; }
+      }
+      return changed ? parts.join(' / ') : val;
+    };
+
+    // players
+    var players = this.getPlayers();
+    players.forEach(function(p) { if (p.name === oldName) p.name = newName; });
+    this.set(this.KEYS.PLAYERS, players);
+    this.syncToFirestore('players', players);
+
+    // events
+    var events = this.getEvents();
+    events.forEach(function(ev) {
+      if (ev.participants) {
+        for (var i = 0; i < ev.participants.length; i++) {
+          if (ev.participants[i] === oldName) ev.participants[i] = newName;
+        }
+      }
+      if (ev.waitlist) {
+        for (var i = 0; i < ev.waitlist.length; i++) {
+          if (ev.waitlist[i] === oldName) ev.waitlist[i] = newName;
+        }
+      }
+    });
+    this.set(this.KEYS.EVENTS, events);
+    this.syncToFirestore('events', events);
+
+    // tournaments
+    var tournaments = this.getTournaments();
+    tournaments.forEach(function(t) {
+      if (t.players) {
+        for (var i = 0; i < t.players.length; i++) {
+          t.players[i] = replaceInField(t.players[i]);
+        }
+      }
+      if (t.rounds) {
+        t.rounds.forEach(function(round) {
+          var matches = Array.isArray(round) ? round : (round.matches || []);
+          matches.forEach(function(m) {
+            if (m.player1) m.player1 = replaceInField(m.player1);
+            if (m.player2) m.player2 = replaceInField(m.player2);
+            if (m.winner) m.winner = replaceInField(m.winner);
+          });
+        });
+      }
+      if (t.timeSlots) {
+        t.timeSlots.forEach(function(slot) {
+          (slot.matches || []).forEach(function(m) {
+            if (m.player1) m.player1 = replaceInField(m.player1);
+            if (m.player2) m.player2 = replaceInField(m.player2);
+            if (m.winner) m.winner = replaceInField(m.winner);
+          });
+        });
+      }
+    });
+    this.set(this.KEYS.TOURNAMENTS, tournaments);
+    this.syncToFirestore('tournaments', tournaments);
+
+    // teams
+    var teams = this.getTeams();
+    teams.forEach(function(team) {
+      if (team.members) {
+        for (var i = 0; i < team.members.length; i++) {
+          if (team.members[i] === oldName) team.members[i] = newName;
+        }
+      }
+    });
+    this.set(this.KEYS.TEAMS, teams);
+    this.syncToFirestore('teams', teams);
+
+    return true;
+  },
+
   // 유틸리티
   generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);

@@ -276,7 +276,8 @@ const App = {
                     '<div class="flex items-center justify-between">' +
                       '<div class="flex items-center gap-3 min-w-0">' +
                         '<span class="w-7 h-7 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">' + (i + 1) + '</span>' +
-                        '<span class="text-gray-800 font-medium truncate">' + self._escapeHtml(c.name) + '</span>' +
+                        '<span class="court-name-display text-gray-800 font-medium truncate cursor-pointer hover:text-green-700 transition" data-court-id="' + c.id + '" title="클릭하여 이름 수정">' + self._escapeHtml(c.name) + '</span>' +
+                        '<input type="text" class="court-name-edit hidden px-2 py-1 border border-green-500 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-green-700 focus:outline-none" data-court-id="' + c.id + '" value="' + self._escapeHtml(c.name) + '" maxlength="30">' +
                         (slots.length > 0 ? '<span class="text-gray-400 text-xs ml-1">' + slots.length + '개</span>' : '') +
                       '</div>' +
                       '<div class="flex items-center gap-1 flex-shrink-0 ml-2">' +
@@ -391,6 +392,71 @@ const App = {
         var courts = Storage.getCourts().filter(function(c) { return c.id !== btn.dataset.id; });
         Storage.saveCourts(courts);
         self.renderSettings(container);
+      };
+    });
+
+    // 코트 이름 수정 (클릭하면 input 표시, Enter/blur로 확정)
+    container.querySelectorAll('.court-name-display').forEach(function(span) {
+      span.onclick = function() {
+        var courtId = span.dataset.courtId;
+        var input = container.querySelector('.court-name-edit[data-court-id="' + courtId + '"]');
+        if (!input) return;
+        span.classList.add('hidden');
+        input.classList.remove('hidden');
+        input.focus();
+        input.select();
+      };
+    });
+
+    container.querySelectorAll('.court-name-edit').forEach(function(input) {
+      var commitRename = async function() {
+        var courtId = input.dataset.courtId;
+        var newName = input.value.trim();
+        var span = container.querySelector('.court-name-display[data-court-id="' + courtId + '"]');
+        if (!newName) {
+          // 빈 이름이면 원래 이름 복원
+          input.classList.add('hidden');
+          if (span) span.classList.remove('hidden');
+          return;
+        }
+        var courts = Storage.getCourts();
+        var court = courts.find(function(c) { return c.id === courtId; });
+        if (!court) return;
+        var oldName = court.name;
+        if (newName === oldName) {
+          // 이름 변경 없음
+          input.classList.add('hidden');
+          if (span) span.classList.remove('hidden');
+          return;
+        }
+        // 중복 이름 체크
+        if (courts.some(function(c) { return c.id !== courtId && c.name === newName; })) {
+          alert('이미 등록된 코트 이름입니다.');
+          input.value = oldName;
+          input.classList.add('hidden');
+          if (span) span.classList.remove('hidden');
+          return;
+        }
+        // 코트 이름 변경
+        court.name = newName;
+        Storage.saveCourts(courts);
+        // 기존 이벤트에서 이전 코트 이름이 포함된 제목 일괄 변경 (Firestore Transaction 기반)
+        input.disabled = true;
+        await Storage.renameCourtInEvents(oldName, newName);
+        self.renderSettings(container);
+      };
+      input.onblur = commitRename;
+      input.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          input.blur();
+        } else if (e.key === 'Escape') {
+          var courtId = input.dataset.courtId;
+          var courts = Storage.getCourts();
+          var court = courts.find(function(c) { return c.id === courtId; });
+          if (court) input.value = court.name;
+          input.blur();
+        }
       };
     });
 

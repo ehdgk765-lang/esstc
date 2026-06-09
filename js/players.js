@@ -67,7 +67,8 @@ const Players = {
                   <div class="flex items-center gap-3 min-w-0">
                     <input type="checkbox" class="player-select-cb w-4 h-4 text-green-700 rounded border-gray-300 focus:ring-green-700 cursor-pointer flex-shrink-0" data-id="${p.id}">
                     <span class="w-7 h-7 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">${i + 1}</span>
-                    <span class="text-gray-800 font-medium truncate">${this.escapeHtml(p.name)}</span>
+                    <span class="member-name-display text-gray-800 font-medium truncate cursor-pointer hover:text-green-700 transition" data-id="${p.id}" title="클릭하여 이름 수정">${this.escapeHtml(p.name)}</span>
+                    <input type="text" class="member-name-edit hidden px-2 py-1 border border-green-500 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-green-700 focus:outline-none" data-id="${p.id}" value="${this.escapeAttr(p.name)}" maxlength="20" style="width:80px">
                     <button class="gender-toggle-btn text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 cursor-pointer active:scale-95 transition ${p.gender === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}"
                       data-id="${p.id}">${p.gender === 'M' ? '남' : '여'}</button>
                     <button class="ntrp-toggle-btn text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 cursor-pointer active:scale-95 transition bg-yellow-100 text-yellow-700"
@@ -158,6 +159,69 @@ const Players = {
         el.classList.toggle('search-hidden', !match);
       });
       updateSelectionUI();
+    });
+
+    // 멤버 이름 수정 (클릭하면 input 표시, Enter/blur로 확정)
+    container.querySelectorAll('.member-name-display').forEach(span => {
+      span.onclick = () => {
+        var id = span.dataset.id;
+        var input = container.querySelector('.member-name-edit[data-id="' + id + '"]');
+        if (!input) return;
+        span.classList.add('hidden');
+        input.classList.remove('hidden');
+        input.focus();
+        input.select();
+      };
+    });
+
+    container.querySelectorAll('.member-name-edit').forEach(input => {
+      var self = this;
+      var commitRename = async function() {
+        var playerId = input.dataset.id;
+        var newName = input.value.trim();
+        var span = container.querySelector('.member-name-display[data-id="' + playerId + '"]');
+        if (!newName) {
+          input.classList.add('hidden');
+          if (span) span.classList.remove('hidden');
+          return;
+        }
+        var players = Storage.getPlayers();
+        var player = players.find(function(p) { return p.id === playerId; });
+        if (!player) return;
+        var oldName = player.name;
+        if (newName === oldName) {
+          input.classList.add('hidden');
+          if (span) span.classList.remove('hidden');
+          return;
+        }
+        if (players.some(function(p) { return p.id !== playerId && p.name === newName; })) {
+          alert('이미 등록된 멤버 이름입니다.');
+          input.value = oldName;
+          input.classList.add('hidden');
+          if (span) span.classList.remove('hidden');
+          return;
+        }
+        input.disabled = true;
+        await Storage.renameMember(oldName, newName);
+        // 현재 로그인된 멤버 이름도 갱신
+        if (typeof App !== 'undefined' && App.getMemberName() === oldName) {
+          App.setMemberName(newName);
+        }
+        self.render(container);
+      };
+      input.onblur = commitRename;
+      input.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          input.blur();
+        } else if (e.key === 'Escape') {
+          var playerId = input.dataset.id;
+          var players = Storage.getPlayers();
+          var player = players.find(function(p) { return p.id === playerId; });
+          if (player) input.value = player.name;
+          input.blur();
+        }
+      };
     });
 
     container.querySelectorAll('.gender-toggle-btn').forEach(btn => {
