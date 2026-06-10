@@ -274,7 +274,7 @@ const App = {
         '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-100/30 border border-white/60 mb-4">' +
           '<div class="px-4 py-3">' +
             '<h3 class="font-semibold text-gray-700 text-sm mb-3">정규 일정 확인</h3>' +
-            '<div class="flex items-center gap-2 mb-2">' +
+            '<div class="flex items-center gap-2">' +
               '<select id="reg-check-year" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700">' +
                 '<option value="' + (curYear - 1) + '">' + (curYear - 1) + '년</option>' +
                 '<option value="' + curYear + '" selected>' + curYear + '년</option>' +
@@ -284,16 +284,7 @@ const App = {
                 monthOptions +
               '</select>' +
               '<select id="reg-check-day" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700"></select>' +
-            '</div>' +
-            '<div class="flex items-center gap-2">' +
-              '<select id="reg-check-court" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700">' +
-                (courts.length === 0 ? '<option value="">코트 없음</option>' :
-                  courts.map(function(c) {
-                    return '<option value="' + self._escapeHtml(c.name) + '">' + self._escapeHtml(c.name) + '</option>';
-                  }).join('')) +
-              '</select>' +
-              '<select id="reg-check-time" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700"></select>' +
-              '<button id="reg-check-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-blue-200/50">정규 일정 확인</button>' +
+              '<button id="reg-check-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-blue-200/50">참석자 확인</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -643,35 +634,6 @@ const App = {
     regCheckYear.onchange = updateDayOptions;
     regCheckMonth.onchange = updateDayOptions;
 
-    // 정규 일정 확인 - 코트 선택 시 시간대 옵션 동적 갱신
-    var regCheckCourt = document.getElementById('reg-check-court');
-    var regCheckTime = document.getElementById('reg-check-time');
-    function updateTimeOptions() {
-      var courtName = regCheckCourt.value;
-      var allCourts = Storage.getCourts();
-      var court = allCourts.find(function(c) { return c.name === courtName; });
-      var slots = court && court.slots ? court.slots : [];
-      var prevTime = regCheckTime.value;
-      regCheckTime.innerHTML = '';
-      if (slots.length === 0) {
-        var opt = document.createElement('option');
-        opt.value = '';
-        opt.textContent = '슬롯 없음';
-        regCheckTime.appendChild(opt);
-      } else {
-        slots.forEach(function(s) {
-          var label = s.startTime.replace(':00', '') + '~' + s.endTime.replace(':00', '');
-          var opt = document.createElement('option');
-          opt.value = label;
-          opt.textContent = label;
-          if (label === prevTime) opt.selected = true;
-          regCheckTime.appendChild(opt);
-        });
-      }
-    }
-    updateTimeOptions();
-    regCheckCourt.onchange = updateTimeOptions;
-
     // 정규 일정 확인 버튼
     var regCheckBtn = document.getElementById('reg-check-btn');
     if (regCheckBtn) {
@@ -679,9 +641,7 @@ const App = {
         var year = parseInt(regCheckYear.value);
         var month = parseInt(regCheckMonth.value);
         var day = parseInt(regCheckDay.value);
-        var court = document.getElementById('reg-check-court').value;
-        var time = document.getElementById('reg-check-time').value;
-        self.handleRegularExerciseCheck(year, month, day, court, time);
+        self.handleRegularExerciseCheck(year, month, day);
       };
     }
   },
@@ -772,7 +732,7 @@ const App = {
     alert((month + 1) + '월 주말 정규 일정 ' + newCount + '건이 등록되었습니다.');
   },
 
-  handleRegularExerciseCheck(year, month, day, court, time) {
+  handleRegularExerciseCheck(year, month, day) {
     var selectedDate = new Date(year, month, day);
     var dow = selectedDate.getDay();
     var daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -787,14 +747,12 @@ const App = {
     if (satDay >= 1 && satDay <= daysInMonth) weekendDays.push({ day: satDay, dow: 6 });
     if (sunDay >= 1 && sunDay <= daysInMonth) weekendDays.push({ day: sunDay, dow: 0 });
 
-    // 이벤트 제목 매칭 키워드: "{코트명} {시간대}" 형식
-    var titleKeyword = court + ' ' + time;
     var events = Storage.getEvents();
     var mm = String(month + 1).padStart(2, '0');
 
     var lines = [];
     lines.push('안녕하세요.');
-    lines.push('금주 참석자 명단을 공지합니다. 변동사항이 있으시면 말씀해주시기 바랍니다.');
+    lines.push('금주 참석자 명단입니다. 변동사항이 있으시면 말씀해주세요 !');
     lines.push('');
 
     for (var i = 0; i < weekendDays.length; i++) {
@@ -802,36 +760,57 @@ const App = {
       var dd = String(wd.day).padStart(2, '0');
       var dateStr = year + '-' + mm + '-' + dd;
 
-      var matchEvent = events.find(function(e) {
-        return e.date === dateStr && e.title.indexOf(titleKeyword) >= 0;
+      // 해당 날짜의 정규 일정 이벤트를 모두 찾기 (시간순 정렬)
+      var dayEvents = events.filter(function(e) {
+        return e.date === dateStr && e.title.indexOf('정규 일정') >= 0;
+      }).sort(function(a, b) {
+        return (a.startTime || '').localeCompare(b.startTime || '');
       });
 
-      var participants = matchEvent ? (matchEvent.participants || []) : [];
-      lines.push('* ' + wd.day + '일(' + dayNames[wd.dow] + ') : ' + participants.length + '명');
-      if (participants.length > 0) {
-        for (var pi = 0; pi < participants.length; pi += 6) {
-          lines.push(participants.slice(pi, pi + 6).join(', '));
-        }
+      if (dayEvents.length === 0) {
+        lines.push('* ' + wd.day + '일(' + dayNames[wd.dow] + ') : 일정 없음');
+        lines.push('');
+        continue;
       }
-      lines.push('');
+
+      for (var j = 0; j < dayEvents.length; j++) {
+        var ev = dayEvents[j];
+        var participants = ev.participants || [];
+        // 제목에서 코트명+시간 추출 (예: "코트1 6~9 정규 일정" → "코트1 6~9")
+        var label = ev.title.replace(' 정규 일정', '');
+        lines.push('* ' + wd.day + '일(' + dayNames[wd.dow] + ') ' + label + ' : ' + participants.length + '명');
+        if (participants.length > 0) {
+          for (var pi = 0; pi < participants.length; pi += 6) {
+            lines.push(participants.slice(pi, pi + 6).join(', '));
+          }
+        }
+        lines.push('');
+      }
     }
 
     var text = lines.join('\n').trim();
 
-    navigator.clipboard.writeText(text).then(function() {
-      alert('클립보드에 복사되었습니다.');
-    }).catch(function() {
-      // fallback
+    var fallbackCopy = function(str) {
       var ta = document.createElement('textarea');
-      ta.value = text;
+      ta.value = str;
       ta.style.position = 'fixed';
       ta.style.opacity = '0';
       document.body.appendChild(ta);
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        alert('클립보드에 복사되었습니다.');
+      }).catch(function() {
+        fallbackCopy(text);
+        alert('클립보드에 복사되었습니다.');
+      });
+    } else {
+      fallbackCopy(text);
       alert('클립보드에 복사되었습니다.');
-    });
+    }
   },
 
   _escapeHtml(text) {
