@@ -274,7 +274,7 @@ const App = {
         '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-100/30 border border-white/60 mb-4">' +
           '<div class="px-4 py-3">' +
             '<h3 class="font-semibold text-gray-700 text-sm mb-3">정규 일정 확인</h3>' +
-            '<div class="flex items-center gap-2">' +
+            '<div class="flex items-center gap-2 mb-2">' +
               '<select id="reg-check-year" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700">' +
                 '<option value="' + (curYear - 1) + '">' + (curYear - 1) + '년</option>' +
                 '<option value="' + curYear + '" selected>' + curYear + '년</option>' +
@@ -283,9 +283,9 @@ const App = {
               '<select id="reg-check-month" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700">' +
                 monthOptions +
               '</select>' +
-              '<select id="reg-check-day" class="px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700"></select>' +
-              '<button id="reg-check-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-blue-200/50">참석자 확인</button>' +
+              '<select id="reg-check-day" class="flex-1 min-w-0 px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-medium bg-white focus:ring-2 focus:ring-blue-700 focus:border-blue-700"></select>' +
             '</div>' +
+            '<button id="reg-check-btn" class="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-medium shadow-sm shadow-blue-200/50">참석자 확인</button>' +
           '</div>' +
         '</div>' +
         // 코트 관리
@@ -363,6 +363,18 @@ const App = {
                 }).join('')) +
           '</div>' +
         '</div>' +
+        // 데이터 백업/복원
+        '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-100/30 border border-white/60 mt-4">' +
+          '<div class="px-4 py-3">' +
+            '<h3 class="font-semibold text-gray-700 text-sm mb-3">데이터 백업 / 복원</h3>' +
+            '<div class="flex gap-2">' +
+              '<button id="backup-export-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-green-200/50">내보내기</button>' +
+              '<button id="backup-import-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 active:scale-[0.98] transition-all font-medium whitespace-nowrap shadow-sm shadow-orange-200/50">가져오기</button>' +
+              '<input type="file" id="backup-file-input" accept=".json" class="hidden">' +
+            '</div>' +
+            '<p class="text-xs text-gray-400 mt-2">내보내기: 전체 데이터를 JSON 파일로 다운로드 / 가져오기: 백업 파일에서 복원</p>' +
+          '</div>' +
+        '</div>' +
         /* [역할 관리 - 비활성화] 필요 시 주석 해제하여 사용
         '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-100/30 border border-white/60 mt-4">' +
           '<div class="px-4 py-3 border-b border-gray-100">' +
@@ -414,6 +426,80 @@ const App = {
       if (e.key === 'Enter') addRole();
     };
     */
+
+    // 데이터 내보내기
+    var exportBtn = document.getElementById('backup-export-btn');
+    if (exportBtn) {
+      exportBtn.onclick = function() {
+        var data = {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          players: Storage.getPlayers(),
+          tournaments: Storage.getTournaments(),
+          events: Storage.getEvents(),
+          teams: Storage.getTeams(),
+          courts: Storage.getCourts()
+        };
+        var json = JSON.stringify(data, null, 2);
+        var blob = new Blob([json], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        var now = new Date();
+        var ts = now.getFullYear() +
+          String(now.getMonth() + 1).padStart(2, '0') +
+          String(now.getDate()).padStart(2, '0') + '_' +
+          String(now.getHours()).padStart(2, '0') +
+          String(now.getMinutes()).padStart(2, '0');
+        a.href = url;
+        a.download = 'backup_' + ts + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+    }
+
+    // 데이터 가져오기
+    var importBtn = document.getElementById('backup-import-btn');
+    var fileInput = document.getElementById('backup-file-input');
+    if (importBtn && fileInput) {
+      importBtn.onclick = function() { fileInput.click(); };
+      fileInput.onchange = function() {
+        var file = fileInput.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            var data = JSON.parse(e.target.result);
+            if (!data.players && !data.tournaments && !data.events) {
+              alert('유효한 백업 파일이 아닙니다.');
+              return;
+            }
+            var summary = [];
+            if (data.players) summary.push('멤버 ' + data.players.length + '명');
+            if (data.tournaments) summary.push('대진표 ' + data.tournaments.length + '개');
+            if (data.events) summary.push('일정 ' + data.events.length + '개');
+            if (data.teams) summary.push('팀 ' + data.teams.length + '개');
+            if (data.courts) summary.push('코트 ' + data.courts.length + '면');
+            var msg = '다음 데이터를 복원합니다:\n' + summary.join(', ') +
+              '\n\n현재 데이터가 모두 덮어씌워집니다. 계속하시겠습니까?';
+            if (!confirm(msg)) { fileInput.value = ''; return; }
+            if (data.players) Storage.savePlayers(data.players);
+            if (data.tournaments) Storage.saveTournaments(data.tournaments);
+            if (data.events) Storage.saveEvents(data.events);
+            if (data.teams) Storage.saveTeams(data.teams);
+            if (data.courts) Storage.saveCourts(data.courts);
+            fileInput.value = '';
+            alert('데이터가 복원되었습니다.');
+            self.renderSettings(container);
+          } catch (err) {
+            alert('파일을 읽을 수 없습니다. 올바른 JSON 파일인지 확인해주세요.');
+            fileInput.value = '';
+          }
+        };
+        reader.readAsText(file);
+      };
+    }
 
     // 코트 추가
     var courtInput = document.getElementById('court-name-input');
