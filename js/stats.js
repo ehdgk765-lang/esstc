@@ -103,7 +103,8 @@ const Stats = {
       });
     });
 
-    return Object.values(medals).sort((a, b) =>
+    const currentPlayers = new Set(Storage.getPlayers().map(p => p.name));
+    return Object.values(medals).filter(m => currentPlayers.has(m.name)).sort((a, b) =>
       b.total - a.total || b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze
     );
   },
@@ -136,7 +137,8 @@ const Stats = {
       participated.forEach(name => { aggregate[name].tournamentCount++; });
     });
 
-    return Object.values(aggregate).sort((a, b) =>
+    const currentPlayers = new Set(Storage.getPlayers().map(p => p.name));
+    return Object.values(aggregate).filter(s => currentPlayers.has(s.name)).sort((a, b) =>
       b.games - a.games || b.wins - a.wins || b.matchPoints - a.matchPoints || b.scorePoints - a.scorePoints
     );
   },
