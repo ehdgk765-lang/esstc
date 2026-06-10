@@ -112,7 +112,7 @@ const Stats = {
     const aggregate = {};
     const ensure = (name) => {
       if (!aggregate[name]) {
-        aggregate[name] = { name, games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0, tournamentCount: 0 };
+        aggregate[name] = { name, games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0, tournamentCount: 0, md: 0, wd: 0, xd: 0, fd: 0 };
       }
     };
 
@@ -127,6 +127,10 @@ const Stats = {
         aggregate[s.name].draws += s.draws;
         aggregate[s.name].matchPoints += s.matchPoints;
         aggregate[s.name].scorePoints += s.scorePoints;
+        aggregate[s.name].md += (s.md || 0);
+        aggregate[s.name].wd += (s.wd || 0);
+        aggregate[s.name].xd += (s.xd || 0);
+        aggregate[s.name].fd += (s.fd || 0);
         participated.add(s.name);
       });
       participated.forEach(name => { aggregate[name].tournamentCount++; });
@@ -257,6 +261,7 @@ const Stats = {
         <div class="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
           <span class="font-semibold text-gray-700 text-sm">참여 순위</span>
         </div>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm standings-table">
           <thead>
             <tr class="border-b border-gray-100 text-gray-500 text-xs">
@@ -264,6 +269,10 @@ const Stats = {
               <th class="text-left px-3 py-2">멤버</th>
               <th class="text-center px-2 py-2">참여</th>
               <th class="text-center px-2 py-2">경기</th>
+              <th class="text-center px-1 py-2">남복</th>
+              <th class="text-center px-1 py-2">여복</th>
+              <th class="text-center px-1 py-2">혼복</th>
+              <th class="text-center px-1 py-2">잡복</th>
             </tr>
           </thead>
           <tbody>
@@ -274,13 +283,18 @@ const Stats = {
               const isMe = RolesConfig.isMember() && App.getMemberName() && s.name === App.getMemberName();
               return `<tr class="border-b border-gray-50 hover:bg-gray-50 ${isMe ? 'bg-blue-50/60' : ''}">
                 <td class="text-center px-2 py-2 text-gray-400 font-bold">${idx + 1}</td>
-                <td class="px-3 py-2 font-medium ${isMe ? 'text-blue-700' : 'text-gray-800'}">${Results.escapeHtml(s.name)} ${gb}</td>
+                <td class="px-3 py-2 font-medium whitespace-nowrap ${isMe ? 'text-blue-700' : 'text-gray-800'}">${Results.escapeHtml(s.name)} ${gb}</td>
                 <td class="text-center px-2 py-2 text-gray-600">${s.tournamentCount}</td>
                 <td class="text-center px-2 py-2 text-gray-600">${s.games}</td>
+                <td class="text-center px-1 py-2 text-blue-600">${s.md || 0}</td>
+                <td class="text-center px-1 py-2 text-pink-600">${s.wd || 0}</td>
+                <td class="text-center px-1 py-2 text-purple-600">${s.xd || 0}</td>
+                <td class="text-center px-1 py-2 text-orange-600">${s.fd || 0}</td>
               </tr>`;
             }).join('')}
           </tbody>
         </table>
+        </div>
       </div>`;
   },
 };

@@ -153,6 +153,52 @@ const Schedule = {
     return remainM >= 0 && remainF >= 0 && (remainM + remainF) >= needAny;
   },
 
+  // 플랜별 게임 수 균형 점수 계산 → 가장 균형 잡힌 플랜 선택
+  selectBestPlan(plans, males, females, gameCounts) {
+    const allPlayers = [...males, ...females];
+    const candidates = [];
+
+    for (const plan of plans) {
+      // 이 플랜이 필요로 하는 성별별 인원 계산
+      let needM = 0, needF = 0, needAny = 0;
+      for (const type of plan) {
+        const cfg = SCHEDULE_GAME_TYPES[type];
+        needM += cfg.needM;
+        needF += cfg.needF;
+        if (cfg.needAny) needAny += cfg.needAny;
+      }
+
+      // 시뮬레이션: 게임 수 적은 순으로 선택 (실제 로직과 동일)
+      const sortedM = [...males].sort((a, b) => (gameCounts[a] || 0) - (gameCounts[b] || 0));
+      const sortedF = [...females].sort((a, b) => (gameCounts[a] || 0) - (gameCounts[b] || 0));
+
+      const pickedM = sortedM.slice(0, needM);
+      const pickedF = sortedF.slice(0, needF);
+
+      // needAny(섞어복식/단식)는 남은 풀에서 게임 수 적은 순으로
+      const remainAll = [...sortedM.slice(needM), ...sortedF.slice(needF)]
+        .sort((a, b) => (gameCounts[a] || 0) - (gameCounts[b] || 0));
+      const pickedAny = remainAll.slice(0, needAny);
+
+      // 이 플랜 실행 후 예상 게임 수 시뮬레이션
+      const simCounts = {};
+      allPlayers.forEach(p => { simCounts[p] = gameCounts[p] || 0; });
+      [...pickedM, ...pickedF, ...pickedAny].forEach(p => { simCounts[p]++; });
+
+      // 점수: max - min 차이 (낮을수록 균형적)
+      const counts = allPlayers.map(p => simCounts[p]);
+      const score = Math.max(...counts) - Math.min(...counts);
+
+      candidates.push({ plan, score });
+    }
+
+    // 최저 점수(가장 균형적인) 플랜들 중 랜덤 선택
+    candidates.sort((a, b) => a.score - b.score);
+    const bestScore = candidates[0].score;
+    const best = candidates.filter(c => c.score === bestScore);
+    return best[Math.floor(Math.random() * best.length)].plan;
+  },
+
   // 한 타임슬롯의 매치 생성 (플랜 기반)
   generateSlotMatches(males, females, courts, gameCounts, allowMixed, usedTeams, isSingles) {
     // 코트를 최대한 채우는 유효한 플랜 찾기
@@ -165,8 +211,8 @@ const Schedule = {
 
     if (validPlans.length === 0) return [];
 
-    // 유효한 플랜 중 랜덤 선택
-    const plan = validPlans[Math.floor(Math.random() * validPlans.length)];
+    // 게임 수 균형을 고려하여 최적 플랜 선택
+    const plan = this.selectBestPlan(validPlans, males, females, gameCounts);
 
     // NTRP 맵 + 가용 멤버 정렬: 경기 수 적은 순 (동점 셔플)
     const ntrpMap = this.buildNtrpMap();
@@ -290,7 +336,7 @@ const Schedule = {
   // 멤버별 통계 계산
   calcPlayerStats(tournament) {
     const stats = {};
-    const ensure = (p) => { if (!stats[p]) stats[p] = { name: p, games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0 }; };
+    const ensure = (p) => { if (!stats[p]) stats[p] = { name: p, games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0, md: 0, wd: 0, xd: 0, fd: 0 }; };
 
     for (const slot of tournament.timeSlots) {
       for (const m of slot.matches) {
@@ -299,6 +345,12 @@ const Schedule = {
         [...t1, ...t2].forEach(p => {
           ensure(p);
           stats[p].games++;
+          // 게임 종류별 카운트
+          const gt = m.gameType;
+          if (gt === 'MD' || gt === 'MS') stats[p].md++;
+          else if (gt === 'WD' || gt === 'WS') stats[p].wd++;
+          else if (gt === 'XD') stats[p].xd++;
+          else if (gt === 'FD' || gt === 'FS') stats[p].fd++;
         });
         if (m.winner === 'draw') {
           [...t1, ...t2].forEach(p => { if (stats[p]) stats[p].draws++; });
@@ -532,11 +584,16 @@ const Schedule = {
             <div class="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
               <span class="font-semibold text-gray-700 text-sm">멤버별 통계</span>
             </div>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm standings-table">
               <thead>
                 <tr class="border-b border-gray-100 text-gray-500 text-xs">
                   <th class="text-left px-4 py-2">멤버</th>
                   <th class="text-center px-2 py-2">경기</th>
+                  <th class="text-center px-1 py-2">남복</th>
+                  <th class="text-center px-1 py-2">여복</th>
+                  <th class="text-center px-1 py-2">혼복</th>
+                  <th class="text-center px-1 py-2">잡복</th>
                   <th class="text-center px-2 py-2">승</th>
                   <th class="text-center px-2 py-2">무</th>
                   <th class="text-center px-2 py-2">패</th>
@@ -552,11 +609,15 @@ const Schedule = {
                   const rank = playerStats.findIndex(p => p.matchPoints === s.matchPoints && p.scorePoints === s.scorePoints);
                   const medalHtml = isComplete && rank < 3 ? '<span style="display:inline-block;width:22px;height:26px;background:url(\'css/medal.png\') no-repeat;background-size:300% auto;background-position:' + medalPos[rank] + ' center;vertical-align:middle;margin-right:2px;"></span>' : '';
                   return '<tr class="border-b border-gray-50 hover:bg-gray-50' + (isComplete && rank < 3 ? ' bg-gradient-to-r' + (rank === 0 ? ' from-yellow-50/60' : rank === 1 ? ' from-gray-50/60' : ' from-orange-50/60') + ' to-transparent' : '') + '">' +
-                    '<td class="px-4 py-2 font-medium text-gray-800">' + medalHtml + Results.escapeHtml(s.name) +
+                    '<td class="px-4 py-2 font-medium text-gray-800 whitespace-nowrap">' + medalHtml + Results.escapeHtml(s.name) +
                       ' ' + genderBadge(gender) +
                       (teamName ? ' <span class="text-xs px-1 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">' + Results.escapeHtml(teamName) + '</span>' : '') +
                     '</td>' +
                     '<td class="text-center px-2 py-2 text-gray-600">' + s.games + '</td>' +
+                    '<td class="text-center px-1 py-2 text-blue-600">' + (s.md || 0) + '</td>' +
+                    '<td class="text-center px-1 py-2 text-pink-600">' + (s.wd || 0) + '</td>' +
+                    '<td class="text-center px-1 py-2 text-purple-600">' + (s.xd || 0) + '</td>' +
+                    '<td class="text-center px-1 py-2 text-orange-600">' + (s.fd || 0) + '</td>' +
                     '<td class="text-center px-2 py-2 text-blue-700 font-medium">' + s.wins + '</td>' +
                     '<td class="text-center px-2 py-2 text-gray-500">' + s.draws + '</td>' +
                     '<td class="text-center px-2 py-2 text-red-500">' + s.losses + '</td>' +
@@ -566,6 +627,7 @@ const Schedule = {
                 }).join(''); })()}
               </tbody>
             </table>
+            </div>
           </div>`;
         })() : `
         <!-- 멤버별 통계 -->
@@ -573,11 +635,16 @@ const Schedule = {
           <div class="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
             <span class="font-semibold text-gray-700 text-sm">멤버별 통계</span>
           </div>
+          <div class="overflow-x-auto">
           <table class="w-full text-sm standings-table">
             <thead>
               <tr class="border-b border-gray-100 text-gray-500 text-xs">
                 <th class="text-left px-4 py-2">멤버</th>
                 <th class="text-center px-2 py-2">경기</th>
+                <th class="text-center px-1 py-2">남복</th>
+                <th class="text-center px-1 py-2">여복</th>
+                <th class="text-center px-1 py-2">혼복</th>
+                <th class="text-center px-1 py-2">잡복</th>
                 <th class="text-center px-2 py-2">승</th>
                 <th class="text-center px-2 py-2">무</th>
                 <th class="text-center px-2 py-2">패</th>
@@ -594,12 +661,16 @@ const Schedule = {
                 const rank = playerStats.findIndex(p => p.matchPoints === s.matchPoints && p.scorePoints === s.scorePoints);
                 const medalHtml = isComplete && rank < 3 ? '<span style="display:inline-block;width:22px;height:26px;background:url(\'css/medal.png\') no-repeat;background-size:300% auto;background-position:' + medalPos[rank] + ' center;vertical-align:middle;margin-right:2px;"></span>' : '';
                 return '<tr class="border-b border-gray-50 hover:bg-gray-50' + (isComplete && rank < 3 ? ' bg-gradient-to-r' + (rank === 0 ? ' from-yellow-50/60' : rank === 1 ? ' from-gray-50/60' : ' from-orange-50/60') + ' to-transparent' : '') + '">' +
-                  '<td class="px-4 py-2 font-medium text-gray-800">' +
+                  '<td class="px-4 py-2 font-medium text-gray-800 whitespace-nowrap">' +
                     medalHtml + Results.escapeHtml(s.name) +
                     ' ' + genderBadge(gender) +
                     (RolesConfig.isMember() ? '' : ' <span class="text-xs px-1 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">' + ntrp.toFixed(1) + '</span>') +
                   '</td>' +
                   '<td class="text-center px-2 py-2 text-gray-600">' + s.games + '</td>' +
+                  '<td class="text-center px-1 py-2 text-blue-600">' + (s.md || 0) + '</td>' +
+                  '<td class="text-center px-1 py-2 text-pink-600">' + (s.wd || 0) + '</td>' +
+                  '<td class="text-center px-1 py-2 text-purple-600">' + (s.xd || 0) + '</td>' +
+                  '<td class="text-center px-1 py-2 text-orange-600">' + (s.fd || 0) + '</td>' +
                   '<td class="text-center px-2 py-2 text-blue-700 font-medium">' + s.wins + '</td>' +
                   '<td class="text-center px-2 py-2 text-gray-500">' + s.draws + '</td>' +
                   '<td class="text-center px-2 py-2 text-red-500">' + s.losses + '</td>' +
@@ -609,6 +680,7 @@ const Schedule = {
               }).join(''); })()}
             </tbody>
           </table>
+          </div>
         </div>`}
       </div>`);
 
