@@ -736,8 +736,9 @@ const Schedule = {
         titleEl.onclick = async () => {
           const newName = prompt('대진표 이름을 입력하세요', tournament.name);
           if (newName !== null && newName.trim() !== '') {
-            tournament.name = newName.trim();
-            await Storage.updateTournament(tournament);
+            const trimmed = newName.trim();
+            await Storage.updateTournament(tournament.id, t => { t.name = trimmed; });
+            tournament.name = trimmed;
             this.render(container, tournament);
           }
         };
@@ -860,7 +861,17 @@ const Schedule = {
             tgtMatch[tgtKey] = tgtTeam.join(' / ');
           }
 
-          await Storage.updateTournament(tournament);
+          const patchSrcId = srcMatch.id, patchTgtId = tgtMatch.id;
+          const patchSrcP1 = srcMatch.player1, patchSrcP2 = srcMatch.player2;
+          const patchTgtP1 = tgtMatch.player1, patchTgtP2 = tgtMatch.player2;
+          await Storage.updateTournament(tournament.id, t => {
+            for (const slot of t.timeSlots) {
+              for (const m of slot.matches) {
+                if (m.id === patchSrcId) { m.player1 = patchSrcP1; m.player2 = patchSrcP2; }
+                if (m.id === patchTgtId) { m.player1 = patchTgtP1; m.player2 = patchTgtP2; }
+              }
+            }
+          });
           this.render(container, tournament);
         }
       };
@@ -883,24 +894,25 @@ const Schedule = {
         const matchId = match.id;
         const tournamentId = tournament.id;
         Results.showScoreModal(match, { setCount: 1, allowDraw: true, isTeamMode: tournament.isTeamMode, isCustom: tournament.isCustom }, async (result) => {
-          // 최신 대회 데이터를 다시 읽어서 해당 매치만 패치 (동시 접속 데이터 유실 방지)
+          const scores = result.scores;
+          const winner = result.winner;
+          await Storage.updateTournament(tournamentId, t => {
+            let targetMatch = null;
+            for (const slot of t.timeSlots) {
+              targetMatch = slot.matches.find(m => m.id === matchId);
+              if (targetMatch) break;
+            }
+            if (!targetMatch) return;
+            targetMatch.scores = scores;
+            targetMatch.winner = winner;
+            const allDone = Schedule.getAllMatches(t).every(m => m.winner || m.winner === 'draw');
+            if (allDone) {
+              t.status = 'completed';
+              t.completedAt = new Date().toISOString();
+            }
+          });
           const freshTournament = Storage.getTournamentById(tournamentId);
-          if (!freshTournament) return;
-          let freshMatch = null;
-          for (const slot of freshTournament.timeSlots) {
-            freshMatch = slot.matches.find(m => m.id === matchId);
-            if (freshMatch) break;
-          }
-          if (!freshMatch) return;
-          freshMatch.scores = result.scores;
-          freshMatch.winner = result.winner;
-          const allDone = this.getAllMatches(freshTournament).every(m => m.winner || m.winner === 'draw');
-          if (allDone) {
-            freshTournament.status = 'completed';
-            freshTournament.completedAt = new Date().toISOString();
-          }
-          await Storage.updateTournament(freshTournament);
-          this.render(container, freshTournament);
+          this.render(container, freshTournament || tournament);
         });
       };
     });
@@ -916,8 +928,14 @@ const Schedule = {
         if (!match) return;
         const label = `${match.player1} vs ${match.player2}`;
         if (!confirm(`이 대진을 삭제하시겠습니까?\n${label}`)) return;
+        const delMatchId = match.id;
         tournament.timeSlots[si].matches.splice(mi, 1);
-        await Storage.updateTournament(tournament);
+        await Storage.updateTournament(tournament.id, t => {
+          for (const slot of t.timeSlots) {
+            const idx = slot.matches.findIndex(m => m.id === delMatchId);
+            if (idx !== -1) { slot.matches.splice(idx, 1); break; }
+          }
+        });
         this.render(container, tournament);
       };
     });
@@ -992,12 +1010,30 @@ const Schedule = {
           }
         }
 
+        const srcMatchId = srcSlot.matches[mi].id;
+        const tgtMatchId = tgtSlot.matches[tMI].id;
         const srcCourt = srcSlot.matches[mi].court;
         const tgtCourt = tgtSlot.matches[tMI].court;
         [srcSlot.matches[mi], tgtSlot.matches[tMI]] = [tgtSlot.matches[tMI], srcSlot.matches[mi]];
         srcSlot.matches[mi].court = srcCourt;
         tgtSlot.matches[tMI].court = tgtCourt;
-        await Storage.updateTournament(tournament);
+        await Storage.updateTournament(tournament.id, t => {
+          let sm = null, tm = null, smSlot = null, tmSlot = null;
+          for (const slot of t.timeSlots) {
+            for (const m of slot.matches) {
+              if (m.id === srcMatchId) { sm = m; smSlot = slot; }
+              if (m.id === tgtMatchId) { tm = m; tmSlot = slot; }
+            }
+          }
+          if (sm && tm && smSlot && tmSlot) {
+            const sIdx = smSlot.matches.indexOf(sm);
+            const tIdx = tmSlot.matches.indexOf(tm);
+            const sc = sm.court, tc = tm.court;
+            [smSlot.matches[sIdx], tmSlot.matches[tIdx]] = [tmSlot.matches[tIdx], smSlot.matches[sIdx]];
+            smSlot.matches[sIdx].court = sc;
+            tmSlot.matches[tIdx].court = tc;
+          }
+        });
         this.render(container, tournament);
       };
     });
@@ -1013,7 +1049,12 @@ const Schedule = {
       const tgtMatches = tournament.timeSlots[tgtIdx].matches;
       tournament.timeSlots[srcIdx].matches = tgtMatches;
       tournament.timeSlots[tgtIdx].matches = srcMatches;
-      await Storage.updateTournament(tournament);
+      await Storage.updateTournament(tournament.id, t => {
+        const sm = t.timeSlots[srcIdx].matches;
+        const tm = t.timeSlots[tgtIdx].matches;
+        t.timeSlots[srcIdx].matches = tm;
+        t.timeSlots[tgtIdx].matches = sm;
+      });
       this.render(container, tournament);
     };
 
@@ -1532,7 +1573,15 @@ const Schedule = {
           tournament.status = 'active';
           tournament.completedAt = null;
         }
-        await Storage.updateTournament(tournament);
+        const addMatch = { ...newMatch };
+        const addSlotIdx = slotIdx;
+        await Storage.updateTournament(tournament.id, t => {
+          t.timeSlots[addSlotIdx].matches.push(addMatch);
+          if (t.status === 'completed') {
+            t.status = 'active';
+            t.completedAt = null;
+          }
+        });
         closeAddMatch();
         this.render(container, tournament);
       };
@@ -1858,7 +1907,15 @@ const Schedule = {
         const names = match[playerKey].split(' / ');
         names[pos] = newName;
         match[playerKey] = names.join(' / ');
-        await Storage.updateTournament(tournament);
+        const patchMatchId = match.id;
+        const patchKey = playerKey;
+        const patchValue = match[playerKey];
+        await Storage.updateTournament(tournament.id, t => {
+          for (const slot of t.timeSlots) {
+            const m = slot.matches.find(x => x.id === patchMatchId);
+            if (m) { m[patchKey] = patchValue; break; }
+          }
+        });
         closePicker2();
         onDone();
         this.render(container, tournament);
@@ -1899,8 +1956,15 @@ const Schedule = {
 
     modal.querySelectorAll('.cgt-option').forEach(btn => {
       btn.onclick = async () => {
-        match.gameType = btn.dataset.type;
-        await Storage.updateTournament(tournament);
+        const newType = btn.dataset.type;
+        const gtMatchId = match.id;
+        match.gameType = newType;
+        await Storage.updateTournament(tournament.id, t => {
+          for (const slot of t.timeSlots) {
+            const m = slot.matches.find(x => x.id === gtMatchId);
+            if (m) { m.gameType = newType; break; }
+          }
+        });
         closeGtModal();
         this.render(container, tournament);
       };

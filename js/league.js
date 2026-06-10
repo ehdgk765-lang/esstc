@@ -107,7 +107,10 @@ const League = {
     if (isComplete && tournament.status !== 'completed') {
       tournament.status = 'completed';
       tournament.completedAt = new Date().toISOString();
-      Storage.updateTournament(tournament);
+      Storage.updateTournament(tournament.id, t => {
+        t.status = 'completed';
+        t.completedAt = tournament.completedAt;
+      });
     }
 
     let html = `
@@ -213,16 +216,17 @@ const League = {
         if (!match || match.scores) return;
 
         Results.showScoreModal(match, { ...tournament, allowDraw: true }, async (result) => {
-          // 최신 대회 데이터를 다시 읽어서 해당 매치만 패치 (동시 접속 데이터 유실 방지)
+          const scores = result.scores;
+          const winner = result.winner;
+          await Storage.updateTournament(tournament.id, t => {
+            if (!t.rounds) return;
+            const fm = t.rounds[round]?.find(m => m.id === matchId);
+            if (!fm) return;
+            fm.scores = scores;
+            fm.winner = winner;
+          });
           const freshTournament = Storage.getTournamentById(tournament.id);
-          if (!freshTournament) return;
-          const freshMatch = freshTournament.rounds[round]?.find(m => m.id === matchId);
-          if (!freshMatch) return;
-          freshMatch.scores = result.scores;
-          freshMatch.winner = result.winner;
-
-          await Storage.updateTournament(freshTournament);
-          this.render(container, freshTournament);
+          this.render(container, freshTournament || tournament);
         });
       };
     });

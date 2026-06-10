@@ -212,38 +212,36 @@ const Tournament = {
         if (isMember && !this._isMyMatch(match)) return;
 
         Results.showScoreModal(match, tournament, async (result) => {
-          // 최신 대회 데이터를 다시 읽어서 해당 매치만 패치 (동시 접속 데이터 유실 방지)
-          const freshTournament = Storage.getTournamentById(tournament.id);
-          if (!freshTournament) return;
-          const freshRounds = freshTournament.rounds;
-          const freshMatch = freshRounds[round]?.find(m => m.id === matchId);
-          if (!freshMatch) return;
-
-          freshMatch.scores = result.scores;
-          freshMatch.winner = result.winner;
-
-          // 다음 라운드에 승자 전파
-          if (round < totalRounds - 1) {
-            const nextMatchIndex = Math.floor(freshMatch.matchIndex / 2);
-            const nextMatch = freshRounds[round + 1]?.[nextMatchIndex];
-            if (nextMatch) {
-              if (freshMatch.matchIndex % 2 === 0) {
-                nextMatch.player1 = result.winner;
-              } else {
-                nextMatch.player2 = result.winner;
+          const scores = result.scores;
+          const winner = result.winner;
+          const tRounds = totalRounds;
+          await Storage.updateTournament(tournament.id, t => {
+            if (!t.rounds) return;
+            const fm = t.rounds[round]?.find(m => m.id === matchId);
+            if (!fm) return;
+            fm.scores = scores;
+            fm.winner = winner;
+            // 다음 라운드에 승자 전파
+            if (round < tRounds - 1) {
+              const nextMatchIndex = Math.floor(fm.matchIndex / 2);
+              const nextMatch = t.rounds[round + 1]?.[nextMatchIndex];
+              if (nextMatch) {
+                if (fm.matchIndex % 2 === 0) {
+                  nextMatch.player1 = winner;
+                } else {
+                  nextMatch.player2 = winner;
+                }
               }
             }
-          }
-
-          // 대회 완료 체크
-          const finalRound = freshRounds[freshRounds.length - 1];
-          if (finalRound && finalRound[0]?.winner) {
-            freshTournament.status = 'completed';
-            freshTournament.completedAt = new Date().toISOString();
-          }
-
-          await Storage.updateTournament(freshTournament);
-          this.render(container, freshTournament);
+            // 대회 완료 체크
+            const finalRound = t.rounds[t.rounds.length - 1];
+            if (finalRound && finalRound[0]?.winner) {
+              t.status = 'completed';
+              t.completedAt = new Date().toISOString();
+            }
+          });
+          const freshTournament = Storage.getTournamentById(tournament.id);
+          this.render(container, freshTournament || tournament);
         });
       };
     });

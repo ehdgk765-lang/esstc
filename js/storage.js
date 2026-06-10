@@ -74,10 +74,10 @@ const Storage = {
     return tournaments.find(t => t.id === id) || null;
   },
 
-  async updateTournament(updatedTournament) {
+  async updateTournament(tournamentId, patchFn) {
     var self = this;
     var base = this._getBase();
-    if (!base) return this._updateTournamentLocal(updatedTournament);
+    if (!base) return this._updateTournamentLocal(tournamentId, patchFn);
 
     var docRef = base.doc('tournaments');
     try {
@@ -89,9 +89,9 @@ const Storage = {
             var d = doc.data();
             tournaments = d.json ? JSON.parse(d.json) : (d.items || []);
           }
-          var index = tournaments.findIndex(function(t) { return t.id === updatedTournament.id; });
+          var index = tournaments.findIndex(function(t) { return t.id === tournamentId; });
           if (index !== -1) {
-            tournaments[index] = updatedTournament;
+            patchFn(tournaments[index]);
             transaction.set(docRef, { json: JSON.stringify(tournaments) });
             finalTournaments = tournaments;
           }
@@ -103,15 +103,15 @@ const Storage = {
       return true;
     } catch (err) {
       console.error('updateTournament transaction error:', err);
-      return this._updateTournamentLocal(updatedTournament);
+      return this._updateTournamentLocal(tournamentId, patchFn);
     }
   },
 
-  _updateTournamentLocal(updatedTournament) {
+  _updateTournamentLocal(tournamentId, patchFn) {
     var tournaments = this.getTournaments();
-    var index = tournaments.findIndex(function(t) { return t.id === updatedTournament.id; });
+    var index = tournaments.findIndex(function(t) { return t.id === tournamentId; });
     if (index !== -1) {
-      tournaments[index] = updatedTournament;
+      patchFn(tournaments[index]);
       this.saveTournaments(tournaments);
       return true;
     }
