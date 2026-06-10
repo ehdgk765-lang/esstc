@@ -344,10 +344,11 @@ const App = {
                         ? '<div class="mt-2 ml-10 space-y-1">' +
                             slots.map(function(s, si) {
                               var colObj = Calendar.COLORS.find(function(col) { return col.value === s.color; }) || Calendar.COLORS[0];
+                              var dayLabel = s.day === 6 ? '토' : s.day === 0 ? '일' : '토/일';
                               return '<div class="flex items-center gap-2 text-xs">' +
                                 '<span class="w-3 h-3 rounded-full ' + colObj.dot + ' flex-shrink-0"></span>' +
                                 '<span class="text-gray-600">' + s.startTime + ' ~ ' + s.endTime + '</span>' +
-                                '<span class="text-gray-400">(' + colObj.label + ')</span>' +
+                                '<span class="text-gray-400">(' + dayLabel + ', ' + colObj.label + ')</span>' +
                                 '<button class="delete-slot-btn text-red-300 hover:text-red-500 transition" data-court-id="' + c.id + '" data-slot-index="' + si + '">x</button>' +
                               '</div>';
                             }).join('') +
@@ -355,6 +356,11 @@ const App = {
                         : '') +
                       // 슬롯 추가 UI
                       '<div class="mt-2 ml-10 flex items-center gap-1.5 flex-wrap">' +
+                        '<select class="slot-day px-2 py-1.5 border border-gray-200 rounded-lg text-xs bg-white" data-court-id="' + c.id + '">' +
+                          '<option value="both">토/일</option>' +
+                          '<option value="6">토</option>' +
+                          '<option value="0">일</option>' +
+                        '</select>' +
                         '<select class="slot-start-time px-2 py-1.5 border border-gray-200 rounded-lg text-xs bg-white" data-court-id="' + c.id + '">' + startTimeOptions + '</select>' +
                         '<span class="text-gray-400 text-xs">~</span>' +
                         '<select class="slot-end-time px-2 py-1.5 border border-gray-200 rounded-lg text-xs bg-white" data-court-id="' + c.id + '">' + endTimeOptions + '</select>' +
@@ -528,6 +534,7 @@ const App = {
       btn.onclick = function() {
         var courtId = btn.dataset.courtId;
         var row = btn.parentElement;
+        var dayVal = row.querySelector('.slot-day').value;
         var startTime = row.querySelector('.slot-start-time').value;
         var endTime = row.querySelector('.slot-end-time').value;
         var color = row.querySelector('.slot-color').value;
@@ -539,14 +546,17 @@ const App = {
         var court = courts.find(function(c) { return c.id === courtId; });
         if (!court) return;
         if (!court.slots) court.slots = [];
+        var day = dayVal === 'both' ? null : parseInt(dayVal);
         var dup = court.slots.some(function(s) {
-          return s.startTime === startTime && s.endTime === endTime;
+          return s.startTime === startTime && s.endTime === endTime && (s.day == null ? null : s.day) === day;
         });
         if (dup) {
-          alert('같은 시간대의 슬롯이 이미 등록되어 있습니다.');
+          alert('같은 요일/시간대의 슬롯이 이미 등록되어 있습니다.');
           return;
         }
-        court.slots.push({ startTime: startTime, endTime: endTime, color: color });
+        var slotData = { startTime: startTime, endTime: endTime, color: color };
+        if (day !== null) slotData.day = day;
+        court.slots.push(slotData);
         court.slots.sort(function(a, b) { return a.startTime.localeCompare(b.startTime); });
         Storage.saveCourts(courts);
         self.renderSettings(container);
@@ -704,7 +714,8 @@ const App = {
           title: court.name + ' ' + timeLabel + ' 정규 일정',
           startTime: slot.startTime,
           endTime: slot.endTime,
-          color: slot.color
+          color: slot.color,
+          day: slot.day != null ? slot.day : null  // 6=토, 0=일, null=토/일 모두
         });
       });
     });
@@ -720,8 +731,11 @@ const App = {
     var newCount = 0;
     for (var i = 0; i < weekendDates.length; i++) {
       var dateStr = weekendDates[i];
+      var dow = new Date(year, month, parseInt(dateStr.slice(8))).getDay(); // 0=일, 6=토
       for (var j = 0; j < templates.length; j++) {
         var tmpl = templates[j];
+        // 슬롯에 요일이 지정되어 있으면 해당 요일만 등록
+        if (tmpl.day !== null && tmpl.day !== dow) continue;
         var exists = events.some(function(e) {
           return e.date === dateStr && e.title === tmpl.title;
         });
