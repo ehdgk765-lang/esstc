@@ -113,7 +113,7 @@ const Stats = {
     const aggregate = {};
     const ensure = (name) => {
       if (!aggregate[name]) {
-        aggregate[name] = { name, games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0, tournamentCount: 0, md: 0, wd: 0, xd: 0, fd: 0 };
+        aggregate[name] = { name, games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0, tournamentCount: 0, md: 0, wd: 0, xd: 0, fd: 0, ms: 0, ws: 0 };
       }
     };
 
@@ -132,6 +132,8 @@ const Stats = {
         aggregate[s.name].wd += (s.wd || 0);
         aggregate[s.name].xd += (s.xd || 0);
         aggregate[s.name].fd += (s.fd || 0);
+        aggregate[s.name].ms += (s.ms || 0);
+        aggregate[s.name].ws += (s.ws || 0);
         participated.add(s.name);
       });
       participated.forEach(name => { aggregate[name].tournamentCount++; });
@@ -275,6 +277,8 @@ const Stats = {
               <th class="text-center px-1 py-2">여복</th>
               <th class="text-center px-1 py-2">혼복</th>
               <th class="text-center px-1 py-2">잡복</th>
+              <th class="text-center px-1 py-2">남단</th>
+              <th class="text-center px-1 py-2">여단</th>
             </tr>
           </thead>
           <tbody>
@@ -292,6 +296,8 @@ const Stats = {
                 <td class="text-center px-1 py-2 text-pink-600">${s.wd || 0}</td>
                 <td class="text-center px-1 py-2 text-purple-600">${s.xd || 0}</td>
                 <td class="text-center px-1 py-2 text-orange-600">${s.fd || 0}</td>
+                <td class="text-center px-1 py-2 text-blue-600">${s.ms || 0}</td>
+                <td class="text-center px-1 py-2 text-pink-600">${s.ws || 0}</td>
               </tr>`;
             }).join('')}
           </tbody>

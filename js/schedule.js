@@ -336,7 +336,7 @@ const Schedule = {
   // 멤버별 통계 계산
   calcPlayerStats(tournament) {
     const stats = {};
-    const ensure = (p) => { if (!stats[p]) stats[p] = { name: p, games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0, md: 0, wd: 0, xd: 0, fd: 0 }; };
+    const ensure = (p) => { if (!stats[p]) stats[p] = { name: p, games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0, md: 0, wd: 0, xd: 0, fd: 0, ms: 0, ws: 0 }; };
 
     for (const slot of tournament.timeSlots) {
       for (const m of slot.matches) {
@@ -347,10 +347,12 @@ const Schedule = {
           stats[p].games++;
           // 게임 종류별 카운트
           const gt = m.gameType;
-          if (gt === 'MD' || gt === 'MS') stats[p].md++;
-          else if (gt === 'WD' || gt === 'WS') stats[p].wd++;
+          if (gt === 'MD') stats[p].md++;
+          else if (gt === 'WD') stats[p].wd++;
           else if (gt === 'XD') stats[p].xd++;
           else if (gt === 'FD' || gt === 'FS') stats[p].fd++;
+          else if (gt === 'MS') stats[p].ms++;
+          else if (gt === 'WS') stats[p].ws++;
         });
         if (m.winner === 'draw') {
           [...t1, ...t2].forEach(p => { if (stats[p]) stats[p].draws++; });
@@ -594,6 +596,8 @@ const Schedule = {
                   <th class="text-center px-1 py-2">여복</th>
                   <th class="text-center px-1 py-2">혼복</th>
                   <th class="text-center px-1 py-2">잡복</th>
+                  <th class="text-center px-1 py-2">남단</th>
+                  <th class="text-center px-1 py-2">여단</th>
                   <th class="text-center px-2 py-2">승</th>
                   <th class="text-center px-2 py-2">무</th>
                   <th class="text-center px-2 py-2">패</th>
@@ -618,6 +622,8 @@ const Schedule = {
                     '<td class="text-center px-1 py-2 text-pink-600">' + (s.wd || 0) + '</td>' +
                     '<td class="text-center px-1 py-2 text-purple-600">' + (s.xd || 0) + '</td>' +
                     '<td class="text-center px-1 py-2 text-orange-600">' + (s.fd || 0) + '</td>' +
+                    '<td class="text-center px-1 py-2 text-blue-600">' + (s.ms || 0) + '</td>' +
+                    '<td class="text-center px-1 py-2 text-pink-600">' + (s.ws || 0) + '</td>' +
                     '<td class="text-center px-2 py-2 text-blue-700 font-medium">' + s.wins + '</td>' +
                     '<td class="text-center px-2 py-2 text-gray-500">' + s.draws + '</td>' +
                     '<td class="text-center px-2 py-2 text-red-500">' + s.losses + '</td>' +
@@ -645,6 +651,8 @@ const Schedule = {
                 <th class="text-center px-1 py-2">여복</th>
                 <th class="text-center px-1 py-2">혼복</th>
                 <th class="text-center px-1 py-2">잡복</th>
+                <th class="text-center px-1 py-2">남단</th>
+                <th class="text-center px-1 py-2">여단</th>
                 <th class="text-center px-2 py-2">승</th>
                 <th class="text-center px-2 py-2">무</th>
                 <th class="text-center px-2 py-2">패</th>
@@ -671,6 +679,8 @@ const Schedule = {
                   '<td class="text-center px-1 py-2 text-pink-600">' + (s.wd || 0) + '</td>' +
                   '<td class="text-center px-1 py-2 text-purple-600">' + (s.xd || 0) + '</td>' +
                   '<td class="text-center px-1 py-2 text-orange-600">' + (s.fd || 0) + '</td>' +
+                  '<td class="text-center px-1 py-2 text-blue-600">' + (s.ms || 0) + '</td>' +
+                  '<td class="text-center px-1 py-2 text-pink-600">' + (s.ws || 0) + '</td>' +
                   '<td class="text-center px-2 py-2 text-blue-700 font-medium">' + s.wins + '</td>' +
                   '<td class="text-center px-2 py-2 text-gray-500">' + s.draws + '</td>' +
                   '<td class="text-center px-2 py-2 text-red-500">' + s.losses + '</td>' +
