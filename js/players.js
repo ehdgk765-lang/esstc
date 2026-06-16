@@ -232,7 +232,20 @@ const Players = {
         if (!player) return;
         player.gender = player.gender === 'M' ? 'F' : 'M';
         Storage.savePlayers(players);
-        this.render(container);
+        btn.textContent = player.gender === 'M' ? '남' : '여';
+        if (player.gender === 'M') {
+          btn.classList.remove('bg-pink-100', 'text-pink-700');
+          btn.classList.add('bg-blue-100', 'text-blue-700');
+        } else {
+          btn.classList.remove('bg-blue-100', 'text-blue-700');
+          btn.classList.add('bg-pink-100', 'text-pink-700');
+        }
+        // 헤더 카운트 갱신
+        const updatedPlayers = Storage.getPlayers();
+        const mCount = updatedPlayers.filter(p => p.gender === 'M').length;
+        const fCount = updatedPlayers.filter(p => p.gender === 'F').length;
+        const countEl = container.querySelector('.text-xs.text-gray-500');
+        if (countEl) countEl.textContent = `남 ${mCount} · 여 ${fCount} · 총 ${updatedPlayers.length}명`;
       };
     });
 
@@ -245,7 +258,7 @@ const Players = {
         const idx = NTRP_VALUES.indexOf(current);
         player.ntrp = NTRP_VALUES[(idx + 1) % NTRP_VALUES.length];
         Storage.savePlayers(players);
-        this.render(container);
+        btn.textContent = player.ntrp.toFixed(1);
       };
     });
 
