@@ -836,8 +836,8 @@ const Schedule = {
               clearSel();
               return;
             }
-            // 다른 시간대 간 교환: 이동 대상이 해당 시간대의 다른 매치에 이미 있는지 확인
-            if (src.slotIdx !== tgt.slotIdx) {
+            // 다른 시간대 간 교환: 이동 대상이 해당 시간대의 다른 매치에 이미 있는지 확인 (커스텀 대진표는 시간대 개념 없으므로 스킵)
+            if (!tournament.isCustom && src.slotIdx !== tgt.slotIdx) {
               const getNamesInSlot = (si, excludeMatch) => {
                 const names = new Set();
                 (tournament.timeSlots[si]?.matches || []).forEach((m, mi) => {
@@ -979,8 +979,8 @@ const Schedule = {
         if (si === tSI && mi === tMI) return;
         const srcSlot = tournament.timeSlots[si], tgtSlot = tournament.timeSlots[tSI];
 
-        // 다른 시간대 간 교환: 멤버 중복 검사
-        if (si !== tSI) {
+        // 다른 시간대 간 교환: 멤버 중복 검사 (커스텀 대진표는 시간대 개념 없으므로 스킵)
+        if (!tournament.isCustom && si !== tSI) {
           const getNames = (m) => {
             const names = new Set();
             m.player1.split(' / ').forEach(n => names.add(n));
@@ -1802,14 +1802,22 @@ const Schedule = {
 
     const playerKey = team === 1 ? 'player1' : 'player2';
     const otherKey = team === 1 ? 'player2' : 'player1';
-    // 같은 시간대 전체 매치에서 사용 중인 멤버 수집 (본인 제외, 완료된 매치 제외)
+    // 중복 멤버 수집 (본인 제외)
     const slotBusyNames = new Set();
-    (tournament.timeSlots[slotIdx]?.matches || []).forEach(m => {
-      if (m.winner) return; // 완료된 매치의 멤버는 재배치 가능
-      m.player1.split(' / ').forEach(n => slotBusyNames.add(n));
-      m.player2.split(' / ').forEach(n => slotBusyNames.add(n));
-    });
-    slotBusyNames.delete(oldName);
+    if (tournament.isCustom) {
+      // 커스텀 대진표: 같은 경기 내 멤버만 중복 방지
+      match[playerKey].split(' / ').forEach(n => slotBusyNames.add(n));
+      match[otherKey].split(' / ').forEach(n => slotBusyNames.add(n));
+      slotBusyNames.delete(oldName);
+    } else {
+      // 일반 대진표: 같은 시간대 전체 매치에서 사용 중인 멤버 수집 (완료된 매치 제외)
+      (tournament.timeSlots[slotIdx]?.matches || []).forEach(m => {
+        if (m.winner) return;
+        m.player1.split(' / ').forEach(n => slotBusyNames.add(n));
+        m.player2.split(' / ').forEach(n => slotBusyNames.add(n));
+      });
+      slotBusyNames.delete(oldName);
+    }
 
     const _teamMap = tournament.isTeamMode ? buildTeamMap() : {};
 
@@ -1850,7 +1858,7 @@ const Schedule = {
                   ${RolesConfig.isMember() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
                   ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isSelf ? '<span class="ml-auto text-xs text-gray-400">현재</span>' : ''}
-                  ${isDup ? '<span class="ml-auto text-xs text-gray-400">같은 시간대</span>' : ''}
+                  ${isDup ? `<span class="ml-auto text-xs text-gray-400">${tournament.isCustom ? '같은 경기' : '같은 시간대'}</span>` : ''}
                 </div>`;
             }).join('')}
           </div>
