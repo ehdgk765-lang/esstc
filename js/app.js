@@ -1582,6 +1582,10 @@ const App = {
           <span class="text-xs text-gray-500">팀전</span>
         </label>
         <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" id="allow-xd" class="w-3.5 h-3.5 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
+          <span id="allow-xd-label" class="text-xs text-gray-500">혼복</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
           <input type="checkbox" id="allow-mixed" class="w-3.5 h-3.5 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
           <span id="allow-mixed-label" class="text-xs text-gray-500">섞어복식 허용</span>
         </label>
@@ -1781,12 +1785,18 @@ const App = {
     if (allowMixedCb) {
       allowMixedCb.onchange = () => this.updateSchedulePreview(container);
     }
+    const allowXDCb = container.querySelector('#allow-xd');
+    if (allowXDCb) {
+      allowXDCb.onchange = () => this.updateSchedulePreview(container);
+    }
 
     // 단식/복식 전환 시 라벨 업데이트
     container.querySelectorAll('input[name="sch-match-type"]').forEach(r => {
       r.onchange = () => {
         const label = container.querySelector('#allow-mixed-label');
         if (label) label.textContent = r.value === 'singles' ? '섞어단식 허용' : '섞어복식 허용';
+        const xdLabel = container.querySelector('#allow-xd-label');
+        if (xdLabel) xdLabel.textContent = r.value === 'singles' ? '혼단' : '혼복';
         this.updateSchedulePreview(container);
       };
     });
@@ -1814,9 +1824,10 @@ const App = {
       }
 
       const allowMixed = container.querySelector('#allow-mixed')?.checked || false;
+      const allowXD = container.querySelector('#allow-xd')?.checked || false;
       const isTeamMode = container.querySelector('#sch-team-mode')?.checked || false;
 
-      const possibleTypes = Schedule.getPossibleTypes(selectedMales, selectedFemales, allowMixed, isSingles);
+      const possibleTypes = Schedule.getPossibleTypes(selectedMales, selectedFemales, allowMixed, isSingles, allowXD);
       if (possibleTypes.length === 0) {
         if (isSingles) {
           alert('선택한 멤버 구성으로 단식 경기를 만들 수 없습니다.\n남자단식: 남2명, 여자단식: 여2명 이상 필요\n또는 섞어단식 허용을 체크해주세요.');
@@ -1826,7 +1837,7 @@ const App = {
         return;
       }
 
-      const timeSlots = Schedule.generate(selectedMales, selectedFemales, courts, startTime, endTime, allowMixed, isSingles);
+      const timeSlots = Schedule.generate(selectedMales, selectedFemales, courts, startTime, endTime, allowMixed, isSingles, allowXD);
 
       if (timeSlots.length === 0) {
         alert('시간이 부족합니다. 최소 30분 이상 설정해주세요.');
@@ -1888,6 +1899,7 @@ const App = {
     timeInfo.className = 'text-xs text-gray-500 mt-1';
 
     const allowMixed = container.querySelector('#allow-mixed')?.checked || false;
+    const allowXD = container.querySelector('#allow-xd')?.checked || false;
     const isSingles = container.querySelector('input[name="sch-match-type"]:checked')?.value === 'singles';
     const possibleTypes = [];
     if (isSingles) {
@@ -1895,7 +1907,7 @@ const App = {
       if (femaleCount >= 2) possibleTypes.push('여자단식');
       if (allowMixed && (maleCount + femaleCount) >= 2) possibleTypes.push('섞어단식');
     } else {
-      if (maleCount >= 2 && femaleCount >= 2) possibleTypes.push('혼합복식');
+      if (allowXD && maleCount >= 2 && femaleCount >= 2) possibleTypes.push('혼합복식');
       if (maleCount >= 4) possibleTypes.push('남자복식');
       if (femaleCount >= 4) possibleTypes.push('여자복식');
       if (allowMixed && (maleCount + femaleCount) >= 4) possibleTypes.push('섞어복식');

@@ -19,14 +19,14 @@ const Schedule = {
   },
 
   // 가용 멤버로 가능한 게임 타입 확인
-  getPossibleTypes(availMales, availFemales, allowMixed, isSingles) {
+  getPossibleTypes(availMales, availFemales, allowMixed, isSingles, allowXD) {
     const types = [];
     if (isSingles) {
       if (availMales.length >= 2) types.push('MS');
       if (availFemales.length >= 2) types.push('WS');
       if (allowMixed && (availMales.length + availFemales.length) >= 2) types.push('FS');
     } else {
-      if (availMales.length >= 2 && availFemales.length >= 2) types.push('XD');
+      if (allowXD && availMales.length >= 2 && availFemales.length >= 2) types.push('XD');
       if (availMales.length >= 4) types.push('MD');
       if (availFemales.length >= 4) types.push('WD');
       if (allowMixed && (availMales.length + availFemales.length) >= 4) types.push('FD');
@@ -121,16 +121,19 @@ const Schedule = {
   },
 
   // N개 코트에 대한 모든 게임 타입 조합 생성
-  generatePlans(numCourts, allowMixed, isSingles) {
+  generatePlans(numCourts, allowMixed, isSingles, allowXD) {
     let types;
     if (isSingles) {
       types = allowMixed ? ['MS', 'WS', 'FS'] : ['MS', 'WS'];
     } else {
-      types = allowMixed ? ['XD', 'MD', 'WD', 'FD'] : ['XD', 'MD', 'WD'];
+      types = [];
+      if (allowXD) types.push('XD');
+      types.push('MD', 'WD');
+      if (allowMixed) types.push('FD');
     }
     if (numCourts === 0) return [[]];
     const result = [];
-    const sub = this.generatePlans(numCourts - 1, allowMixed, isSingles);
+    const sub = this.generatePlans(numCourts - 1, allowMixed, isSingles, allowXD);
     for (const t of types) {
       for (const s of sub) {
         result.push([t, ...s]);
@@ -200,11 +203,11 @@ const Schedule = {
   },
 
   // 한 타임슬롯의 매치 생성 (플랜 기반)
-  generateSlotMatches(males, females, courts, gameCounts, allowMixed, usedTeams, isSingles) {
+  generateSlotMatches(males, females, courts, gameCounts, allowMixed, usedTeams, isSingles, allowXD) {
     // 코트를 최대한 채우는 유효한 플랜 찾기
     let validPlans = [];
     for (let n = courts; n >= 1; n--) {
-      const plans = this.generatePlans(n, allowMixed, isSingles);
+      const plans = this.generatePlans(n, allowMixed, isSingles, allowXD);
       validPlans = plans.filter(p => this.isPlanValid(p, males.length, females.length));
       if (validPlans.length > 0) break;
     }
@@ -308,14 +311,14 @@ const Schedule = {
   },
 
   // 대진표 생성
-  generate(males, females, courts, startTime, endTime, allowMixed, isSingles) {
+  generate(males, females, courts, startTime, endTime, allowMixed, isSingles, allowXD) {
     const slots = this.calculateTimeSlots(startTime, endTime);
     const gameCounts = {};
     [...males, ...females].forEach(p => { gameCounts[p] = 0; });
     const usedTeams = new Map(); // 팀키 → 횟수
 
     const timeSlots = slots.map(time => {
-      const matches = this.generateSlotMatches(males, females, courts, gameCounts, allowMixed, usedTeams, isSingles);
+      const matches = this.generateSlotMatches(males, females, courts, gameCounts, allowMixed, usedTeams, isSingles, allowXD);
       return { time, matches };
     });
 
