@@ -2109,10 +2109,26 @@ const App = {
       if (RolesConfig.isMember()) return;
       btn.onclick = (e) => {
         e.stopPropagation();
-        const name = Storage.getTournamentById(btn.dataset.id)?.name || '';
+        const id = btn.dataset.id;
+        const name = Storage.getTournamentById(id)?.name || '';
         if (!confirm(`"${name}" 대회를 삭제하시겠습니까?`)) return;
-        Storage.deleteTournament(btn.dataset.id);
-        this.renderTournamentList(container);
+        Storage.deleteTournament(id);
+        // 카드만 DOM에서 제거 (리스트 접힘 방지)
+        const card = btn.closest('.tournament-card');
+        if (card) {
+          const monthContent = card.closest('.month-content');
+          card.remove();
+          // 월 그룹 내 카드가 없으면 그룹 전체 제거
+          if (monthContent && monthContent.querySelectorAll('.tournament-card').length === 0) {
+            const monthGroup = monthContent.closest('.month-group');
+            if (monthGroup) monthGroup.remove();
+          } else if (monthContent) {
+            // 월별 카운트 갱신
+            const monthGroup = monthContent.closest('.month-group');
+            const countSpan = monthGroup && monthGroup.querySelector('.month-toggle .text-gray-400');
+            if (countSpan) countSpan.textContent = '(' + monthContent.querySelectorAll('.tournament-card').length + ')';
+          }
+        }
       };
     });
 
