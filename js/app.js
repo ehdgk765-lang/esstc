@@ -14,12 +14,7 @@ const App = {
     if (content) content.innerHTML = '';
     this.applyRoleUI();
     this.bindTabs();
-    // 멤버: 이름 확인 필요
-    if (RolesConfig.isMember() && !this.getMemberName()) {
-      this.showMemberNameModal();
-    } else {
-      this.navigate(RolesConfig.getDefaultTab());
-    }
+    this.navigate(RolesConfig.getDefaultTab());
   },
 
   // 멤버 이름 관련

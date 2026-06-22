@@ -32,6 +32,21 @@ const Auth = {
         // 실시간 동기화 시작
         Storage.startRealtimeSync();
 
+        // 멤버: 이름 검증 (앱 전환 전)
+        if (RolesConfig.isMember()) {
+          const memberName = localStorage.getItem('tennis_member_name') || '';
+          const players = Storage.getPlayers();
+          if (!memberName) {
+            this._showLoginError('이름을 입력해주세요.');
+            return;
+          }
+          if (!players.some(p => p.name === memberName)) {
+            localStorage.removeItem('tennis_member_name');
+            this._showLoginError('멤버 목록에 등록되지 않은 이름입니다.');
+            return;
+          }
+        }
+
         if (authEl._vpCleanup) authEl._vpCleanup();
         authEl.style.display = 'none';
         appEl.style.display = '';
@@ -53,6 +68,49 @@ const Auth = {
       }
     });
 
+  },
+
+  // 로그인 화면에 에러 메시지 표시 (로그아웃 없이)
+  _showLoginError(msg) {
+    const errorEl = document.querySelector('#auth-error');
+    const submitBtn = document.querySelector('#auth-submit-btn');
+    if (errorEl) {
+      errorEl.textContent = msg;
+      errorEl.classList.remove('hidden');
+    }
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '로그인';
+    }
+  },
+
+  // 이미 로그인된 상태에서 이름만 변경 후 재시도
+  async _retryMemberLogin() {
+    const authEl = document.getElementById('auth-container');
+    const appEl = document.getElementById('app-container');
+    const memberName = localStorage.getItem('tennis_member_name') || '';
+    const players = Storage.getPlayers();
+
+    if (!memberName) {
+      this._showLoginError('이름을 입력해주세요.');
+      return;
+    }
+    if (!players.some(p => p.name === memberName)) {
+      localStorage.removeItem('tennis_member_name');
+      this._showLoginError('멤버 목록에 등록되지 않은 이름입니다.');
+      return;
+    }
+
+    // 검증 통과 → 앱 전환
+    if (authEl._vpCleanup) authEl._vpCleanup();
+    authEl.style.display = 'none';
+    appEl.style.display = '';
+    if (!this.initialized) {
+      App.init();
+      this.initialized = true;
+    } else {
+      App.navigate(App.currentTab);
+    }
   },
 
   renderLogin() {
@@ -80,7 +138,13 @@ const Auth = {
         </div>
 
         <!-- 로그인 카드 -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-blue-200/50 p-6 border border-white/60">
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-blue-200/50 border border-white/60 overflow-hidden">
+          <!-- 탭 -->
+          <div class="flex border-b border-gray-200">
+            <button type="button" id="auth-tab-admin" class="flex-1 py-3 text-sm font-bold text-blue-700 border-b-2 border-blue-700 transition">관리자</button>
+            <button type="button" id="auth-tab-member" class="flex-1 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-gray-600 transition">멤버</button>
+          </div>
+          <div class="p-6">
           <form id="auth-form" class="space-y-4">
             <div>
               <label class="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">아이디</label>
@@ -94,6 +158,12 @@ const Auth = {
                 class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 focus:bg-white transition"
                 placeholder="6자 이상">
             </div>
+            <div id="auth-member-name-wrap" style="display:none">
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">이름</label>
+              <input type="text" id="auth-member-name" maxlength="20"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 focus:bg-white transition"
+                placeholder="멤버 목록에 등록된 본인 이름">
+            </div>
             <div id="auth-confirm-wrap" style="display:none">
               <label class="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">비밀번호 확인</label>
               <input type="password" id="auth-password-confirm" minlength="6"
@@ -102,7 +172,7 @@ const Auth = {
             </div>
             <label class="flex items-center justify-end gap-1.5 cursor-pointer select-none">
               <input type="checkbox" id="auth-remember" class="w-4 h-4 rounded border-gray-300 text-blue-700 focus:ring-blue-700 accent-blue-700">
-              <span class="text-xs text-gray-400">아이디 기억하기</span>
+              <span id="auth-remember-label" class="text-xs text-gray-400">아이디 기억하기</span>
             </label>
             <p id="auth-error" class="text-sm text-red-500 hidden"></p>
             <button type="submit" id="auth-submit-btn"
@@ -110,12 +180,8 @@ const Auth = {
               로그인
             </button>
           </form>
+          </div>
         </div>
-
-        <!--<p class="text-center text-sm text-gray-400 mt-5">
-          <span id="auth-toggle-text">계정이 없으신가요?</span>
-          <button type="button" id="auth-toggle-btn" class="text-blue-700 font-bold hover:underline ml-1">회원가입</button>
-        </p>-->
       </div>
       </div>`;
 
@@ -178,62 +244,115 @@ const Auth = {
       };
     }
 
-    // 이메일 기억하기: 저장된 이메일 복원
+    // 이메일 기억하기: 저장된 이메일/이름 복원
     const emailInput = container.querySelector('#auth-email');
     const rememberCheck = container.querySelector('#auth-remember');
     const savedEmail = localStorage.getItem('tennis_remember_email');
+    const savedRememberName = localStorage.getItem('tennis_remember_name');
     if (savedEmail) {
       emailInput.value = savedEmail;
       rememberCheck.checked = true;
     }
 
-    let isRegister = false;
+    let isMemberTab = false;
     const form = container.querySelector('#auth-form');
     const confirmWrap = container.querySelector('#auth-confirm-wrap');
+    const memberNameWrap = container.querySelector('#auth-member-name-wrap');
+    const memberNameInput = container.querySelector('#auth-member-name');
     const submitBtn = container.querySelector('#auth-submit-btn');
-    const toggleText = container.querySelector('#auth-toggle-text');
-    //const toggleBtn = container.querySelector('#auth-toggle-btn');
     const errorEl = container.querySelector('#auth-error');
+    const tabAdmin = container.querySelector('#auth-tab-admin');
+    const tabMember = container.querySelector('#auth-tab-member');
 
-    // toggleBtn.onclick = () => {
-    //   isRegister = !isRegister;
-    //   confirmWrap.style.display = isRegister ? '' : 'none';
-    //   submitBtn.textContent = isRegister ? '회원가입' : '로그인';
-    //   toggleText.textContent = isRegister ? '이미 계정이 있으신가요?' : '계정이 없으신가요?';
-    //   toggleBtn.textContent = isRegister ? '로그인' : '회원가입';
-    //   errorEl.classList.add('hidden');
-    // };
+    // 저장된 멤버 이름 복원 (기억하기 > 기존 저장 순)
+    if (savedRememberName) {
+      memberNameInput.value = savedRememberName;
+    } else {
+      const savedMemberName = localStorage.getItem('tennis_member_name');
+      if (savedMemberName) memberNameInput.value = savedMemberName;
+    }
+
+    // 저장된 탭 복원
+    const savedTab = localStorage.getItem('tennis_login_tab');
+    if (savedTab === 'member') {
+      isMemberTab = true;
+      tabAdmin.className = 'flex-1 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-gray-600 transition';
+      tabMember.className = 'flex-1 py-3 text-sm font-bold text-blue-700 border-b-2 border-blue-700 transition';
+      memberNameWrap.style.display = '';
+      container.querySelector('#auth-remember-label').textContent = '아이디/이름 기억하기';
+    }
+
+    const rememberLabel = container.querySelector('#auth-remember-label');
+    const switchTab = (toMember) => {
+      isMemberTab = toMember;
+      errorEl.classList.add('hidden');
+      localStorage.setItem('tennis_login_tab', toMember ? 'member' : 'admin');
+      if (toMember) {
+        tabAdmin.className = 'flex-1 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-gray-600 transition';
+        tabMember.className = 'flex-1 py-3 text-sm font-bold text-blue-700 border-b-2 border-blue-700 transition';
+        memberNameWrap.style.display = '';
+        rememberLabel.textContent = '아이디/이름 기억하기';
+      } else {
+        tabAdmin.className = 'flex-1 py-3 text-sm font-bold text-blue-700 border-b-2 border-blue-700 transition';
+        tabMember.className = 'flex-1 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-gray-600 transition';
+        memberNameWrap.style.display = 'none';
+        rememberLabel.textContent = '아이디 기억하기';
+      }
+    };
+    tabAdmin.onclick = () => switchTab(false);
+    tabMember.onclick = () => switchTab(true);
 
     form.onsubmit = async (e) => {
       e.preventDefault();
       const email = container.querySelector('#auth-email').value.trim();
       const password = container.querySelector('#auth-password').value;
       errorEl.classList.add('hidden');
+
+      // 멤버 탭: 이름 빈값 체크
+      if (isMemberTab) {
+        const name = memberNameInput.value.trim();
+        if (!name) {
+          errorEl.textContent = '이름을 입력해주세요.';
+          errorEl.classList.remove('hidden');
+          return;
+        }
+        localStorage.setItem('tennis_member_name', name);
+      }
+
+      // 이미 로그인된 상태 (이름만 수정 후 재시도)
+      if (fbAuth.currentUser && isMemberTab) {
+        // 이메일/이름 기억하기 처리
+        if (rememberCheck.checked) {
+          localStorage.setItem('tennis_remember_name', memberNameInput.value.trim());
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = '처리 중...';
+        await this._retryMemberLogin();
+        return;
+      }
+
       submitBtn.disabled = true;
       submitBtn.textContent = '처리 중...';
 
       try {
-        // 이메일 기억하기 처리
+        // 이메일/이름 기억하기 처리
         if (rememberCheck.checked) {
           localStorage.setItem('tennis_remember_email', email);
+          if (isMemberTab) {
+            localStorage.setItem('tennis_remember_name', memberNameInput.value.trim());
+          }
         } else {
           localStorage.removeItem('tennis_remember_email');
+          localStorage.removeItem('tennis_remember_name');
         }
 
-        if (isRegister) {
-          const confirm = container.querySelector('#auth-password-confirm').value;
-          if (password !== confirm) {
-            throw { message: '비밀번호가 일치하지 않습니다.' };
-          }
-          await fbAuth.createUserWithEmailAndPassword(email, password);
-        } else {
-          await fbAuth.signInWithEmailAndPassword(email, password);
-        }
+        await fbAuth.signInWithEmailAndPassword(email, password);
       } catch (err) {
         errorEl.textContent = this.getErrorMessage(err);
         errorEl.classList.remove('hidden');
         submitBtn.disabled = false;
-        submitBtn.textContent = isRegister ? '회원가입' : '로그인';
+        submitBtn.textContent = '로그인';
+        if (isMemberTab) localStorage.removeItem('tennis_member_name');
       }
     };
   },
