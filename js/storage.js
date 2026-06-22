@@ -43,6 +43,143 @@ const Storage = {
     return result;
   },
 
+  // 멤버 삭제 - players에서 제거 + events 참석자/대기자에서 제거 (Transaction 기반)
+  async deleteMember(memberName) {
+    var self = this;
+    var base = this._getBase();
+    if (!base) {
+      return this._deleteMemberLocal(memberName);
+    }
+
+    var playersRef = base.doc('players');
+    var eventsRef = base.doc('events');
+
+    try {
+      var result = { players: null, events: null };
+      await fbDb.runTransaction(function(transaction) {
+        return Promise.all([
+          transaction.get(playersRef),
+          transaction.get(eventsRef)
+        ]).then(function(docs) {
+          var parse = function(doc) {
+            if (!doc.exists) return [];
+            var d = doc.data();
+            return d.json ? JSON.parse(d.json) : (d.items || []);
+          };
+          var players = parse(docs[0]);
+          var events = parse(docs[1]);
+
+          // players에서 제거
+          players = players.filter(function(p) { return p.name !== memberName; });
+
+          // events 참석자/대기자에서 제거
+          events.forEach(function(ev) {
+            if (ev.participants) {
+              var idx = ev.participants.indexOf(memberName);
+              if (idx >= 0) ev.participants.splice(idx, 1);
+            }
+            if (ev.waitlist) {
+              var wIdx = ev.waitlist.indexOf(memberName);
+              if (wIdx >= 0) ev.waitlist.splice(wIdx, 1);
+            }
+          });
+
+          transaction.set(playersRef, { json: JSON.stringify(players) });
+          transaction.set(eventsRef, { json: JSON.stringify(events) });
+
+          result.players = players;
+          result.events = events;
+        });
+      });
+
+      if (result.players) localStorage.setItem(self.KEYS.PLAYERS, JSON.stringify(result.players));
+      if (result.events) localStorage.setItem(self.KEYS.EVENTS, JSON.stringify(result.events));
+      return true;
+    } catch (err) {
+      console.error('deleteMember transaction error:', err);
+      return this._deleteMemberLocal(memberName);
+    }
+  },
+
+  _deleteMemberLocal(memberName) {
+    var players = this.getPlayers().filter(function(p) { return p.name !== memberName; });
+    this.set(this.KEYS.PLAYERS, players);
+    this.syncToFirestore('players', players);
+    var events = this.getEvents();
+    var changed = false;
+    events.forEach(function(ev) {
+      if (ev.participants) {
+        var idx = ev.participants.indexOf(memberName);
+        if (idx >= 0) { ev.participants.splice(idx, 1); changed = true; }
+      }
+      if (ev.waitlist) {
+        var wIdx = ev.waitlist.indexOf(memberName);
+        if (wIdx >= 0) { ev.waitlist.splice(wIdx, 1); changed = true; }
+      }
+    });
+    if (changed) {
+      this.set(this.KEYS.EVENTS, events);
+      this.syncToFirestore('events', events);
+    }
+    return true;
+  },
+
+  // 멤버 복수 삭제 (Transaction 기반)
+  async deleteMembers(memberNames) {
+    var self = this;
+    var base = this._getBase();
+    if (!base) {
+      memberNames.forEach(function(name) { self._deleteMemberLocal(name); });
+      return true;
+    }
+
+    var playersRef = base.doc('players');
+    var eventsRef = base.doc('events');
+
+    try {
+      var result = { players: null, events: null };
+      await fbDb.runTransaction(function(transaction) {
+        return Promise.all([
+          transaction.get(playersRef),
+          transaction.get(eventsRef)
+        ]).then(function(docs) {
+          var parse = function(doc) {
+            if (!doc.exists) return [];
+            var d = doc.data();
+            return d.json ? JSON.parse(d.json) : (d.items || []);
+          };
+          var players = parse(docs[0]);
+          var events = parse(docs[1]);
+
+          players = players.filter(function(p) { return memberNames.indexOf(p.name) < 0; });
+
+          events.forEach(function(ev) {
+            if (ev.participants) {
+              ev.participants = ev.participants.filter(function(n) { return memberNames.indexOf(n) < 0; });
+            }
+            if (ev.waitlist) {
+              ev.waitlist = ev.waitlist.filter(function(n) { return memberNames.indexOf(n) < 0; });
+            }
+          });
+
+          transaction.set(playersRef, { json: JSON.stringify(players) });
+          transaction.set(eventsRef, { json: JSON.stringify(events) });
+
+          result.players = players;
+          result.events = events;
+        });
+      });
+
+      if (result.players) localStorage.setItem(self.KEYS.PLAYERS, JSON.stringify(result.players));
+      if (result.events) localStorage.setItem(self.KEYS.EVENTS, JSON.stringify(result.events));
+      return true;
+    } catch (err) {
+      console.error('deleteMembers transaction error:', err);
+      memberNames.forEach(function(name) { self._deleteMemberLocal(name); });
+      return true;
+    }
+  },
+
   // 팀 관련
   getTeams() {
     return this.get(this.KEYS.TEAMS) || [];
@@ -750,13 +887,49 @@ const Storage = {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
   },
 
+  // 백업 복원 (Firestore batch write로 원자적 처리)
+  async restoreBackup(data) {
+    // localStorage에 먼저 반영
+    if (data.players) this.set(this.KEYS.PLAYERS, data.players);
+    if (data.tournaments) this.set(this.KEYS.TOURNAMENTS, data.tournaments);
+    if (data.events) this.set(this.KEYS.EVENTS, data.events);
+    if (data.teams) this.set(this.KEYS.TEAMS, data.teams);
+    if (data.courts) this.set(this.KEYS.COURTS, data.courts);
+
+    var base = this._getBase();
+    if (!base) return;
+
+    // 모든 문서에 쓰기 가드 설정
+    var docs = ['players', 'tournaments', 'events', 'teams', 'courts'];
+    var self = this;
+    docs.forEach(function(d) { self._writeGuard[d] = true; });
+
+    try {
+      var batch = fbDb.batch();
+      if (data.players) batch.set(base.doc('players'), { json: JSON.stringify(data.players) });
+      if (data.tournaments) batch.set(base.doc('tournaments'), { json: JSON.stringify(data.tournaments) });
+      if (data.events) batch.set(base.doc('events'), { json: JSON.stringify(data.events) });
+      if (data.teams) batch.set(base.doc('teams'), { json: JSON.stringify(data.teams) });
+      if (data.courts) batch.set(base.doc('courts'), { json: JSON.stringify(data.courts) });
+      await batch.commit();
+    } catch (err) {
+      console.error('restoreBackup batch error:', err);
+    } finally {
+      setTimeout(function() {
+        docs.forEach(function(d) { delete self._writeGuard[d]; });
+      }, 1500);
+    }
+  },
+
   // ─── Firestore 동기화 ───
 
   _unsubPlayers: null,
   _unsubTournaments: null,
   _unsubEvents: null,
   _unsubCourts: null,
+  _unsubTeams: null,
   _remoteChangeTimer: null,
+  _writeGuard: {},  // 쓰기 중인 문서를 추적하여 onSnapshot 덮어쓰기 방지
 
   // Firestore 경로 분기: 클럽 사용자(admin/member) → 공유, 그 외 → per-user
   _getBase() {
@@ -768,13 +941,22 @@ const Storage = {
     return fbDb.collection('users').doc(user.uid).collection('data');
   },
 
-  // localStorage → Firestore
+  // localStorage → Firestore (쓰기 가드 포함)
   syncToFirestore(docName, data) {
+    var self = this;
     var base = this._getBase();
     if (!base) return;
+    this._writeGuard[docName] = true;
     base.doc(docName)
       .set({ json: JSON.stringify(data || []) })
-      .catch(function(err) { console.error('Firestore sync error:', err); });
+      .then(function() {
+        // 쓰기 완료 후 가드 해제 (onSnapshot이 안정화될 시간 확보)
+        setTimeout(function() { delete self._writeGuard[docName]; }, 1000);
+      })
+      .catch(function(err) {
+        delete self._writeGuard[docName];
+        console.error('Firestore sync error:', err);
+      });
   },
 
   // Firestore → localStorage (로그인 시 호출)
@@ -948,87 +1130,30 @@ const Storage = {
     this._setupVisibilityListener();
 
     // 데이터 실시간 리스너
-    this._unsubPlayers = base.doc('players').onSnapshot(function(doc) {
-      if (doc.metadata.hasPendingWrites) return;
-      if (!doc.exists) return;
-      var d = doc.data();
-      var items = d.json ? JSON.parse(d.json) : (d.items || []);
-      var current = localStorage.getItem(self.KEYS.PLAYERS);
-      var newJson = JSON.stringify(items);
-      if (current !== newJson) {
-        localStorage.setItem(self.KEYS.PLAYERS, newJson);
-        // console.log('실시간 동기화: 멤버 데이터 업데이트');
-        self._onRemoteChange();
-      }
-    }, function(err) {
-      console.error('Players realtime sync error:', err);
-    });
+    // onSnapshot 핸들러 (쓰기 가드 적용)
+    var makeListener = function(docName, storageKey) {
+      return base.doc(docName).onSnapshot(function(doc) {
+        if (doc.metadata.hasPendingWrites) return;
+        if (self._writeGuard[docName]) return; // 로컬 쓰기 중이면 무시
+        if (!doc.exists) return;
+        var d = doc.data();
+        var items = d.json ? JSON.parse(d.json) : (d.items || []);
+        var current = localStorage.getItem(storageKey);
+        var newJson = JSON.stringify(items);
+        if (current !== newJson) {
+          localStorage.setItem(storageKey, newJson);
+          self._onRemoteChange();
+        }
+      }, function(err) {
+        console.error(docName + ' realtime sync error:', err);
+      });
+    };
 
-    // 대회 데이터 실시간 리스너 (공유 경로)
-    this._unsubTournaments = base.doc('tournaments').onSnapshot(function(doc) {
-      if (doc.metadata.hasPendingWrites) return;
-      if (!doc.exists) return;
-      var d = doc.data();
-      var items = d.json ? JSON.parse(d.json) : (d.items || []);
-      var current = localStorage.getItem(self.KEYS.TOURNAMENTS);
-      var newJson = JSON.stringify(items);
-      if (current !== newJson) {
-        localStorage.setItem(self.KEYS.TOURNAMENTS, newJson);
-        // console.log('실시간 동기화: 대회 데이터 업데이트');
-        self._onRemoteChange();
-      }
-    }, function(err) {
-      console.error('Tournaments realtime sync error:', err);
-    });
-
-    // 일정 데이터 실시간 리스너
-    this._unsubEvents = base.doc('events').onSnapshot(function(doc) {
-      if (doc.metadata.hasPendingWrites) return;
-      if (!doc.exists) return;
-      var d = doc.data();
-      var items = d.json ? JSON.parse(d.json) : (d.items || []);
-      var current = localStorage.getItem(self.KEYS.EVENTS);
-      var newJson = JSON.stringify(items);
-      if (current !== newJson) {
-        localStorage.setItem(self.KEYS.EVENTS, newJson);
-        // console.log('실시간 동기화: 일정 데이터 업데이트');
-        self._onRemoteChange();
-      }
-    }, function(err) {
-      console.error('Events realtime sync error:', err);
-    });
-
-    // 코트 데이터 실시간 리스너
-    this._unsubCourts = base.doc('courts').onSnapshot(function(doc) {
-      if (doc.metadata.hasPendingWrites) return;
-      if (!doc.exists) return;
-      var d = doc.data();
-      var items = d.json ? JSON.parse(d.json) : (d.items || []);
-      var current = localStorage.getItem(self.KEYS.COURTS);
-      var newJson = JSON.stringify(items);
-      if (current !== newJson) {
-        localStorage.setItem(self.KEYS.COURTS, newJson);
-        self._onRemoteChange();
-      }
-    }, function(err) {
-      console.error('Courts realtime sync error:', err);
-    });
-
-    // 팀 데이터 실시간 리스너
-    this._unsubTeams = base.doc('teams').onSnapshot(function(doc) {
-      if (doc.metadata.hasPendingWrites) return;
-      if (!doc.exists) return;
-      var d = doc.data();
-      var items = d.json ? JSON.parse(d.json) : (d.items || []);
-      var current = localStorage.getItem(self.KEYS.TEAMS);
-      var newJson = JSON.stringify(items);
-      if (current !== newJson) {
-        localStorage.setItem(self.KEYS.TEAMS, newJson);
-        self._onRemoteChange();
-      }
-    }, function(err) {
-      console.error('Teams realtime sync error:', err);
-    });
+    this._unsubPlayers = makeListener('players', self.KEYS.PLAYERS);
+    this._unsubTournaments = makeListener('tournaments', self.KEYS.TOURNAMENTS);
+    this._unsubEvents = makeListener('events', self.KEYS.EVENTS);
+    this._unsubCourts = makeListener('courts', self.KEYS.COURTS);
+    this._unsubTeams = makeListener('teams', self.KEYS.TEAMS);
   },
 
   stopRealtimeSync() {

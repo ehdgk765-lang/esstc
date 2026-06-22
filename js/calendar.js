@@ -211,6 +211,14 @@ const Calendar = {
         }
       }
 
+      // 관리자용 참석자 추가 버튼
+      var addParticipantBtn = '';
+      if (isAdmin) {
+        addParticipantBtn = '<button class="cal-add-participant-btn mt-1.5 w-full py-1.5 text-xs font-semibold rounded-lg border border-dashed border-gray-300 text-gray-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50/50 transition flex items-center justify-center gap-1" data-id="' + ev.id + '">' +
+          '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>' +
+          '참석자 관리</button>';
+      }
+
       html += '<div class="p-3 rounded-xl ' + color.bg + ' mb-2">' +
                 '<div class="flex items-start gap-3">' +
                   '<div class="w-1 self-stretch rounded-full ' + color.dot + ' flex-shrink-0 mt-0.5"></div>' +
@@ -247,6 +255,7 @@ const Calendar = {
                   })() +
                 '</div>' +
                 attendBtn +
+                addParticipantBtn +
               '</div>';
     }
     return html;
@@ -302,6 +311,17 @@ const Calendar = {
         var events = Storage.getEvents();
         var ev = events.find(function(e) { return e.id === id; });
         if (ev) self._showBracketModal(ev);
+      };
+    });
+
+    // 참석자 추가 버튼 (관리자)
+    container.querySelectorAll('.cal-add-participant-btn').forEach(function(btn) {
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        var id = this.dataset.id;
+        var events = Storage.getEvents();
+        var ev = events.find(function(e) { return e.id === id; });
+        if (ev) self._showAddParticipantModal(ev);
       };
     });
 
@@ -712,6 +732,153 @@ const Calendar = {
     var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     var dayNames = ['일', '월', '화', '수', '목', '금', '토'];
     return parseInt(parts[1]) + '월 ' + parseInt(parts[2]) + '일 (' + dayNames[d.getDay()] + ')';
+  },
+
+  // 참석자 관리 모달 (관리자 - 추가/제거)
+  _showAddParticipantModal(ev) {
+    var self = this;
+    var allPlayers = Storage.getPlayers();
+    var participants = ev.participants || [];
+    var waitlist = ev.waitlist || [];
+    var genderMap = {};
+    allPlayers.forEach(function(p) { genderMap[p.name] = p.gender; });
+
+    // 현재 참석자 목록 HTML
+    var buildCurrentItem = function(name, type, order) {
+      var g = genderMap[name];
+      var gCls = g === 'F' ? 'bg-pink-50 text-pink-700' : 'bg-blue-50 text-blue-700';
+      return '<div class="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-gray-50">' +
+        (order ? '<span class="text-xs text-yellow-600 font-medium w-5">' + order + '</span>' : '') +
+        '<span class="text-sm text-gray-700 flex-1">' + self._escapeHtml(name) + '</span>' +
+        '<span class="text-xs px-1.5 py-0.5 rounded ' + gCls + '">' + (g === 'F' ? '여' : '남') + '</span>' +
+        '<button type="button" class="ap-remove-btn text-gray-300 hover:text-red-500 transition" data-name="' + self._escapeAttr(name) + '" data-type="' + type + '" title="제거">' +
+          '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
+        '</button>' +
+      '</div>';
+    };
+
+    var currentItems = '';
+    for (var ci = 0; ci < participants.length; ci++) currentItems += buildCurrentItem(participants[ci], 'participant');
+    if (waitlist.length > 0) {
+      currentItems += '<div class="text-xs font-semibold text-gray-500 mt-2 mb-0.5 px-2">대기 ' + waitlist.length + '명</div>';
+      for (var wi = 0; wi < waitlist.length; wi++) currentItems += buildCurrentItem(waitlist[wi], 'waitlist', wi + 1);
+    }
+
+    // 추가 가능한 멤버
+    var available = allPlayers.filter(function(p) {
+      return participants.indexOf(p.name) < 0 && waitlist.indexOf(p.name) < 0;
+    });
+    available.sort(function(a, b) { return (a.name || '').localeCompare(b.name || '', 'ko'); });
+
+    var addItems = '';
+    for (var ai = 0; ai < available.length; ai++) {
+      var p = available[ai];
+      var gCls2 = p.gender === 'F' ? 'text-pink-600' : 'text-blue-600';
+      addItems += '<label class="ap-add-item flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-gray-50 cursor-pointer" data-name="' + self._escapeAttr(p.name) + '">' +
+        '<input type="checkbox" class="ap-check w-4 h-4 text-blue-600 rounded border-gray-300" value="' + self._escapeAttr(p.name) + '">' +
+        '<span class="text-sm text-gray-700 flex-1">' + self._escapeHtml(p.name) + '</span>' +
+        '<span class="text-xs ' + gCls2 + '">' + (p.gender === 'F' ? '여' : '남') + '</span>' +
+      '</label>';
+    }
+
+    var modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modal.innerHTML =
+      '<div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm flex flex-col" style="max-height:85vh">' +
+        '<div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-3 sm:hidden flex-shrink-0"></div>' +
+        // 헤더 (고정)
+        '<div class="px-4 pt-3 pb-2 flex-shrink-0">' +
+          '<h3 class="text-base font-bold text-gray-800 text-center">참석자 관리</h3>' +
+          '<div class="text-xs text-gray-500 text-center mt-0.5">' + self._escapeHtml(ev.title) + '</div>' +
+        '</div>' +
+        // 스크롤 영역
+        '<div class="flex-1 overflow-y-auto px-4 space-y-3 min-h-0">' +
+          // 현재 참석자
+          (currentItems ?
+            '<div>' +
+              '<div class="text-xs font-semibold text-gray-600 mb-1">참석자 <span class="text-gray-400 font-normal">(' + participants.length + '명)</span></div>' +
+              '<div class="space-y-0.5">' + currentItems + '</div>' +
+            '</div>' : '') +
+          // 멤버 추가
+          (available.length > 0 ?
+            '<div class="border-t border-gray-100 pt-3">' +
+              '<div class="text-xs font-semibold text-gray-600 mb-2">멤버 추가 <span class="text-gray-400 font-normal">(' + available.length + '명)</span></div>' +
+              '<div class="relative mb-2">' +
+                '<svg class="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>' +
+                '<input type="text" id="ap-search" class="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition" placeholder="이름 검색">' +
+              '</div>' +
+              '<div id="ap-add-list" class="space-y-0.5">' + addItems + '</div>' +
+            '</div>' : '') +
+        '</div>' +
+        // 하단 버튼 (고정)
+        '<div class="px-4 py-3 flex gap-2 flex-shrink-0 border-t border-gray-100">' +
+          '<button type="button" class="ap-cancel flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">닫기</button>' +
+          (available.length > 0 ? '<button type="button" class="ap-submit flex-1 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-semibold hover:bg-blue-600 transition">추가</button>' : '') +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(modal);
+    lockScroll();
+
+    var closeModal = function() { modal.remove(); unlockScroll(); };
+    // 모달을 닫고 최신 데이터로 다시 열기
+    var refreshModal = function() {
+      modal.remove();
+      unlockScroll();
+      self.render(self._container);
+      var freshEvents = Storage.getEvents();
+      var freshEv = freshEvents.find(function(e) { return e.id === ev.id; });
+      if (freshEv) self._showAddParticipantModal(freshEv);
+    };
+
+    modal.querySelector('.ap-cancel').onclick = closeModal;
+    modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+    // 검색 필터
+    var searchInput = modal.querySelector('#ap-search');
+    if (searchInput) {
+      searchInput.oninput = function() {
+        var keyword = this.value.trim().toLowerCase();
+        modal.querySelectorAll('.ap-add-item').forEach(function(item) {
+          var name = (item.dataset.name || '').toLowerCase();
+          item.style.display = name.indexOf(keyword) >= 0 ? '' : 'none';
+        });
+      };
+    }
+
+    // 제거 버튼
+    modal.querySelectorAll('.ap-remove-btn').forEach(function(btn) {
+      btn.onclick = async function() {
+        var name = this.dataset.name;
+        var type = this.dataset.type;
+        if (!confirm(name + ' 님을 ' + (type === 'waitlist' ? '대기 목록' : '참석자') + '에서 제거하시겠습니까?')) return;
+        btn.disabled = true;
+        if (type === 'waitlist') {
+          await Storage.toggleWaitlist(ev.id, name);
+        } else {
+          await Storage.toggleAttendance(ev.id, name);
+        }
+        refreshModal();
+      };
+    });
+
+    // 추가 버튼
+    var submitBtn = modal.querySelector('.ap-submit');
+    if (submitBtn) {
+      submitBtn.onclick = async function() {
+        var checks = modal.querySelectorAll('.ap-check:checked');
+        var names = [];
+        checks.forEach(function(c) { names.push(c.value); });
+        if (names.length === 0) return;
+        submitBtn.disabled = true;
+        submitBtn.textContent = '추가 중...';
+        for (var i = 0; i < names.length; i++) {
+          await Storage.toggleAttendance(ev.id, names[i]);
+        }
+        refreshModal();
+      };
+    }
   },
 
   // 대진표 생성 설정 모달

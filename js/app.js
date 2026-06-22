@@ -463,7 +463,7 @@ const App = {
         var file = fileInput.files[0];
         if (!file) return;
         var reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = async function(e) {
           try {
             var data = JSON.parse(e.target.result);
             if (!data.players && !data.tournaments && !data.events) {
@@ -479,11 +479,7 @@ const App = {
             var msg = '다음 데이터를 복원합니다:\n' + summary.join(', ') +
               '\n\n현재 데이터가 모두 덮어씌워집니다. 계속하시겠습니까?';
             if (!confirm(msg)) { fileInput.value = ''; return; }
-            if (data.players) Storage.savePlayers(data.players);
-            if (data.tournaments) Storage.saveTournaments(data.tournaments);
-            if (data.events) Storage.saveEvents(data.events);
-            if (data.teams) Storage.saveTeams(data.teams);
-            if (data.courts) Storage.saveCourts(data.courts);
+            await Storage.restoreBackup(data);
             fileInput.value = '';
             alert('데이터가 복원되었습니다.');
             self.renderSettings(container);

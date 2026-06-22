@@ -263,11 +263,15 @@ const Players = {
     });
 
     container.querySelectorAll('.delete-player-btn').forEach(btn => {
-      btn.onclick = () => {
+      btn.onclick = async () => {
         const id = btn.dataset.id;
         if (!confirm('멤버를 삭제하시겠습니까?')) return;
-        const players = Storage.getPlayers().filter(p => p.id !== id);
-        Storage.savePlayers(players);
+        const players = Storage.getPlayers();
+        const deleted = players.find(p => p.id === id);
+        if (deleted) {
+          btn.disabled = true;
+          await Storage.deleteMember(deleted.name);
+        }
         this.render(container);
       };
     });
@@ -313,12 +317,14 @@ const Players = {
     playerCbs.forEach(cb => { cb.onchange = updateSelectionUI; });
 
     if (deleteSelectedBtn) {
-      deleteSelectedBtn.onclick = () => {
+      deleteSelectedBtn.onclick = async () => {
         const checkedIds = Array.from(container.querySelectorAll('.player-select-cb:checked')).map(cb => cb.dataset.id);
         if (checkedIds.length === 0) return;
         if (!confirm(`선택한 ${checkedIds.length}명의 멤버를 삭제하시겠습니까?`)) return;
-        const players = Storage.getPlayers().filter(p => !checkedIds.includes(p.id));
-        Storage.savePlayers(players);
+        const players = Storage.getPlayers();
+        const deletedNames = players.filter(p => checkedIds.includes(p.id)).map(p => p.name);
+        deleteSelectedBtn.disabled = true;
+        await Storage.deleteMembers(deletedNames);
         this.render(container);
       };
     }
