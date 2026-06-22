@@ -201,7 +201,7 @@ const Auth = {
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
       // color-scheme 메타 태그 업데이트 (크롬 강제 다크모드 방지)
       const csMeta = document.querySelector('meta[name="color-scheme"]');
-      if (csMeta) csMeta.content = isDark ? 'dark' : 'only light';
+      if (csMeta) csMeta.content = isDark ? 'only dark' : 'only light';
       updateAuthThemeIcons(isDark);
       // 앱 헤더 아이콘도 동기화
       const iconSun = document.getElementById('icon-sun');
@@ -212,9 +212,10 @@ const Auth = {
       if (metaColor) metaColor.content = isDark ? '#1e293b' : '#ffffff';
     };
 
-    // 모바일 키보드 대응: 키보드가 올라오면 로고 축소 + 컨테이너 리사이즈
+    // 모바일 키보드 대응: 키보드가 올라오면 로고 축소 + 컨테이너 리사이즈 + 스크롤 가능
     if (window.visualViewport) {
       const logoSection = container.querySelector('#auth-logo-section');
+      const authWrapper = container.querySelector('.min-h-full');
       const initialHeight = window.visualViewport.height;
       const handleAuthViewport = () => {
         const vh = window.visualViewport.height;
@@ -230,6 +231,31 @@ const Auth = {
             logoSection.style.maxHeight = '';
             logoSection.style.marginBottom = '';
             logoSection.style.opacity = '';
+          }
+        }
+        // 키보드가 올라오면 스크롤 가능하게 + 상단 정렬로 변경
+        if (authWrapper) {
+          if (isKeyboard) {
+            authWrapper.style.alignItems = 'flex-start';
+            authWrapper.style.overflowY = 'auto';
+            authWrapper.style.minHeight = '0';
+            authWrapper.style.height = '100%';
+            authWrapper.style.paddingTop = '16px';
+            authWrapper.style.paddingBottom = '16px';
+            // 포커스된 입력 필드가 보이도록 스크롤
+            setTimeout(function() {
+              var focused = document.activeElement;
+              if (focused && focused.tagName === 'INPUT') {
+                focused.scrollIntoView({ block: 'center', behavior: 'smooth' });
+              }
+            }, 100);
+          } else {
+            authWrapper.style.alignItems = '';
+            authWrapper.style.overflowY = '';
+            authWrapper.style.minHeight = '';
+            authWrapper.style.height = '';
+            authWrapper.style.paddingTop = '';
+            authWrapper.style.paddingBottom = '';
           }
         }
       };

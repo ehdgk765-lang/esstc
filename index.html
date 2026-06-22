@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="color-scheme" content="only light">
@@ -17,7 +18,7 @@
       if (saved === 'dark' || (deviceDark && saved !== 'light')) {
         document.documentElement.classList.add('dark');
         // 크롬 강제 다크모드 방지: color-scheme 메타도 dark로 설정
-        document.querySelector('meta[name="color-scheme"]').content = 'dark';
+        document.querySelector('meta[name="color-scheme"]').content = 'only dark';
       }
     })();
   </script>
@@ -212,7 +213,7 @@
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         // color-scheme 메타 태그 업데이트 (크롬 강제 다크모드 방지)
         var csMeta = document.querySelector('meta[name="color-scheme"]');
-        if (csMeta) csMeta.content = isDark ? 'dark' : 'only light';
+        if (csMeta) csMeta.content = isDark ? 'only dark' : 'only light';
         applyIcons(isDark);
       });
 

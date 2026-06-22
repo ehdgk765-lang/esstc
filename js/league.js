@@ -96,6 +96,21 @@ const League = {
     });
   },
 
+  // 매치에 멤버 본인 이름이 포함되어 있는지 확인
+  _isMyMatch(match) {
+    const name = App.getMemberName();
+    if (!name) return false;
+    const check = (pStr) => pStr && pStr.split(' / ').includes(name);
+    return check(match.player1) || check(match.player2);
+  },
+
+  // 순위표에서 본인 이름인지 확인
+  _isMyName(name) {
+    const myName = App.getMemberName();
+    if (!myName) return false;
+    return name.split(' / ').includes(myName);
+  },
+
   // 리그 뷰 렌더링
   render(container, tournament) {
     const rounds = tournament.rounds;
@@ -103,6 +118,7 @@ const League = {
     const totalMatches = rounds.reduce((sum, r) => sum + r.length, 0);
     const completedMatches = rounds.reduce((sum, r) => sum + r.filter(m => m.scores).length, 0);
     const isComplete = completedMatches === totalMatches;
+    const isMember = RolesConfig.isMember();
 
     if (isComplete && tournament.status !== 'completed') {
       tournament.status = 'completed';
@@ -141,17 +157,21 @@ const League = {
               </tr>
             </thead>
             <tbody>
-              ${standings.map((s, i) => `
-                <tr class="${i === 0 && isComplete ? 'bg-yellow-50' : (i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50')} border-b border-gray-50">
-                  <td class="px-3 py-2.5 font-bold ${i === 0 && isComplete ? 'text-yellow-600' : 'text-gray-400'}">${i + 1}</td>
-                  <td class="px-3 py-2.5 font-medium text-gray-800">${Results.escapeHtml(s.name)}</td>
+              ${standings.map((s, i) => {
+                const isMe = isMember && this._isMyName(s.name);
+                const rowBg = isMe ? 'bg-blue-50/60' : (i === 0 && isComplete ? 'bg-yellow-50' : (i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'));
+                const nameClass = isMe ? 'text-blue-700' : 'text-gray-800';
+                return `
+                <tr class="${rowBg} border-b border-gray-50">
+                  <td class="px-3 py-2.5 font-bold ${i === 0 && isComplete ? 'text-yellow-600' : 'text-gray-500'}">${i + 1}</td>
+                  <td class="px-3 py-2.5 font-medium ${nameClass}">${Results.escapeHtml(s.name)}</td>
                   <td class="px-3 py-2.5 text-center text-blue-700 font-semibold">${s.wins}</td>
                   <td class="px-3 py-2.5 text-center text-gray-500">${s.draws}</td>
                   <td class="px-3 py-2.5 text-center text-red-500">${s.losses}</td>
                   <td class="px-3 py-2.5 text-center font-bold text-orange-600">${s.points}</td>
                   <td class="px-3 py-2.5 text-center font-medium text-purple-600">${s.scorePoints}</td>
-                </tr>
-              `).join('')}
+                </tr>`;
+              }).join('')}
             </tbody>
           </table>
         </div>
@@ -169,7 +189,8 @@ const League = {
 
       for (const match of rounds[r]) {
         const hasResult = !!match.scores;
-        const canEdit = !hasResult;
+        const isMyMatch = this._isMyMatch(match);
+        const canEdit = !hasResult && (!isMember || isMyMatch);
         const isDraw = match.winner === 'draw';
         const p1Won = !isDraw && match.winner === match.player1;
         const p2Won = !isDraw && match.winner === match.player2;
@@ -177,13 +198,14 @@ const League = {
         const p1Class = isDraw ? 'font-bold text-yellow-700' : (p1Won ? 'font-bold text-blue-700' : 'text-gray-700');
         const p2Class = isDraw ? 'font-bold text-yellow-700' : (p2Won ? 'font-bold text-blue-700' : 'text-gray-700');
         const badge = (won, draw) => {
-          if (draw) return '<span class="w-5 h-5 bg-yellow-400 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">D</span>';
+          if (draw) return '<span class="w-5 h-5 bg-yellow-400 text-yellow-900 rounded-full flex items-center justify-center text-xs flex-shrink-0">D</span>';
           if (won) return '<span class="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">W</span>';
           return '';
         };
+        const myMatchClass = isMember && isMyMatch ? 'my-match bg-blue-50/60' : '';
 
         html += `
-          <div class="league-match league-match-mobile flex items-center px-4 py-3 ${canEdit ? 'cursor-pointer hover:bg-blue-50 active:bg-blue-50' : ''} transition"
+          <div class="league-match league-match-mobile flex items-center px-4 py-3 ${myMatchClass} ${canEdit ? 'cursor-pointer hover:bg-blue-50 active:bg-blue-50' : ''} transition"
                data-match-id="${match.id}" data-round="${r}">
             <div class="league-p1 flex-1 flex items-center justify-end gap-2">
               <span class="text-sm ${p1Class} truncate">${Results.escapeHtml(match.player1)}</span>
@@ -214,6 +236,8 @@ const League = {
         const round = parseInt(el.dataset.round);
         const match = rounds[round].find(m => m.id === matchId);
         if (!match || match.scores) return;
+        // 멤버는 자기 매치만 입력 가능
+        if (isMember && !this._isMyMatch(match)) return;
 
         Results.showScoreModal(match, { ...tournament, allowDraw: true }, async (result) => {
           const scores = result.scores;

@@ -244,10 +244,10 @@ const Stats = {
               const gb = genderBadge(gender);
               const isMe = RolesConfig.isMember() && App.getMemberName() && m.name === App.getMemberName();
               return `<tr class="border-b border-gray-50 hover:bg-gray-50 ${isMe ? 'bg-blue-50/60' : ''}">
-                <td class="text-center px-2 py-2 text-gray-400 font-bold">${idx + 1}</td>
+                <td class="text-center px-2 py-2 text-gray-500 font-bold">${idx + 1}</td>
                 <td class="px-3 py-2 font-medium ${isMe ? 'text-blue-700' : 'text-gray-800'}">${Results.escapeHtml(m.name)} ${gb}</td>
                 <td class="text-center px-2 py-2 font-bold text-yellow-600">${m.gold || '-'}</td>
-                <td class="text-center px-2 py-2 font-bold text-gray-400">${m.silver || '-'}</td>
+                <td class="text-center px-2 py-2 font-bold text-gray-500">${m.silver || '-'}</td>
                 <td class="text-center px-2 py-2 font-bold text-orange-600">${m.bronze || '-'}</td>
                 <td class="text-center px-2 py-2 font-bold text-blue-700">${m.total}</td>
               </tr>`;
@@ -288,7 +288,7 @@ const Stats = {
               const gb = genderBadge(gender);
               const isMe = RolesConfig.isMember() && App.getMemberName() && s.name === App.getMemberName();
               return `<tr class="border-b border-gray-50 hover:bg-gray-50 ${isMe ? 'bg-blue-50/60' : ''}">
-                <td class="text-center px-2 py-2 text-gray-400 font-bold">${idx + 1}</td>
+                <td class="text-center px-2 py-2 text-gray-500 font-bold">${idx + 1}</td>
                 <td class="px-3 py-2 font-medium whitespace-nowrap ${isMe ? 'text-blue-700' : 'text-gray-800'}">${Results.escapeHtml(s.name)} ${gb}</td>
                 <td class="text-center px-2 py-2 text-gray-600">${s.tournamentCount}</td>
                 <td class="text-center px-2 py-2 text-gray-600">${s.games}</td>

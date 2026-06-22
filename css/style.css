@@ -258,6 +258,17 @@ header {
 .my-match.schedule-match-card {
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), 0 2px 8px rgba(59, 130, 246, 0.15);
 }
+.my-match.league-match {
+  background-color: rgba(239, 246, 255, 0.6);
+  box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+/* 멤버 본인 대진표 카드 하이라이트 */
+.tournament-card.my-card,
+.tournament-card.ring-2 {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), 0 2px 8px rgba(59, 130, 246, 0.15) !important;
+}
 
 /* 스코어 바 */
 .match-score-bar {
@@ -356,7 +367,7 @@ header {
 
 /* ─── Dark Mode ─── */
 html.dark {
-  color-scheme: dark;
+  color-scheme: only dark;
 }
 
 html.dark body {
@@ -456,9 +467,19 @@ html.dark .tournament-card {
   border-color: rgba(51, 65, 85, 0.5) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
+html.dark .tournament-card.my-card,
+html.dark .tournament-card.ring-2 {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4), 0 2px 8px rgba(59, 130, 246, 0.2) !important;
+}
 html.dark .tournament-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
   border-color: rgba(96, 165, 250, 0.3) !important;
+}
+html.dark .tournament-card.my-card:hover,
+html.dark .tournament-card.ring-2:hover {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5), 0 4px 12px rgba(59, 130, 246, 0.25) !important;
+  border-color: #60a5fa !important;
 }
 html.dark .shadow-blue-50\/30 {
   --tw-shadow-color: transparent !important;
@@ -692,6 +713,10 @@ html.dark .my-match .match-card,
 html.dark .my-match.schedule-match-card {
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4), 0 2px 8px rgba(59, 130, 246, 0.2) !important;
   border-color: #3b82f6 !important;
+}
+html.dark .my-match.league-match {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+  box-shadow: inset 3px 0 0 #3b82f6 !important;
 }
 
 /* 스코어 바 (다크모드) */
@@ -974,6 +999,9 @@ html.dark .hover\:bg-gray-200:hover {
 html.dark .text-gray-900 {
   color: #f1f5f9 !important;
 }
+html.dark .text-yellow-900 {
+  color: #fef08a !important;
+}
 html.dark .text-yellow-800 {
   color: #fbbf24 !important;
 }
@@ -1138,6 +1166,14 @@ html.dark .hover\:border-blue-600:hover {
 }
 html.dark .hover\:bg-gray-100:hover {
   background-color: #334155 !important;
+}
+
+/* 투명도 분수 배경 */
+html.dark .bg-blue-50\/60 {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+}
+html.dark .hover\:bg-blue-50\/50:hover {
+  background-color: rgba(59, 130, 246, 0.08) !important;
 }
 
 /* 로고 배경 */

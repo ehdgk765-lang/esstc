@@ -1982,7 +1982,7 @@ const App = {
           }
         }
       }
-      const myCardClass = isMember && hasMyName ? 'border-blue-400 ring-2 ring-blue-200 shadow-blue-100/50' : 'border-white/60';
+      const myCardClass = isMember && hasMyName ? 'my-card' : 'border-white/60';
 
       if (t.format === 'schedule') {
         const allMatches = Schedule.getAllMatches(t);

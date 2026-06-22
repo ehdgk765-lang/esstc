@@ -207,7 +207,7 @@ const Calendar = {
         } else if (!isFull) {
           attendBtn = '<button class="cal-attend-btn mt-2 w-full py-1.5 text-xs font-semibold rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition" data-id="' + ev.id + '">참석</button>';
         } else {
-          attendBtn = '<button class="cal-waitlist-btn mt-2 w-full py-1.5 text-xs font-semibold rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition" data-id="' + ev.id + '">대기 신청</button>';
+          attendBtn = '<button class="cal-waitlist-btn mt-2 w-full py-1.5 text-xs font-semibold rounded-lg bg-yellow-500 text-yellow-900 hover:bg-yellow-600 transition" data-id="' + ev.id + '">대기 신청</button>';
         }
       }
 
