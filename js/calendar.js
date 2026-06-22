@@ -156,12 +156,33 @@ const Calendar = {
         '</div>';
       }
 
-      // 참석자 이름 목록
+      // 참석자 이름 목록 (남녀 그룹핑)
       var namesList = '';
       if (participants.length > 0) {
-        namesList = '<div class="flex flex-wrap gap-1 mt-1.5">';
+        var _allPlayers = Storage.getPlayers();
+        var _genderMap = {};
+        for (var pi = 0; pi < _allPlayers.length; pi++) { _genderMap[_allPlayers[pi].name] = _allPlayers[pi].gender; }
+        var maleNames = [], femaleNames = [];
         for (var j = 0; j < participants.length; j++) {
-          namesList += '<span class="inline-block text-xs px-1.5 py-0.5 rounded-md bg-white/60 text-gray-600">' + this._escapeHtml(participants[j]) + '</span>';
+          if (_genderMap[participants[j]] === 'F') femaleNames.push(participants[j]);
+          else maleNames.push(participants[j]);
+        }
+        namesList = '<div class="mt-1.5 space-y-1">';
+        if (maleNames.length > 0) {
+          namesList += '<div class="flex flex-wrap items-center gap-1">' +
+            '<span class="text-xs font-medium text-blue-600">남' + maleNames.length + '</span>';
+          for (var mi = 0; mi < maleNames.length; mi++) {
+            namesList += '<span class="inline-block text-xs px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700">' + this._escapeHtml(maleNames[mi]) + '</span>';
+          }
+          namesList += '</div>';
+        }
+        if (femaleNames.length > 0) {
+          namesList += '<div class="flex flex-wrap items-center gap-1">' +
+            '<span class="text-xs font-medium text-pink-600">여' + femaleNames.length + '</span>';
+          for (var fi = 0; fi < femaleNames.length; fi++) {
+            namesList += '<span class="inline-block text-xs px-1.5 py-0.5 rounded-md bg-pink-50 text-pink-700">' + this._escapeHtml(femaleNames[fi]) + '</span>';
+          }
+          namesList += '</div>';
         }
         namesList += '</div>';
       }
