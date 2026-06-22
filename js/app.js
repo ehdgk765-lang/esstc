@@ -47,7 +47,7 @@ const App = {
         '</button>' +
         '<h3 class="text-lg font-bold text-gray-800 text-center">이름 확인</h3>' +
         '<p class="text-sm text-gray-500 text-center">멤버 목록에 등록된 본인의 이름을 입력해주세요.</p>' +
-        '<input type="text" id="member-name-input" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-700 transition" placeholder="이름 입력">' +
+        '<input type="text" autocomplete="off" id="member-name-input" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-700 transition" placeholder="이름 입력">' +
         '<p id="member-name-error" class="text-sm text-red-500 hidden text-center"></p>' +
         '<button id="member-name-submit" class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 font-semibold transition">확인</button>' +
       '</div>';
@@ -288,7 +288,7 @@ const App = {
           '<div class="px-4 py-3 border-b border-gray-100">' +
             '<h3 class="font-semibold text-gray-700 text-sm mb-2">코트 관리</h3>' +
             '<div class="flex gap-2">' +
-              '<input type="text" id="court-name-input" class="min-w-0 flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-base" placeholder="코트 이름 입력" maxlength="30">' +
+              '<input type="text" autocomplete="off" id="court-name-input" class="min-w-0 flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-base" placeholder="코트 이름 입력" maxlength="30">' +
               '<button id="add-court-btn" class="px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-medium whitespace-nowrap flex-shrink-0 shadow-sm shadow-blue-200/50">추가</button>' +
             '</div>' +
           '</div>' +
@@ -315,7 +315,7 @@ const App = {
                       '<div class="flex items-center gap-3 min-w-0">' +
                         '<span class="w-7 h-7 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">' + (i + 1) + '</span>' +
                         '<span class="court-name-display text-gray-800 font-medium truncate cursor-pointer hover:text-blue-700 transition" data-court-id="' + c.id + '" title="클릭하여 이름 수정">' + self._escapeHtml(c.name) + '</span>' +
-                        '<input type="text" class="court-name-edit hidden px-2 py-1 border border-blue-500 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-700 focus:outline-none" data-court-id="' + c.id + '" value="' + self._escapeHtml(c.name) + '" maxlength="30">' +
+                        '<input type="text" autocomplete="off" class="court-name-edit hidden px-2 py-1 border border-blue-500 rounded-lg text-sm font-medium text-gray-800 focus:ring-2 focus:ring-blue-700 focus:outline-none" data-court-id="' + c.id + '" value="' + self._escapeHtml(c.name) + '" maxlength="30">' +
                         (slots.length > 0 ? '<span class="text-gray-400 text-xs ml-1">' + slots.length + '개</span>' : '') +
                       '</div>' +
                       '<div class="flex items-center gap-1 flex-shrink-0 ml-2">' +
@@ -1078,7 +1078,7 @@ const App = {
       <form id="create-form" class="space-y-5">
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">대회명</label>
-          <input type="text" id="tournament-name" required maxlength="30"
+          <input type="text" autocomplete="off" id="tournament-name" required maxlength="30"
             class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
             placeholder="예: 2024년 봄 정기대회">
         </div>
@@ -1223,7 +1223,7 @@ const App = {
     patchDOM(section, `
       <div>
         <label class="block text-sm font-semibold text-gray-700 mb-2">참가 멤버 선택</label>
-        <input type="text" id="player-search" placeholder="이름 검색..."
+        <input type="text" autocomplete="off" id="player-search" placeholder="이름 검색..."
           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-2">
         <div class="flex justify-between items-center mb-2">
           <span id="selected-count" class="text-sm text-gray-500">0명 선택</span>
@@ -1293,7 +1293,7 @@ const App = {
           ${genderLabel}자 멤버 선택
           <span id="${prefix}-count" class="text-blue-700 font-normal">(0명 선택)</span>
         </label>
-        <input type="text" id="${prefix}-search" placeholder="이름 검색..."
+        <input type="text" autocomplete="off" id="${prefix}-search" placeholder="이름 검색..."
           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-2">
         <div class="flex justify-between items-center mb-2">
           <span class="text-sm text-gray-500">${players.length}명 중 선택</span>
@@ -1607,7 +1607,7 @@ const App = {
         <!-- 대진표 이름 -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">대진표 이름</label>
-          <input type="text" id="schedule-name" maxlength="30"
+          <input type="text" autocomplete="off" id="schedule-name" maxlength="30"
             class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
             placeholder="미입력 시 게임 날짜로 자동 생성">
         </div>
@@ -1655,7 +1655,7 @@ const App = {
             남자 멤버 <span id="male-count" class="text-blue-700 font-normal">(0/${males.length}명 선택)</span>
           </label>
           ${males.length === 0 ? '<p class="text-sm text-gray-400">등록된 남자 멤버가 없습니다.</p>' : `
-          <input type="text" id="sch-male-search" placeholder="이름 검색..."
+          <input type="text" autocomplete="off" id="sch-male-search" placeholder="이름 검색..."
             class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-2">
           <div class="flex justify-between items-center mb-2">
             <span class="text-sm text-gray-500">${males.length}명 중 선택</span>
@@ -1682,7 +1682,7 @@ const App = {
             여자 멤버 <span id="female-count" class="text-blue-700 font-normal">(0/${females.length}명 선택)</span>
           </label>
           ${females.length === 0 ? '<p class="text-sm text-gray-400">등록된 여자 멤버가 없습니다.</p>' : `
-          <input type="text" id="sch-female-search" placeholder="이름 검색..."
+          <input type="text" autocomplete="off" id="sch-female-search" placeholder="이름 검색..."
             class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-2">
           <div class="flex justify-between items-center mb-2">
             <span class="text-sm text-gray-500">${females.length}명 중 선택</span>

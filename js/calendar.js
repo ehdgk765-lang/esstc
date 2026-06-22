@@ -806,7 +806,7 @@ const Calendar = {
               '<div class="text-xs font-semibold text-gray-600 mb-2">멤버 추가 <span class="text-gray-400 font-normal">(' + available.length + '명)</span></div>' +
               '<div class="relative mb-2">' +
                 '<svg class="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>' +
-                '<input type="text" id="ap-search" class="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition" placeholder="이름 검색">' +
+                '<input type="text" autocomplete="off" id="ap-search" class="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition" placeholder="이름 검색">' +
               '</div>' +
               '<div id="ap-add-list" class="space-y-0.5">' + addItems + '</div>' +
             '</div>' : '') +
@@ -821,9 +821,38 @@ const Calendar = {
     document.body.appendChild(modal);
     lockScroll();
 
-    var closeModal = function() { modal.remove(); unlockScroll(); };
+    // 모바일 키보드 대응
+    var innerDiv = modal.querySelector('.bg-white');
+    var adjustForKeyboard = function() {
+      if (window.visualViewport) {
+        var vh = window.visualViewport.height;
+        var offsetTop = window.visualViewport.offsetTop;
+        modal.style.height = vh + 'px';
+        modal.style.top = offsetTop + 'px';
+        modal.style.bottom = 'auto';
+        innerDiv.style.maxHeight = (vh - 16) + 'px';
+      }
+    };
+    if (window.visualViewport) {
+      adjustForKeyboard();
+      window.visualViewport.addEventListener('resize', adjustForKeyboard);
+      window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+    }
+
+    var closeModal = function() {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustForKeyboard);
+        window.visualViewport.removeEventListener('scroll', adjustForKeyboard);
+      }
+      modal.remove();
+      unlockScroll();
+    };
     // 모달을 닫고 최신 데이터로 다시 열기
     var refreshModal = function() {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustForKeyboard);
+        window.visualViewport.removeEventListener('scroll', adjustForKeyboard);
+      }
       modal.remove();
       unlockScroll();
       self.render(self._container);
@@ -911,7 +940,7 @@ const Calendar = {
       '<div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4 overflow-y-auto" style="max-height:90vh">' +
         '<div class="w-10 h-1 bg-gray-300 rounded-full mx-auto sm:hidden"></div>' +
         '<h3 class="text-lg font-bold text-gray-800 text-center">대진표 생성</h3>' +
-        '<input type="text" id="bm-name" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm text-center focus:outline-none focus:border-blue-500 transition" value="' + this._escapeAttr(ev.title + ' 대진표') + '">' +
+        '<input type="text" autocomplete="off" id="bm-name" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm text-center focus:outline-none focus:border-blue-500 transition" value="' + this._escapeAttr(ev.title + ' 대진표') + '">' +
         // 참석자 현황
         '<div class="flex justify-center gap-3">' +
           '<span class="text-sm font-medium text-blue-600">남 ' + males.length + '명</span>' +

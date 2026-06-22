@@ -160,7 +160,7 @@ const Auth = {
             </div>
             <div id="auth-member-name-wrap" style="display:none">
               <label class="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">이름</label>
-              <input type="text" id="auth-member-name" maxlength="20"
+              <input type="text" autocomplete="off" id="auth-member-name" maxlength="20"
                 class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 focus:bg-white transition"
                 placeholder="멤버 목록에 등록된 본인 이름">
             </div>

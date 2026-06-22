@@ -28,7 +28,7 @@ const CustomBracket = {
       <form id="custom-bracket-form" class="space-y-5">
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">대회명</label>
-          <input type="text" id="cb-name" required maxlength="30"
+          <input type="text" autocomplete="off" id="cb-name" required maxlength="30"
             class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
             placeholder="예: 2024년 봄 정기대회" value="${Results.escapeHtml(st.tournamentName)}">
         </div>
@@ -330,7 +330,7 @@ const CustomBracket = {
 
         <div class="mb-3">
           <div class="flex gap-2">
-            <input type="text" id="cb-custom-name" placeholder="직접 입력..."
+            <input type="text" autocomplete="off" id="cb-custom-name" placeholder="직접 입력..."
               class="cb-picker-search flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
             <button type="button" id="cb-custom-add"
               class="px-4 py-2 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition whitespace-nowrap">추가</button>
