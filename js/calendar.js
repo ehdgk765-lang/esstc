@@ -1005,6 +1005,24 @@ const Calendar = {
     document.body.appendChild(modal);
     lockScroll();
 
+    // 모바일 키보드 대응
+    var bmInner = modal.querySelector('.bg-white');
+    var adjustBmKeyboard = function() {
+      if (window.visualViewport) {
+        var vh = window.visualViewport.height;
+        var offsetTop = window.visualViewport.offsetTop;
+        modal.style.height = vh + 'px';
+        modal.style.top = offsetTop + 'px';
+        modal.style.bottom = 'auto';
+        bmInner.style.maxHeight = (vh - 16) + 'px';
+      }
+    };
+    if (window.visualViewport) {
+      adjustBmKeyboard();
+      window.visualViewport.addEventListener('resize', adjustBmKeyboard);
+      window.visualViewport.addEventListener('scroll', adjustBmKeyboard);
+    }
+
     // 기본값 설정
     modal.querySelector('#bm-start').value = defaultStart;
     modal.querySelector('#bm-end').value = defaultEnd;
@@ -1019,7 +1037,14 @@ const Calendar = {
     });
 
     // 닫기
-    var closeModal = function() { modal.remove(); unlockScroll(); };
+    var closeModal = function() {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', adjustBmKeyboard);
+        window.visualViewport.removeEventListener('scroll', adjustBmKeyboard);
+      }
+      modal.remove();
+      unlockScroll();
+    };
     modal.querySelector('.bm-cancel').onclick = closeModal;
     modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
 
