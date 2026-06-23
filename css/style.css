@@ -815,6 +815,34 @@ html.dark #member-name-modal p {
   color: #94a3b8;
 }
 
+/* 가계부 보기 버튼 */
+#btn-ledger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  transition: background-color 0.2s;
+  color: #4b5563;
+}
+#btn-ledger:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+html.dark #btn-ledger {
+  color: #9ca3af;
+}
+html.dark #btn-ledger:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+#btn-ledger svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* 테마 토글 버튼 */
 #theme-toggle {
   display: flex;

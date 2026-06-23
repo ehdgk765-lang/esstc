@@ -10,6 +10,10 @@
   <meta name="theme-color" content="#ffffff" id="meta-theme-color">
   <title>해태클럽</title>
   <script>
+    // 앱 버전 (수정 배포 시 이 값만 변경하면 캐시 갱신)
+    var APP_VERSION = '20260623';
+  </script>
+  <script>
     // 페이지 렌더 전 테마 적용 (깜빡임 방지)
     (function() {
       const saved = localStorage.getItem('theme');
@@ -45,7 +49,8 @@
       morphdom(container, tmp, { childrenOnly: true });
     }
   </script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css" id="app-css">
+  <script>document.getElementById('app-css').href = 'css/style.css?v=' + APP_VERSION;</script>
 </head>
 <body class="bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 min-h-screen">
 
@@ -131,6 +136,11 @@
           </h1>
           <!-- 우측 영역 -->
           <div class="flex-1 flex items-center justify-end gap-1">
+            <button id="btn-ledger" class="hidden" title="가계부 보기" aria-label="가계부 보기">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </button>
             <button id="theme-toggle" title="테마 전환" aria-label="테마 전환">
               <svg id="icon-sun" class="text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -176,21 +186,27 @@
     </main>
   </div>
 
-  <!-- JS 모듈 (의존성 순서대로) -->
-  <script src="js/firebase-config.js"></script>
-  <script src="js/roles-config.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/results.js"></script>
-  <script src="js/players.js"></script>
-  <script src="js/tournament.js"></script>
-  <script src="js/league.js"></script>
-  <script src="js/schedule.js"></script>
-  <script src="js/custom-bracket.js"></script>
-  <script src="js/calendar.js"></script>
-  <script src="js/stats.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/auth.js"></script>
+  <!-- JS 모듈 (의존성 순서대로, 캐시 버스팅 적용) -->
+  <script>
+    [
+      'js/firebase-config.js',
+      'js/roles-config.js',
+      'js/storage.js',
+      'js/utils.js',
+      'js/results.js',
+      'js/players.js',
+      'js/tournament.js',
+      'js/league.js',
+      'js/schedule.js',
+      'js/custom-bracket.js',
+      'js/calendar.js',
+      'js/stats.js',
+      'js/app.js',
+      'js/auth.js'
+    ].forEach(function(src) {
+      document.write('<script src="' + src + '?v=' + APP_VERSION + '"><\/script>');
+    });
+  </script>
   <script>
     // 테마 토글 로직
     (function() {

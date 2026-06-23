@@ -169,6 +169,21 @@ const App = {
       settingsBtn.classList.toggle('hidden', !RolesConfig.isAdmin());
     }
 
+    // 가계부 보기 버튼: 관리자/멤버만 표시
+    var ledgerBtn = document.getElementById('btn-ledger');
+    if (ledgerBtn) {
+      if (RolesConfig.isClubUser()) {
+        ledgerBtn.classList.remove('hidden');
+        ledgerBtn.classList.add('flex');
+        ledgerBtn.onclick = function() {
+          window.open('https://docs.google.com/spreadsheets/d/1SCsekMiWsNr8qfBE4PCNzkb36QGBOog0_cnP2ehHvl8/edit?usp=sharing', '_blank');
+        };
+      } else {
+        ledgerBtn.classList.add('hidden');
+        ledgerBtn.classList.remove('flex');
+      }
+    }
+
     // 멤버: 좌측 메뉴 버튼 숨기고 멤버 정보 표시
     var menuBtn = document.getElementById('menu-btn');
     var memberHeaderInfo = document.getElementById('member-header-info');
