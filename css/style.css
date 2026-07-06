@@ -1206,12 +1206,12 @@ html.dark .hover\:bg-blue-50\/50:hover {
 
 /* 로고 배경 */
 .auth-logo-bg {
-  background: url('esstc.jpg') center/cover no-repeat;
+  background: url('android-chrome-192x192.png') center/cover no-repeat;
   border-radius: 50%;
   mix-blend-mode: multiply;
 }
 .header-logo-bg {
-  background: url('esstc.jpg') center/cover no-repeat;
+  background: url('favicon-32x32.png') center/cover no-repeat;
   border-radius: 50%;
   mix-blend-mode: multiply;
 }
