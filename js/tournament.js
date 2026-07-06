@@ -106,7 +106,7 @@ const Tournament = {
     const totalRounds = rounds.length;
     const roundNames = this.getRoundNames(totalRounds);
     const isComplete = rounds[totalRounds - 1][0].winner !== null;
-    const isMember = RolesConfig.isMember();
+    const isMember = !RolesConfig.hasAdminAccess();
 
     // 멤버→팀 매핑
     const _teamMap = buildTeamMap();

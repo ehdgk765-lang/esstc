@@ -1,5 +1,68 @@
 /* style.css - 커스텀 스타일 */
 
+/* 토스트 알림 */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  pointer-events: none;
+  max-width: 90vw;
+}
+.toast-item {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: auto;
+  text-align: center;
+  white-space: nowrap;
+}
+.toast-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast-hide {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+.toast-error { background: #ef4444; }
+.toast-warn { background: #f59e0b; color: #78350f; }
+.toast-info { background: #3b82f6; }
+html.dark .toast-error { background: #dc2626; }
+html.dark .toast-warn { background: #d97706; color: #fffbeb; }
+html.dark .toast-info { background: #2563eb; }
+
+/* 오프라인 배너 */
+#offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  padding: 6px 16px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fef3c7;
+  color: #92400e;
+  border-bottom: 1px solid #fcd34d;
+}
+html.dark #offline-banner {
+  background: #78350f;
+  color: #fef3c7;
+  border-bottom-color: #92400e;
+}
+
 /* 기본 설정 */
 * {
   -webkit-tap-highlight-color: transparent;

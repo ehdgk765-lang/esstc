@@ -31,6 +31,8 @@ const Auth = {
         }
         // 실시간 동기화 시작
         Storage.startRealtimeSync();
+        // 네트워크 상태 감지 초기화
+        Storage.initNetworkStatus();
 
         // 멤버: 이름 검증 (앱 전환 전)
         if (RolesConfig.isMember()) {
@@ -54,6 +56,8 @@ const Auth = {
           App.init();
           this.initialized = true;
         } else {
+          // 재인증 시에도 권한 UI 반영 (hasAdminAccess 등)
+          App.applyRoleUI();
           App.navigate(App.currentTab);
         }
       } else {
@@ -105,12 +109,9 @@ const Auth = {
     if (authEl._vpCleanup) authEl._vpCleanup();
     authEl.style.display = 'none';
     appEl.style.display = '';
-    if (!this.initialized) {
-      App.init();
-      this.initialized = true;
-    } else {
-      App.navigate(App.currentTab);
-    }
+    // 항상 App.init() 호출: 멤버 이름 변경 시 권한(hasAdminAccess) 반영 필요
+    App.init();
+    this.initialized = true;
   },
 
   renderLogin() {

@@ -80,3 +80,30 @@ function genderBadge(gender, style) {
   if (gender === 'F') return '<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-pink-100 text-pink-700">여</span>';
   return '<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-gray-100 text-gray-500">-</span>';
 }
+
+// ── 토스트 알림 ──
+var _toastTimer = null;
+function showToast(message, type) {
+  type = type || 'info';
+  var container = document.getElementById('toast-container');
+  if (!container) return;
+
+  var toast = document.createElement('div');
+  toast.className = 'toast-item toast-' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  // 슬라이드-업 애니메이션 트리거
+  requestAnimationFrame(function() {
+    toast.classList.add('toast-show');
+  });
+
+  // 3초 후 자동 제거
+  setTimeout(function() {
+    toast.classList.remove('toast-show');
+    toast.classList.add('toast-hide');
+    setTimeout(function() {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 300);
+  }, 3000);
+}

@@ -35,6 +35,17 @@ const RolesConfig = {
     return this._currentRole === 'other';
   },
 
+  // 관리자 또는 관리자 권한을 부여받은 멤버 (멤버 이름 기반)
+  hasAdminAccess() {
+    if (this.isAdmin()) return true;
+    if (!this.isMember()) return false;
+    var memberName = typeof App !== 'undefined' ? App.getMemberName() : '';
+    if (!memberName) return false;
+    var players = typeof Storage !== 'undefined' ? Storage.getPlayers() : [];
+    var player = players.find(function(p) { return p.name === memberName; });
+    return !!(player && player.adminAccess);
+  },
+
   // 관리자 또는 멤버 (공유 데이터 사용자)
   isClubUser() {
     return this.isAdmin() || this.isMember();
@@ -42,6 +53,10 @@ const RolesConfig = {
 
   getVisibleTabs() {
     if (this.isMember()) {
+      if (this.hasAdminAccess()) {
+        // 권한 부여 멤버: 일정 보기 + 일정 관리 + 진행 중 + 통계
+        return ['calendar', 'schedule', 'active', 'stats'];
+      }
       return ['calendar', 'active', 'stats'];
     }
     // admin, other 모두 전체 탭
@@ -49,7 +64,10 @@ const RolesConfig = {
   },
 
   getDefaultTab() {
-    return this.isMember() ? 'calendar' : 'players';
+    if (this.isMember()) {
+      return 'calendar';
+    }
+    return 'players';
   },
 
   // ─── 관리자용: 역할 관리 ───

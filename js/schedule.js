@@ -675,7 +675,7 @@ const Schedule = {
                   '<td class="px-4 py-2 font-medium text-gray-800 whitespace-nowrap">' +
                     medalHtml + Results.escapeHtml(s.name) +
                     ' ' + genderBadge(gender) +
-                    (RolesConfig.isMember() ? '' : ' <span class="text-xs px-1 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">' + ntrp.toFixed(1) + '</span>') +
+                    (!RolesConfig.hasAdminAccess() ? '' : ' <span class="text-xs px-1 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">' + ntrp.toFixed(1) + '</span>') +
                   '</td>' +
                   '<td class="text-center px-2 py-2 text-gray-600">' + s.games + '</td>' +
                   '<td class="text-center px-1 py-2 text-blue-600">' + (s.md || 0) + '</td>' +
@@ -697,8 +697,8 @@ const Schedule = {
         </div>`}
       </div>`);
 
-    // 게스트 모드: 수정 UI 숨기기 (스코어 입력만 허용)
-    if (RolesConfig.isMember()) {
+    // 관리자 권한 없는 멤버: 수정 UI 숨기기 (스코어 입력만 허용)
+    if (!RolesConfig.hasAdminAccess()) {
       container.querySelectorAll('#add-match-btn, .delete-match-btn, .court-add-match-btn, #pdf-download-btn').forEach(el => el.style.display = 'none');
       const titleEl = container.querySelector('#schedule-title');
       if (titleEl) titleEl.style.cursor = 'default';
@@ -710,7 +710,7 @@ const Schedule = {
       pdfBtn.onclick = () => this.exportPDF(container, tournament);
     }
 
-    if (!RolesConfig.isMember()) {
+    if (RolesConfig.hasAdminAccess()) {
       // 슬롯별 대진 추가 버튼 - 빈 코트 자리 (시간/코트 모드)
       container.querySelectorAll('.slot-add-match-btn').forEach(btn => {
         btn.style.display = '';
@@ -762,9 +762,9 @@ const Schedule = {
     const cards = container.querySelectorAll('.schedule-match-card');
     let selectedPlayer = null;
 
-    // 멤버 이름 탭 → 선택/교환 (관리자만)
+    // 멤버 이름 탭 → 선택/교환 (관리자 권한만)
     container.querySelectorAll('.swap-player').forEach(el => {
-      if (RolesConfig.isMember()) { el.style.cursor = 'default'; return; }
+      if (!RolesConfig.hasAdminAccess()) { el.style.cursor = 'default'; return; }
       el.onclick = async (e) => {
         e.stopPropagation(); // 카드 클릭(스코어) 방지
 
@@ -909,7 +909,7 @@ const Schedule = {
     });
 
     // 카드 빈 영역 클릭 → 스코어 입력 (멤버 선택 중이면 해제)
-    const isMember = RolesConfig.isMember();
+    const isMember = !RolesConfig.hasAdminAccess();
     cards.forEach(card => {
       card.onclick = () => {
         if (selectedPlayer) {
@@ -948,9 +948,9 @@ const Schedule = {
       };
     });
 
-    // 대진 삭제 (X 버튼, 관리자만)
+    // 대진 삭제 (X 버튼, 관리자 권한만)
     container.querySelectorAll('.delete-match-btn').forEach(btn => {
-      if (RolesConfig.isMember()) return;
+      if (!RolesConfig.hasAdminAccess()) return;
       btn.onclick = async (e) => {
         e.stopPropagation();
         const si = +btn.dataset.slotIdx;
@@ -981,8 +981,8 @@ const Schedule = {
       };
     });
 
-    // ── 드래그 (관리자 전용) ──
-    if (!RolesConfig.isMember()) {
+    // ── 드래그 (관리자 권한 전용) ──
+    if (RolesConfig.hasAdminAccess()) {
     let _dragType = null; // 'card'
 
     // ── 매치 카드 교환 (데스크톱 DnD) ──
@@ -1090,7 +1090,7 @@ const Schedule = {
     };
 
     handles.forEach(handle => {
-      if (!RolesConfig.isMember()) handle.style.display = '';
+      if (RolesConfig.hasAdminAccess()) handle.style.display = '';
     });
 
     // 모바일/데스크톱 공용: 시간대 핸들 탭으로 교환
@@ -1140,7 +1140,7 @@ const Schedule = {
         clearSlotSelection();
       }
     });
-    } // end if (!RolesConfig.isMember()) - 드래그
+    } // end if (RolesConfig.hasAdminAccess()) - 드래그
   },
 
   // PDF 내보내기 (타임슬롯 단위 캡처, 페이지당 4개)
@@ -1272,7 +1272,7 @@ const Schedule = {
     const allPlayers = Storage.getPlayers();
     const pd = allPlayers.find(p => p.name === name);
     const isCustom = this._tournament?.isCustom;
-    const ntrpHtml = RolesConfig.isMember() ? '' : `<span class="text-yellow-600 text-xs">${(pd?.ntrp || 2.5).toFixed(1)}</span>`;
+    const ntrpHtml = !RolesConfig.hasAdminAccess() ? '' : `<span class="text-yellow-600 text-xs">${(pd?.ntrp || 2.5).toFixed(1)}</span>`;
     const genderHtml = pd ? genderBadge(pd.gender, 'text') : '';
     return `<span class="swap-player cursor-pointer hover:bg-yellow-100 rounded px-0.5 transition inline-flex items-center gap-0.5"
       data-slot-idx="${slotIdx}" data-match-idx="${matchIdx}" data-team="${team}" data-pos="${pos}"
@@ -1365,7 +1365,7 @@ const Schedule = {
 
     return `
       <div class="schedule-match-card ${myMatchClass} relative bg-white border ${myBorderColor} rounded-xl p-3 cursor-pointer hover:shadow-md transition"
-           ${!RolesConfig.isMember() ? 'draggable="true"' : ''} data-match-id="${match.id}" data-slot-idx="${slotIdx}" data-match-idx="${matchIdx}" data-my-match="${isMember && isMyMatch}">
+           ${RolesConfig.hasAdminAccess() ? 'draggable="true"' : ''} data-match-id="${match.id}" data-slot-idx="${slotIdx}" data-match-idx="${matchIdx}" data-my-match="${isMember && isMyMatch}">
         <button type="button" class="delete-match-btn absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-300 hover:text-red-500 shadow-sm transition z-10" data-slot-idx="${slotIdx}" data-match-idx="${matchIdx}">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
@@ -1423,7 +1423,7 @@ const Schedule = {
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-800 font-medium">${Results.escapeHtml(name)}</span>
               ${pd ? `${genderBadge(pd.gender)}
-              ${RolesConfig.isMember() ? '' : `<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(pd.ntrp || 2.5).toFixed(1)}</span>`}` : ''}
+              ${!RolesConfig.hasAdminAccess() ? '' : `<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(pd.ntrp || 2.5).toFixed(1)}</span>`}` : ''}
               ${tn ? `<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
             </div>
             <button type="button" class="am-remove-player text-red-400 hover:text-red-600 text-xs" data-key="${key}">✕</button>
@@ -1760,7 +1760,7 @@ const Schedule = {
                   data-name="${Results.escapeHtml(p.name)}" data-used="${isDisabled}">
                   <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                   <span class="ml-2">${genderBadge(p.gender)}</span>
-                  ${RolesConfig.isMember() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
+                  ${!RolesConfig.hasAdminAccess() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
                   ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isUsed ? '<span class="ml-auto text-xs text-gray-400">선택됨</span>' : ''}
                   ${isBusy ? '<span class="ml-auto text-xs text-gray-400">같은 시간대</span>' : ''}
@@ -1905,7 +1905,7 @@ const Schedule = {
                   data-name="${Results.escapeHtml(p.name)}" data-disabled="${isDup || isSelf}">
                   <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                   <span class="ml-2">${genderBadge(p.gender)}</span>
-                  ${RolesConfig.isMember() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
+                  ${!RolesConfig.hasAdminAccess() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
                   ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isSelf ? '<span class="ml-auto text-xs text-gray-400">현재</span>' : ''}
                   ${isDup ? `<span class="ml-auto text-xs text-gray-400">${tournament.isCustom ? '같은 경기' : '같은 시간대'}</span>` : ''}

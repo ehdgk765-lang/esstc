@@ -212,7 +212,7 @@ const Results = {
         if (pd) {
           badge = `<span class="ml-0.5">${genderBadge(pd.gender, 'text')}</span>`;
         }
-      } else if (!RolesConfig.isMember()) {
+      } else if (RolesConfig.hasAdminAccess()) {
         const ntrp = (pd?.ntrp || 2.5).toFixed(1);
         badge = `<span class="text-yellow-600 text-xs ml-0.5">${ntrp}</span>`;
       }

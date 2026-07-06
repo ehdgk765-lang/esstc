@@ -118,7 +118,7 @@ const League = {
     const totalMatches = rounds.reduce((sum, r) => sum + r.length, 0);
     const completedMatches = rounds.reduce((sum, r) => sum + r.filter(m => m.scores).length, 0);
     const isComplete = completedMatches === totalMatches;
-    const isMember = RolesConfig.isMember();
+    const isMember = !RolesConfig.hasAdminAccess();
 
     if (isComplete && tournament.status !== 'completed') {
       tournament.status = 'completed';

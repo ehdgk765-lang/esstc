@@ -34,12 +34,13 @@ const Storage = {
   },
 
   savePlayers(players) {
-    if (typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
-      console.warn('멤버는 멤버 목록을 수정할 수 없습니다.');
+    if (typeof RolesConfig !== 'undefined' && !RolesConfig.isAdmin()) {
+      console.warn('관리자만 멤버 목록을 수정할 수 있습니다.');
       return false;
     }
+    var oldData = this.getPlayers();
     const result = this.set(this.KEYS.PLAYERS, players);
-    this.syncToFirestore('players', players);
+    this.syncToFirestore('players', players, this.KEYS.PLAYERS, oldData);
     return result;
   },
 
@@ -84,8 +85,8 @@ const Storage = {
             }
           });
 
-          transaction.set(playersRef, { json: JSON.stringify(players) });
-          transaction.set(eventsRef, { json: JSON.stringify(events) });
+          transaction.set(playersRef, { json: JSON.stringify(players), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          transaction.set(eventsRef, { json: JSON.stringify(events), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
 
           result.players = players;
           result.events = events;
@@ -97,6 +98,7 @@ const Storage = {
       return true;
     } catch (err) {
       console.error('deleteMember transaction error:', err);
+      if (typeof showToast === 'function') showToast('멤버 삭제에 실패했습니다. 다시 시도해주세요.', 'error');
       return this._deleteMemberLocal(memberName);
     }
   },
@@ -162,8 +164,8 @@ const Storage = {
             }
           });
 
-          transaction.set(playersRef, { json: JSON.stringify(players) });
-          transaction.set(eventsRef, { json: JSON.stringify(events) });
+          transaction.set(playersRef, { json: JSON.stringify(players), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          transaction.set(eventsRef, { json: JSON.stringify(events), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
 
           result.players = players;
           result.events = events;
@@ -175,6 +177,7 @@ const Storage = {
       return true;
     } catch (err) {
       console.error('deleteMembers transaction error:', err);
+      if (typeof showToast === 'function') showToast('멤버 삭제에 실패했습니다. 다시 시도해주세요.', 'error');
       memberNames.forEach(function(name) { self._deleteMemberLocal(name); });
       return true;
     }
@@ -186,12 +189,13 @@ const Storage = {
   },
 
   saveTeams(teams) {
-    if (typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
-      console.warn('멤버는 팀 목록을 수정할 수 없습니다.');
+    if (typeof RolesConfig !== 'undefined' && !RolesConfig.hasAdminAccess()) {
+      console.warn('관리자 권한이 필요합니다.');
       return false;
     }
+    var oldData = this.getTeams();
     const result = this.set(this.KEYS.TEAMS, teams);
-    this.syncToFirestore('teams', teams);
+    this.syncToFirestore('teams', teams, this.KEYS.TEAMS, oldData);
     return result;
   },
 
@@ -201,8 +205,9 @@ const Storage = {
   },
 
   saveTournaments(tournaments) {
+    var oldData = this.getTournaments();
     const result = this.set(this.KEYS.TOURNAMENTS, tournaments);
-    this.syncToFirestore('tournaments', tournaments);
+    this.syncToFirestore('tournaments', tournaments, this.KEYS.TOURNAMENTS, oldData);
     return result;
   },
 
@@ -229,7 +234,7 @@ const Storage = {
           var index = tournaments.findIndex(function(t) { return t.id === tournamentId; });
           if (index !== -1) {
             patchFn(tournaments[index]);
-            transaction.set(docRef, { json: JSON.stringify(tournaments) });
+            transaction.set(docRef, { json: JSON.stringify(tournaments), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
             finalTournaments = tournaments;
           }
         });
@@ -240,6 +245,7 @@ const Storage = {
       return true;
     } catch (err) {
       console.error('updateTournament transaction error:', err);
+      if (typeof showToast === 'function') showToast('대회 저장에 실패했습니다. 다시 시도해주세요.', 'error');
       return this._updateTournamentLocal(tournamentId, patchFn);
     }
   },
@@ -266,12 +272,13 @@ const Storage = {
   },
 
   saveEvents(events) {
-    if (typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
-      console.warn('멤버는 일정을 수정할 수 없습니다.');
+    if (typeof RolesConfig !== 'undefined' && !RolesConfig.hasAdminAccess()) {
+      console.warn('관리자 권한이 필요합니다.');
       return false;
     }
+    var oldData = this.getEvents();
     var result = this.set(this.KEYS.EVENTS, events);
-    this.syncToFirestore('events', events);
+    this.syncToFirestore('events', events, this.KEYS.EVENTS, oldData);
     return result;
   },
 
@@ -283,8 +290,8 @@ const Storage = {
   // 단일 이벤트 추가 (멤버도 호출 가능, 정규 일정 제외) - Firestore Transaction 기반
   async addEvent(newEvent) {
     var self = this;
-    if (this.isRegularEvent(newEvent) && typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
-      console.warn('멤버는 정규 일정 일정을 추가할 수 없습니다.');
+    if (this.isRegularEvent(newEvent) && typeof RolesConfig !== 'undefined' && !RolesConfig.hasAdminAccess()) {
+      console.warn('관리자 권한이 필요합니다.');
       return false;
     }
     var base = this._getBase();
@@ -305,7 +312,7 @@ const Storage = {
             if (a.date !== b.date) return a.date < b.date ? -1 : 1;
             return (a.startTime || a.time || '').localeCompare(b.startTime || b.time || '');
           });
-          transaction.set(docRef, { json: JSON.stringify(events) });
+          transaction.set(docRef, { json: JSON.stringify(events), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
           finalEvents = events;
         });
       });
@@ -315,6 +322,7 @@ const Storage = {
       return true;
     } catch (err) {
       console.error('addEvent transaction error:', err);
+      if (typeof showToast === 'function') showToast('일정 추가에 실패했습니다. 다시 시도해주세요.', 'error');
       return this._addEventLocal(newEvent);
     }
   },
@@ -349,8 +357,8 @@ const Storage = {
           }
           for (var i = 0; i < events.length; i++) {
             if (events[i].id === eventId) {
-              // 멤버 수정 제한: 정규 일정 불가 + 본인 등록 일정만 수정 가능
-              if (typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
+              // 관리자 권한 없는 멤버 수정 제한: 정규 일정 불가 + 본인 등록 일정만 수정 가능
+              if (typeof RolesConfig !== 'undefined' && !RolesConfig.hasAdminAccess()) {
                 if (self.isRegularEvent(events[i])) return;
                 var myName = typeof App !== 'undefined' ? App.getMemberName() : '';
                 if (!events[i].createdBy || events[i].createdBy !== myName) return;
@@ -369,7 +377,7 @@ const Storage = {
             if (a.date !== b.date) return a.date < b.date ? -1 : 1;
             return (a.startTime || a.time || '').localeCompare(b.startTime || b.time || '');
           });
-          transaction.set(docRef, { json: JSON.stringify(events) });
+          transaction.set(docRef, { json: JSON.stringify(events), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
           finalEvents = events;
         });
       });
@@ -379,6 +387,7 @@ const Storage = {
       return true;
     } catch (err) {
       console.error('editEvent transaction error:', err);
+      if (typeof showToast === 'function') showToast('일정 수정에 실패했습니다. 다시 시도해주세요.', 'error');
       return this._editEventLocal(eventId, updatedFields);
     }
   },
@@ -387,7 +396,7 @@ const Storage = {
     var events = this.getEvents();
     for (var i = 0; i < events.length; i++) {
       if (events[i].id === eventId) {
-        if (typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
+        if (typeof RolesConfig !== 'undefined' && !RolesConfig.hasAdminAccess()) {
           if (this.isRegularEvent(events[i])) return false;
           var myName = typeof App !== 'undefined' ? App.getMemberName() : '';
           if (!events[i].createdBy || events[i].createdBy !== myName) return false;
@@ -427,15 +436,15 @@ const Storage = {
             var d = doc.data();
             events = d.json ? JSON.parse(d.json) : (d.items || []);
           }
-          // 멤버 삭제 제한: 정규 일정 불가 + 본인 등록 일정만 삭제 가능
+          // 관리자 권한 없는 멤버 삭제 제한: 정규 일정 불가 + 본인 등록 일정만 삭제 가능
           var target = events.find(function(e) { return e.id === eventId; });
-          if (target && typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
+          if (target && typeof RolesConfig !== 'undefined' && !RolesConfig.hasAdminAccess()) {
             if (self.isRegularEvent(target)) { finalEvents = events; return; }
             var myName = typeof App !== 'undefined' ? App.getMemberName() : '';
             if (!target.createdBy || target.createdBy !== myName) { finalEvents = events; return; }
           }
           events = events.filter(function(e) { return e.id !== eventId; });
-          transaction.set(docRef, { json: JSON.stringify(events) });
+          transaction.set(docRef, { json: JSON.stringify(events), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
           finalEvents = events;
         });
       });
@@ -445,6 +454,7 @@ const Storage = {
       return true;
     } catch (err) {
       console.error('removeEvent transaction error:', err);
+      if (typeof showToast === 'function') showToast('일정 삭제에 실패했습니다. 다시 시도해주세요.', 'error');
       return this._removeEventLocal(eventId);
     }
   },
@@ -452,7 +462,7 @@ const Storage = {
   _removeEventLocal(eventId) {
     var events = this.getEvents();
     var target = events.find(function(e) { return e.id === eventId; });
-    if (target && typeof RolesConfig !== 'undefined' && RolesConfig.isMember()) {
+    if (target && typeof RolesConfig !== 'undefined' && !RolesConfig.hasAdminAccess()) {
       if (this.isRegularEvent(target)) return false;
       var myName = typeof App !== 'undefined' ? App.getMemberName() : '';
       if (!target.createdBy || target.createdBy !== myName) return false;
@@ -481,7 +491,7 @@ const Storage = {
           }
           var toggleResult = self._applyToggleAttendance(events, eventId, memberName, false);
           if (toggleResult.changed) {
-            transaction.set(docRef, { json: JSON.stringify(events) });
+            transaction.set(docRef, { json: JSON.stringify(events), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
           }
           finalEvents = events;
           return toggleResult.result;
@@ -493,6 +503,7 @@ const Storage = {
       return result;
     } catch (err) {
       console.error('toggleAttendance transaction error:', err);
+      if (typeof showToast === 'function') showToast('참석 변경에 실패했습니다. 다시 시도해주세요.', 'error');
       return this._applyToggleAttendance(this.getEvents(), eventId, memberName, true);
     }
   },
@@ -561,7 +572,7 @@ const Storage = {
           }
           var toggleResult = self._applyToggleWaitlist(events, eventId, memberName, false);
           if (toggleResult.changed) {
-            transaction.set(docRef, { json: JSON.stringify(events) });
+            transaction.set(docRef, { json: JSON.stringify(events), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
           }
           finalEvents = events;
           return toggleResult.result;
@@ -573,6 +584,7 @@ const Storage = {
       return result;
     } catch (err) {
       console.error('toggleWaitlist transaction error:', err);
+      if (typeof showToast === 'function') showToast('대기 변경에 실패했습니다. 다시 시도해주세요.', 'error');
       return this._applyToggleWaitlist(this.getEvents(), eventId, memberName, true);
     }
   },
@@ -604,12 +616,13 @@ const Storage = {
   },
 
   saveCourts(courts) {
-    if (typeof RolesConfig !== 'undefined' && !RolesConfig.isAdmin()) {
-      console.warn('관리자만 코트를 수정할 수 있습니다.');
+    if (typeof RolesConfig !== 'undefined' && !RolesConfig.hasAdminAccess()) {
+      console.warn('관리자 권한이 필요합니다.');
       return false;
     }
+    var oldData = this.getCourts();
     var result = this.set(this.KEYS.COURTS, courts);
-    this.syncToFirestore('courts', courts);
+    this.syncToFirestore('courts', courts, this.KEYS.COURTS, oldData);
     return result;
   },
 
@@ -641,7 +654,7 @@ const Storage = {
             }
           });
           if (changed) {
-            transaction.set(eventsDocRef, { json: JSON.stringify(events) });
+            transaction.set(eventsDocRef, { json: JSON.stringify(events), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
           }
           finalEvents = events;
         });
@@ -652,6 +665,7 @@ const Storage = {
       return true;
     } catch (err) {
       console.error('renameCourtInEvents transaction error:', err);
+      if (typeof showToast === 'function') showToast('코트 이름 변경에 실패했습니다. 다시 시도해주세요.', 'error');
       return this._renameCourtInEventsLocal(oldName, newName);
     }
   },
@@ -776,10 +790,10 @@ const Storage = {
             }
           });
 
-          transaction.set(playersRef, { json: JSON.stringify(players) });
-          transaction.set(eventsRef, { json: JSON.stringify(events) });
-          transaction.set(tournamentsRef, { json: JSON.stringify(tournaments) });
-          transaction.set(teamsRef, { json: JSON.stringify(teams) });
+          transaction.set(playersRef, { json: JSON.stringify(players), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          transaction.set(eventsRef, { json: JSON.stringify(events), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          transaction.set(tournamentsRef, { json: JSON.stringify(tournaments), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          transaction.set(teamsRef, { json: JSON.stringify(teams), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
 
           result.players = players;
           result.events = events;
@@ -797,6 +811,7 @@ const Storage = {
       return true;
     } catch (err) {
       console.error('renameMember transaction error:', err);
+      if (typeof showToast === 'function') showToast('이름 변경에 실패했습니다. 다시 시도해주세요.', 'error');
       return this._renameMemberLocal(oldName, newName);
     }
   },
@@ -906,11 +921,12 @@ const Storage = {
 
     try {
       var batch = fbDb.batch();
-      if (data.players) batch.set(base.doc('players'), { json: JSON.stringify(data.players) });
-      if (data.tournaments) batch.set(base.doc('tournaments'), { json: JSON.stringify(data.tournaments) });
-      if (data.events) batch.set(base.doc('events'), { json: JSON.stringify(data.events) });
-      if (data.teams) batch.set(base.doc('teams'), { json: JSON.stringify(data.teams) });
-      if (data.courts) batch.set(base.doc('courts'), { json: JSON.stringify(data.courts) });
+      var ts = firebase.firestore.FieldValue.serverTimestamp();
+      if (data.players) batch.set(base.doc('players'), { json: JSON.stringify(data.players), updatedAt: ts });
+      if (data.tournaments) batch.set(base.doc('tournaments'), { json: JSON.stringify(data.tournaments), updatedAt: ts });
+      if (data.events) batch.set(base.doc('events'), { json: JSON.stringify(data.events), updatedAt: ts });
+      if (data.teams) batch.set(base.doc('teams'), { json: JSON.stringify(data.teams), updatedAt: ts });
+      if (data.courts) batch.set(base.doc('courts'), { json: JSON.stringify(data.courts), updatedAt: ts });
       await batch.commit();
     } catch (err) {
       console.error('restoreBackup batch error:', err);
@@ -930,6 +946,37 @@ const Storage = {
   _unsubTeams: null,
   _remoteChangeTimer: null,
   _writeGuard: {},  // 쓰기 중인 문서를 추적하여 onSnapshot 덮어쓰기 방지
+  _isOnline: true,
+
+  // 네트워크 상태 감지 및 배너 표시
+  initNetworkStatus() {
+    var self = this;
+    var banner = document.getElementById('offline-banner');
+
+    // 초기 상태 설정 (재로드 없이 배너만)
+    self._isOnline = navigator.onLine;
+    if (banner) {
+      banner.classList.toggle('hidden', self._isOnline);
+    }
+
+    // 온라인 복귀 시에만 Firestore 재로드
+    window.addEventListener('online', function() {
+      self._isOnline = true;
+      if (banner) banner.classList.add('hidden');
+      if (fbAuth.currentUser) {
+        self.loadFromFirestore().then(function() {
+          self.stopRealtimeSync();
+          self.startRealtimeSync();
+          self._onRemoteChange();
+        }).catch(function() {});
+      }
+    });
+
+    window.addEventListener('offline', function() {
+      self._isOnline = false;
+      if (banner) banner.classList.remove('hidden');
+    });
+  },
 
   // Firestore 경로 분기: 클럽 사용자(admin/member) → 공유, 그 외 → per-user
   _getBase() {
@@ -941,14 +988,26 @@ const Storage = {
     return fbDb.collection('users').doc(user.uid).collection('data');
   },
 
-  // localStorage → Firestore (쓰기 가드 포함)
-  syncToFirestore(docName, data) {
+  // localStorage → Firestore (쓰기 가드 포함, 실패 시 롤백)
+  syncToFirestore(docName, data, rollbackKey, rollbackData) {
     var self = this;
     var base = this._getBase();
     if (!base) return;
+    // 오프라인 상태 체크
+    if (!navigator.onLine) {
+      if (typeof showToast === 'function') {
+        showToast('오프라인 상태입니다. 연결 후 다시 시도해주세요.', 'warn');
+      }
+      // 오프라인이면 localStorage도 롤백
+      if (rollbackKey && rollbackData !== undefined) {
+        localStorage.setItem(rollbackKey, JSON.stringify(rollbackData));
+        self._onRemoteChange();
+      }
+      return;
+    }
     this._writeGuard[docName] = true;
     base.doc(docName)
-      .set({ json: JSON.stringify(data || []) })
+      .set({ json: JSON.stringify(data || []), updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
       .then(function() {
         // 쓰기 완료 후 가드 해제 (onSnapshot이 안정화될 시간 확보)
         setTimeout(function() { delete self._writeGuard[docName]; }, 1000);
@@ -956,6 +1015,14 @@ const Storage = {
       .catch(function(err) {
         delete self._writeGuard[docName];
         console.error('Firestore sync error:', err);
+        // 롤백: localStorage를 이전 상태로 되돌림
+        if (rollbackKey && rollbackData !== undefined) {
+          localStorage.setItem(rollbackKey, JSON.stringify(rollbackData));
+          self._onRemoteChange();
+        }
+        if (typeof showToast === 'function') {
+          showToast('저장에 실패했습니다. 다시 시도해주세요.', 'error');
+        }
       });
   },
 
@@ -1098,12 +1165,13 @@ const Storage = {
       }
 
       // 공유 경로에 저장
+      var ts = firebase.firestore.FieldValue.serverTimestamp();
       await Promise.all([
-        sharedBase.doc('players').set({ json: JSON.stringify(players) }),
-        sharedBase.doc('tournaments').set({ json: JSON.stringify(tournaments) }),
-        sharedBase.doc('events').set({ json: JSON.stringify(events) }),
-        sharedBase.doc('courts').set({ json: JSON.stringify(courts) }),
-        sharedBase.doc('teams').set({ json: JSON.stringify(teams) })
+        sharedBase.doc('players').set({ json: JSON.stringify(players), updatedAt: ts }),
+        sharedBase.doc('tournaments').set({ json: JSON.stringify(tournaments), updatedAt: ts }),
+        sharedBase.doc('events').set({ json: JSON.stringify(events), updatedAt: ts }),
+        sharedBase.doc('courts').set({ json: JSON.stringify(courts), updatedAt: ts }),
+        sharedBase.doc('teams').set({ json: JSON.stringify(teams), updatedAt: ts })
       ]);
 
       localStorage.setItem(this.KEYS.PLAYERS, JSON.stringify(players));
@@ -1216,6 +1284,8 @@ const Storage = {
     this._remoteChangeTimer = setTimeout(function() {
       self._remoteChangeTimer = null;
       if (typeof App !== 'undefined') {
+        // 원격 변경 시 권한 UI 갱신 (adminAccess 변경 반영)
+        if (typeof App.applyRoleUI === 'function') App.applyRoleUI();
         if (App._viewMode === 'calendar') {
           App.showCalendar();
         } else if (App._viewMode === 'settings') {

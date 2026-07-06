@@ -30,7 +30,7 @@ const Calendar = {
     }
 
     var events = Storage.getEvents();
-    var isAdmin = !RolesConfig.isMember();
+    var isAdmin = RolesConfig.hasAdminAccess();
     var isClubUser = RolesConfig.isClubUser();
 
     var year = this._currentMonth.getFullYear();

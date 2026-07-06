@@ -157,7 +157,9 @@ const App = {
         badge.style.display = '';
         badge.className = RolesConfig.isAdmin()
           ? 'text-xs font-normal ml-2 px-2 py-0.5 rounded-full bg-red-100 text-red-600'
-          : 'text-xs font-normal ml-2 px-2 py-0.5 rounded-full bg-blue-100 text-blue-600';
+          : RolesConfig.hasAdminAccess()
+            ? 'text-xs font-normal ml-2 px-2 py-0.5 rounded-full bg-purple-100 text-purple-600'
+            : 'text-xs font-normal ml-2 px-2 py-0.5 rounded-full bg-blue-100 text-blue-600';
       } else {
         badge.style.display = 'none';
       }
@@ -184,11 +186,11 @@ const App = {
       }
     }
 
-    // 멤버: 좌측 메뉴 버튼 숨기고 멤버 정보 표시
+    // 멤버: 좌측 메뉴 버튼 숨기고 멤버 정보 표시 (권한 부여 멤버도 동일)
     var menuBtn = document.getElementById('menu-btn');
     var memberHeaderInfo = document.getElementById('member-header-info');
     if (menuBtn && memberHeaderInfo) {
-      if (RolesConfig.isMember()) {
+      if (!RolesConfig.isAdmin()) {
         menuBtn.classList.add('hidden');
         memberHeaderInfo.classList.remove('hidden');
         memberHeaderInfo.classList.add('flex');
@@ -385,6 +387,18 @@ const App = {
             '<p class="text-xs text-gray-400 mt-2">내보내기: 전체 데이터를 JSON 파일로 다운로드 / 가져오기: 백업 파일에서 복원</p>' +
           '</div>' +
         '</div>' +
+        // 관리자 권한 부여 (admin만 표시)
+        (RolesConfig.isAdmin() ?
+        '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-100/30 border border-white/60 mt-4">' +
+          '<div class="px-4 py-3 border-b border-gray-100">' +
+            '<h3 class="font-semibold text-gray-700 text-sm">관리자 권한 부여</h3>' +
+            '<p class="text-xs text-gray-400 mt-1">멤버에게 대진표 관리 등 관리자 권한을 부여합니다. (멤버 관리 제외)</p>' +
+            '<input type="text" autocomplete="off" id="admin-access-search" class="w-full mt-2 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition" placeholder="이름 검색">' +
+          '</div>' +
+          '<div id="admin-access-list" class="divide-y divide-gray-100 max-h-64 overflow-y-auto">' +
+            '<p class="text-gray-400 text-center py-4 text-sm">불러오는 중...</p>' +
+          '</div>' +
+        '</div>' : '') +
         /* [역할 관리 - 비활성화] 필요 시 주석 해제하여 사용
         '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-100/30 border border-white/60 mt-4">' +
           '<div class="px-4 py-3 border-b border-gray-100">' +
@@ -436,6 +450,11 @@ const App = {
       if (e.key === 'Enter') addRole();
     };
     */
+
+    // 관리자 권한 부여 목록 로드 (admin만)
+    if (RolesConfig.isAdmin()) {
+      self._loadAdminAccessList();
+    }
 
     // 데이터 내보내기
     var exportBtn = document.getElementById('backup-export-btn');
@@ -952,6 +971,82 @@ const App = {
           alert('역할 삭제에 실패했습니다.');
           btn.disabled = false;
           btn.textContent = '삭제';
+        }
+      });
+    });
+  },
+
+  // 관리자 권한 부여 목록 로드 (admin 전용, 멤버 이름 기반)
+  _loadAdminAccessList(filter) {
+    var self = this;
+    var listEl = document.getElementById('admin-access-list');
+    if (!listEl) return;
+    var players = Storage.getPlayers();
+    if (players.length === 0) {
+      listEl.innerHTML = '<p class="text-gray-400 text-center py-4 text-sm">등록된 멤버가 없습니다.</p>';
+      return;
+    }
+
+    // 검색 이벤트 바인딩 (최초 1회)
+    var searchInput = document.getElementById('admin-access-search');
+    if (searchInput && !searchInput._bound) {
+      searchInput._bound = true;
+      searchInput.addEventListener('input', function() {
+        self._loadAdminAccessList(searchInput.value.trim());
+      });
+    }
+
+    // 필터링: 권한 부여된 멤버를 상단에, 검색어로 필터
+    var keyword = (filter || '').toLowerCase();
+    var filtered = players.filter(function(p) {
+      return !keyword || p.name.toLowerCase().indexOf(keyword) >= 0;
+    });
+    // 권한 부여된 멤버 먼저 표시
+    filtered.sort(function(a, b) {
+      var aOn = a.adminAccess ? 1 : 0;
+      var bOn = b.adminAccess ? 1 : 0;
+      return bOn - aOn;
+    });
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = '<p class="text-gray-400 text-center py-4 text-sm">검색 결과가 없습니다.</p>';
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(function(p) {
+      var isOn = !!p.adminAccess;
+      return '<div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition">' +
+        '<div class="flex items-center gap-2 min-w-0">' +
+          '<span class="text-gray-800 font-medium text-sm truncate">' + self._escapeHtml(p.name) + '</span>' +
+          (isOn ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-600">권한 부여됨</span>' : '') +
+        '</div>' +
+        '<label class="admin-access-toggle relative inline-flex items-center cursor-pointer flex-shrink-0 ml-2">' +
+          '<input type="checkbox" class="sr-only peer" data-name="' + self._escapeHtml(p.name) + '"' + (isOn ? ' checked' : '') + '>' +
+          '<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>' +
+        '</label>' +
+      '</div>';
+    }).join('');
+
+    // 토글 이벤트
+    listEl.querySelectorAll('.admin-access-toggle input').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var name = input.dataset.name;
+        var enabled = input.checked;
+        var players = Storage.getPlayers();
+        var player = players.find(function(p) { return p.name === name; });
+        if (player) {
+          if (enabled) {
+            player.adminAccess = true;
+          } else {
+            delete player.adminAccess;
+          }
+          Storage.savePlayers(players);
+          if (typeof showToast === 'function') {
+            showToast(enabled ? name + '님에게 관리자 권한을 부여했습니다.' : name + '님의 관리자 권한을 해제했습니다.', 'info');
+          }
+          // 뱃지 상태 갱신 (현재 검색어 유지)
+          var searchInput = document.getElementById('admin-access-search');
+          self._loadAdminAccessList(searchInput ? searchInput.value.trim() : '');
         }
       });
     });
@@ -2016,7 +2111,7 @@ const App = {
         return `
           <div class="tournament-card relative bg-white/80 backdrop-blur-sm border ${myCardClass} rounded-2xl p-4 cursor-pointer hover:shadow-lg hover:shadow-blue-100/50 hover:border-blue-200 transition-all shadow-sm shadow-blue-50/30"
                data-id="${t.id}">
-            ${!RolesConfig.isMember() ? `<button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
+            ${RolesConfig.hasAdminAccess() ? `<button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>` : ''}
             <div class="flex items-center justify-between mb-2 pr-6">
@@ -2044,7 +2139,7 @@ const App = {
       return `
         <div class="tournament-card relative bg-white/80 backdrop-blur-sm border ${myCardClass} rounded-2xl p-4 cursor-pointer hover:shadow-lg hover:shadow-blue-100/50 hover:border-blue-200 transition-all shadow-sm shadow-blue-50/30"
              data-id="${t.id}">
-          ${!RolesConfig.isMember() ? `<button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
+          ${RolesConfig.hasAdminAccess() ? `<button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>` : ''}
           <div class="flex items-center justify-between mb-2 pr-6">
@@ -2110,14 +2205,14 @@ const App = {
       };
     });
 
-    // 멤버 모드: 삭제 버튼 숨기기
-    if (RolesConfig.isMember()) {
+    // 관리자 권한 없는 멤버: 삭제 버튼 숨기기
+    if (!RolesConfig.hasAdminAccess()) {
       container.querySelectorAll('.delete-tournament-btn').forEach(el => el.style.display = 'none');
     }
 
-    // 삭제 버튼 (관리자만)
+    // 삭제 버튼 (관리자 권한만)
     container.querySelectorAll('.delete-tournament-btn').forEach(btn => {
-      if (RolesConfig.isMember()) return;
+      if (!RolesConfig.hasAdminAccess()) return;
       btn.onclick = (e) => {
         e.stopPropagation();
         const id = btn.dataset.id;
