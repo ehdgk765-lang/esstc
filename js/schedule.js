@@ -1151,6 +1151,8 @@ const Schedule = {
     btn.disabled = true;
 
     try {
+      // html2canvas + jsPDF 동적 로딩 (최초 1회)
+      await loadPdfLibs();
       const { jsPDF } = window.jspdf;
 
       // ── 화면 그대로 캡처 방식 ──
@@ -1403,6 +1405,7 @@ const Schedule = {
 
     const allPlayers = Storage.getPlayers().sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     const _teamMap = tournament.isTeamMode ? buildTeamMap() : {};
+    const _amGroups = Storage.getGroups();
     const isSingles = !!tournament.isSingles;
     const selected = { t1p1: null, t1p2: null, t2p1: null, t2p2: null };
     let selectedCourt = presetCourt || 1;
@@ -1423,7 +1426,8 @@ const Schedule = {
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-800 font-medium">${Results.escapeHtml(name)}</span>
               ${pd ? `${genderBadge(pd.gender)}
-              ${!RolesConfig.hasAdminAccess() ? '' : `<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(pd.ntrp || 2.5).toFixed(1)}</span>`}` : ''}
+              ${!RolesConfig.hasAdminAccess() ? '' : `<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(pd.ntrp || 2.5).toFixed(1)}</span>`}
+              ${(pd.groups || []).map(gid => _amGroups.find(g => g.id === gid)).filter(Boolean).map(g => `<span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}` : ''}
               ${tn ? `<span class="text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
             </div>
             <button type="button" class="am-remove-player text-red-400 hover:text-red-600 text-xs" data-key="${key}">✕</button>
@@ -1707,6 +1711,7 @@ const Schedule = {
     const usedNames = new Set(Object.values(selected).filter(Boolean));
     const busyNames = slotBusyNames || new Set();
     const _teamMap = this._tournament?.isTeamMode ? buildTeamMap() : {};
+    const _pkGroups = Storage.getGroups();
 
     // 팀 모드: 허용/제외 팀 결정
     let allowedTeam = null, excludedTeam = null;
@@ -1761,6 +1766,7 @@ const Schedule = {
                   <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                   <span class="ml-2">${genderBadge(p.gender)}</span>
                   ${!RolesConfig.hasAdminAccess() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
+                  ${(p.groups || []).map(gid => _pkGroups.find(g => g.id === gid)).filter(Boolean).map(g => `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
                   ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isUsed ? '<span class="ml-auto text-xs text-gray-400">선택됨</span>' : ''}
                   ${isBusy ? '<span class="ml-auto text-xs text-gray-400">같은 시간대</span>' : ''}
@@ -1846,6 +1852,7 @@ const Schedule = {
     if (existing) existing.remove();
 
     const allPlayers = Storage.getPlayers().sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    const _swGroups = Storage.getGroups();
     const { slotIdx, matchIdx, team, pos, name: oldName } = playerInfo;
     const match = tournament.timeSlots[slotIdx]?.matches[matchIdx];
     if (!match) return;
@@ -1906,6 +1913,7 @@ const Schedule = {
                   <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                   <span class="ml-2">${genderBadge(p.gender)}</span>
                   ${!RolesConfig.hasAdminAccess() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
+                  ${(p.groups || []).map(gid => _swGroups.find(g => g.id === gid)).filter(Boolean).map(g => `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
                   ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isSelf ? '<span class="ml-auto text-xs text-gray-400">현재</span>' : ''}
                   ${isDup ? `<span class="ml-auto text-xs text-gray-400">${tournament.isCustom ? '같은 경기' : '같은 시간대'}</span>` : ''}

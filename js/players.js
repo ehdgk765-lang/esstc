@@ -390,8 +390,19 @@ const Players = {
   importExcel(file, container) {
     const reader = new FileReader();
     reader.onload = (e) => {
+      // XLSX 라이브러리 동적 로딩 (최초 1회)
+      loadXLSX().then(() => {
+        this._processExcel(e.target.result, container);
+      }).catch(() => {
+        alert('엑셀 라이브러리를 불러올 수 없습니다. 네트워크를 확인해주세요.');
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  },
+
+  _processExcel(data, container) {
       try {
-        const wb = XLSX.read(e.target.result, { type: 'array' });
+        const wb = XLSX.read(data, { type: 'array' });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
 
@@ -445,8 +456,6 @@ const Players = {
         console.error('엑셀 파싱 오류:', err);
         alert('파일을 읽을 수 없습니다. 엑셀(.xlsx) 또는 CSV 파일인지 확인해주세요.');
       }
-    };
-    reader.readAsArrayBuffer(file);
   },
 
   escapeHtml(text) {

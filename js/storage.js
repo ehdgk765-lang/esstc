@@ -6,6 +6,7 @@ const Storage = {
     TEAMS: 'tennis_teams',
     EVENTS: 'tennis_events',
     COURTS: 'tennis_courts',
+    GROUPS: 'tennis_groups',
   },
 
   get(key) {
@@ -626,6 +627,22 @@ const Storage = {
     return result;
   },
 
+  // 조(그룹) 관련
+  getGroups() {
+    return this.get(this.KEYS.GROUPS) || [];
+  },
+
+  saveGroups(groups) {
+    if (typeof RolesConfig !== 'undefined' && !RolesConfig.isAdmin()) {
+      console.warn('관리자만 조를 관리할 수 있습니다.');
+      return false;
+    }
+    var oldData = this.getGroups();
+    var result = this.set(this.KEYS.GROUPS, groups);
+    this.syncToFirestore('groups', groups, this.KEYS.GROUPS, oldData);
+    return result;
+  },
+
   // 코트 이름 변경 + 이벤트 제목 일괄 수정 (Firestore Transaction 기반)
   async renameCourtInEvents(oldName, newName) {
     var self = this;
@@ -1039,6 +1056,7 @@ const Storage = {
     localStorage.removeItem(this.KEYS.TEAMS);
     localStorage.removeItem(this.KEYS.EVENTS);
     localStorage.removeItem(this.KEYS.COURTS);
+    localStorage.removeItem(this.KEYS.GROUPS);
 
     try {
       var results = await Promise.all([
@@ -1046,13 +1064,15 @@ const Storage = {
         base.doc('tournaments').get(),
         base.doc('events').get(),
         base.doc('courts').get(),
-        base.doc('teams').get()
+        base.doc('teams').get(),
+        base.doc('groups').get()
       ]);
       var pDoc = results[0];
       var tDoc = results[1];
       var eDoc = results[2];
       var cDoc = results[3];
       var tmDoc = results[4];
+      var gDoc = results[5];
 
       if (pDoc.exists) {
         var d = pDoc.data();
@@ -1110,6 +1130,12 @@ const Storage = {
       } else if (!RolesConfig.isMember()) {
         var localTm = this.getTeams();
         if (localTm.length > 0) this.syncToFirestore('teams', localTm);
+      }
+
+      if (gDoc.exists) {
+        var dg = gDoc.data();
+        var gItems = dg.json ? JSON.parse(dg.json) : (dg.items || []);
+        localStorage.setItem(this.KEYS.GROUPS, JSON.stringify(gItems));
       }
     } catch (err) {
       console.error('Firestore load error:', err);
@@ -1222,6 +1248,7 @@ const Storage = {
     this._unsubEvents = makeListener('events', self.KEYS.EVENTS);
     this._unsubCourts = makeListener('courts', self.KEYS.COURTS);
     this._unsubTeams = makeListener('teams', self.KEYS.TEAMS);
+    this._unsubGroups = makeListener('groups', self.KEYS.GROUPS);
   },
 
   stopRealtimeSync() {
@@ -1244,6 +1271,10 @@ const Storage = {
     if (this._unsubTeams) {
       this._unsubTeams();
       this._unsubTeams = null;
+    }
+    if (this._unsubGroups) {
+      this._unsubGroups();
+      this._unsubGroups = null;
     }
     this._removeVisibilityListener();
   },
@@ -1288,6 +1319,8 @@ const Storage = {
         if (typeof App.applyRoleUI === 'function') App.applyRoleUI();
         if (App._viewMode === 'calendar') {
           App.showCalendar();
+        } else if (App._viewMode === 'members') {
+          App.showMembers();
         } else if (App._viewMode === 'settings') {
           App.showSettings();
         } else if (App.currentTab === 'active' && App.currentTournamentId) {

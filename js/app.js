@@ -165,6 +165,12 @@ const App = {
       }
     }
 
+    // 회원 관리 메뉴: 관리자 + 권한 부여 멤버 표시
+    var membersBtn = document.getElementById('menu-members');
+    if (membersBtn) {
+      membersBtn.classList.toggle('hidden', !RolesConfig.hasAdminAccess());
+    }
+
     // 설정 메뉴: 관리자만 표시
     var settingsBtn = document.getElementById('menu-settings');
     if (settingsBtn) {
@@ -186,11 +192,13 @@ const App = {
       }
     }
 
-    // 멤버: 좌측 메뉴 버튼 숨기고 멤버 정보 표시 (권한 부여 멤버도 동일)
+    // 멤버: 좌측 메뉴 버튼 숨기고 멤버 정보 표시
+    // 관리자 + 권한 부여 멤버: 햄버거 메뉴 표시
     var menuBtn = document.getElementById('menu-btn');
     var memberHeaderInfo = document.getElementById('member-header-info');
     if (menuBtn && memberHeaderInfo) {
-      if (!RolesConfig.isAdmin()) {
+      if (!RolesConfig.hasAdminAccess()) {
+        // 일반 멤버: 햄버거 숨기고 이름 헤더 표시
         menuBtn.classList.add('hidden');
         memberHeaderInfo.classList.remove('hidden');
         memberHeaderInfo.classList.add('flex');
@@ -200,6 +208,7 @@ const App = {
           nameEl.textContent = (mName || '멤버') + '님';
         }
       } else {
+        // 관리자 + 권한 부여 멤버: 햄버거 메뉴 표시
         menuBtn.classList.remove('hidden');
         memberHeaderInfo.classList.add('hidden');
         memberHeaderInfo.classList.remove('flex');
@@ -233,6 +242,19 @@ const App = {
     this._updateMenuActive();
     var content = document.getElementById('main-content');
     Calendar.render(content);
+  },
+
+  showMembers() {
+    this._viewMode = 'members';
+    var tabNav = document.querySelector('header nav');
+    if (tabNav) tabNav.style.display = 'none';
+    document.querySelectorAll('[data-tab]').forEach(function(tab) {
+      tab.classList.remove('tab-active');
+      tab.classList.add('text-gray-500');
+    });
+    this._updateMenuActive();
+    var content = document.getElementById('main-content');
+    Members.render(content);
   },
 
   showSettings() {
@@ -1055,6 +1077,7 @@ const App = {
   _updateMenuActive() {
     var homeBtn = document.getElementById('menu-home');
     var calBtn = document.getElementById('menu-calendar');
+    var membersBtn = document.getElementById('menu-members');
     var settingsBtn = document.getElementById('menu-settings');
     if (homeBtn) {
       if (this._viewMode === 'home') {
@@ -1068,6 +1091,13 @@ const App = {
         calBtn.classList.add('active');
       } else {
         calBtn.classList.remove('active');
+      }
+    }
+    if (membersBtn) {
+      if (this._viewMode === 'members') {
+        membersBtn.classList.add('active');
+      } else {
+        membersBtn.classList.remove('active');
       }
     }
     if (settingsBtn) {
@@ -1330,6 +1360,8 @@ const App = {
       return;
     }
 
+    const groups = Storage.getGroups();
+
     patchDOM(section, `
       <div>
         <label class="block text-sm font-semibold text-gray-700 mb-2">참가 멤버 선택</label>
@@ -1340,14 +1372,17 @@ const App = {
           <button type="button" id="select-all-btn" class="text-sm text-blue-700 font-medium hover:underline">전체 선택</button>
         </div>
         <div id="player-checkbox-list" class="bg-white/80 backdrop-blur-sm border border-white/60 rounded-xl max-h-48 overflow-y-auto divide-y divide-gray-50">
-          ${eligible.map(p => `
+          ${eligible.map(p => {
+            const pGroups = (p.groups || []).map(gid => groups.find(g => g.id === gid)).filter(Boolean);
+            return `
             <label class="player-item flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition" data-name="${Results.escapeHtml(p.name.toLowerCase())}">
               <input type="checkbox" name="players" value="${Results.escapeHtml(p.name)}" class="player-checkbox w-4 h-4 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
               <span class="ml-3 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
               <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-medium ${p.gender === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}">${p.gender === 'M' ? '남' : '여'}</span>
               <span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
-            </label>
-          `).join('')}
+              ${pGroups.map(g => `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
+            </label>`;
+          }).join('')}
         </div>
       </div>`);
 

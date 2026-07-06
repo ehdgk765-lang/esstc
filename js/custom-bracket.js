@@ -319,6 +319,7 @@ const CustomBracket = {
     const allPlayers = Storage.getPlayers().sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     const placedNames = this.getPlacedNames();
     const teamMap = buildTeamMap();
+    const cbGroups = Storage.getGroups();
 
     const picker = document.createElement('div');
     picker.className = 'cb-player-picker fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4';
@@ -343,12 +344,14 @@ const CustomBracket = {
             ${allPlayers.map(p => {
               const isPlaced = placedNames.has(p.name);
               const tn = teamMap[p.name];
+              const pGrps = (p.groups || []).map(gid => cbGroups.find(g => g.id === gid)).filter(Boolean);
               return `
                 <div class="cb-pick-option flex items-center px-3 py-2.5 ${isPlaced ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'} transition"
                   data-name="${Results.escapeHtml(p.name)}" data-placed="${isPlaced}">
                   <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                   <span class="ml-2">${genderBadge(p.gender)}</span>
                   <span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
+                  ${pGrps.map(g => `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
                   ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
                   ${isPlaced ? '<span class="ml-auto text-xs text-gray-400">배치됨</span>' : ''}
                 </div>`;
@@ -431,6 +434,7 @@ const CustomBracket = {
 
     const allPlayers = Storage.getPlayers().sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     const teamMap = buildTeamMap();
+    const cbGroups2 = Storage.getGroups();
     const usedNames = this._getPlacedPlayerNames();
     // 기존 배치에서 현재 슬롯 멤버는 제외 (재선택 가능)
     const currentVal = this._state.placements[slotIndex];
@@ -486,12 +490,14 @@ const CustomBracket = {
               ${allPlayers.map(p => {
                 const isUsed = allUsed.has(p.name);
                 const tn = teamMap[p.name];
+                const pGrps2 = (p.groups || []).map(gid => cbGroups2.find(g => g.id === gid)).filter(Boolean);
                 return `
                   <div class="cb-pick-option flex items-center px-3 py-2.5 ${isUsed ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'} transition"
                     data-name="${Results.escapeHtml(p.name)}" data-used="${isUsed}">
                     <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
                     <span class="ml-2">${genderBadge(p.gender)}</span>
                     <span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
+                    ${pGrps2.map(g => `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
                     ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
                     ${isUsed ? '<span class="ml-auto text-xs text-gray-400">선택됨</span>' : ''}
                   </div>`;

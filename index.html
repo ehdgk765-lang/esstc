@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.json">
   <script>
     // 앱 버전 (수정 배포 시 이 값만 변경하면 캐시 갱신)
-    var APP_VERSION = '20260706c';
+    var APP_VERSION = '20260706e';
   </script>
   <script>
     // 페이지 렌더 전 테마 적용 (깜빡임 방지)
@@ -35,10 +35,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <!-- Libraries -->
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js"></script>
   <!-- morphdom: DOM diffing for flicker-free updates -->
   <script src="https://unpkg.com/morphdom@2.7.4/dist/morphdom-umd.min.js"></script>
   <script>
@@ -50,6 +46,27 @@
       var tmp = document.createElement('div');
       tmp.innerHTML = html;
       morphdom(container, tmp, { childrenOnly: true });
+    }
+    // 무거운 라이브러리 동적 로딩 유틸 (xlsx ~300KB, html2canvas ~40KB, jspdf ~90KB)
+    // 페이지 로드 시에는 불필요 → 사용자 액션 시 최초 1회 로딩
+    var _loadedScripts = {};
+    function loadScript(url) {
+      if (_loadedScripts[url]) return _loadedScripts[url];
+      _loadedScripts[url] = new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = url;
+        s.onload = resolve;
+        s.onerror = function() { _loadedScripts[url] = null; reject(new Error('Failed to load: ' + url)); };
+        document.head.appendChild(s);
+      });
+      return _loadedScripts[url];
+    }
+    function loadXLSX() { return loadScript('https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js'); }
+    function loadPdfLibs() {
+      return Promise.all([
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js')
+      ]);
     }
   </script>
   <link rel="stylesheet" href="css/style.css" id="app-css">
@@ -99,6 +116,12 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
             <span>일정 보기</span>
+          </button>
+          <button id="menu-members" class="menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-800 transition hidden">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span>회원 관리</span>
           </button>
           <button id="menu-settings" class="menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-800 transition hidden">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -209,6 +232,7 @@
       'js/custom-bracket.js',
       'js/calendar.js',
       'js/stats.js',
+      'js/members.js',
       'js/app.js',
       'js/auth.js'
     ].forEach(function(src) {
@@ -273,6 +297,12 @@
       document.getElementById('menu-calendar').addEventListener('click', function() {
         closeMenu();
         App.showCalendar();
+      });
+
+      // 메뉴: 회원 관리
+      document.getElementById('menu-members').addEventListener('click', function() {
+        closeMenu();
+        App.showMembers();
       });
 
       // 메뉴: 설정
