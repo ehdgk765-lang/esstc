@@ -343,6 +343,7 @@ const Schedule = {
 
     for (const slot of tournament.timeSlots) {
       for (const m of slot.matches) {
+        if (!m.player1 || !m.player2) continue;
         const t1 = m.player1.split(' / ');
         const t2 = m.player2.split(' / ');
         [...t1, ...t2].forEach(p => {
@@ -365,12 +366,13 @@ const Schedule = {
           winners.forEach(p => { if (stats[p]) stats[p].wins++; });
           losers.forEach(p => { if (stats[p]) stats[p].losses++; });
         }
-        // 포인트: 각 세트 스코어 합산 (득점)
+        // 포인트: 스코어 차이 (예: 6-4이면 승자 +2, 패자 -2)
         if (m.scores && m.scores.length > 0) {
           let t1Pts = 0, t2Pts = 0;
           m.scores.forEach(([s1, s2]) => { t1Pts += s1; t2Pts += s2; });
-          t1.forEach(p => { if (stats[p]) stats[p].scorePoints += t1Pts; });
-          t2.forEach(p => { if (stats[p]) stats[p].scorePoints += t2Pts; });
+          var diff = t1Pts - t2Pts;
+          t1.forEach(p => { if (stats[p]) stats[p].scorePoints += diff; });
+          t2.forEach(p => { if (stats[p]) stats[p].scorePoints -= diff; });
         }
       }
     }
@@ -380,7 +382,7 @@ const Schedule = {
       s.matchPoints = s.wins * 3 + s.draws * 1;
     });
 
-    return Object.values(stats).sort((a, b) => b.matchPoints - a.matchPoints || b.scorePoints - a.scorePoints || b.wins - a.wins || b.games - a.games);
+    return Object.values(stats).sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || b.wins - a.wins || b.games - a.games);
   },
 
   // 팀별 통계 계산
@@ -420,8 +422,9 @@ const Schedule = {
         if (m.scores && m.scores.length > 0) {
           let t1Pts = 0, t2Pts = 0;
           m.scores.forEach(([s1, s2]) => { t1Pts += s1; t2Pts += s2; });
-          if (team1 && stats[team1]) stats[team1].scorePoints += t1Pts;
-          if (team2 && stats[team2]) stats[team2].scorePoints += t2Pts;
+          var diff = t1Pts - t2Pts;
+          if (team1 && stats[team1]) stats[team1].scorePoints += diff;
+          if (team2 && stats[team2]) stats[team2].scorePoints -= diff;
         }
       }
     }
@@ -430,7 +433,7 @@ const Schedule = {
       s.matchPoints = s.wins * 3 + s.draws * 1;
     });
 
-    return Object.values(stats).sort((a, b) => b.matchPoints - a.matchPoints || b.scorePoints - a.scorePoints || b.wins - a.wins || b.games - a.games);
+    return Object.values(stats).sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || b.wins - a.wins || b.games - a.games);
   },
 
   // 대진표 렌더링
@@ -454,8 +457,8 @@ const Schedule = {
     const allPlayersData = Storage.getPlayers();
     const uniqueNames = new Set();
     allMatches.forEach(m => {
-      m.player1.split(' / ').forEach(n => uniqueNames.add(n));
-      m.player2.split(' / ').forEach(n => uniqueNames.add(n));
+      if (m.player1) m.player1.split(' / ').forEach(n => uniqueNames.add(n));
+      if (m.player2) m.player2.split(' / ').forEach(n => uniqueNames.add(n));
     });
     let maleCount = 0, femaleCount = 0, unknownCount = 0;
     uniqueNames.forEach(name => {
@@ -481,12 +484,14 @@ const Schedule = {
           <p class="text-sm text-gray-500 mt-1">
             ${tournament.isCustom ? '' : `${tournament.startTime} ~ ${tournament.endTime} · `}코트 ${maxCourts}면 · ${playerInfo}
           </p>
+          <!-- [PDF 기능 비활성화]
           <div class="flex items-center gap-2 mt-3">
             <button id="pdf-download-btn" class="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition font-medium flex items-center gap-1">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               PDF
             </button>
           </div>
+          -->
         </div>
 
         ${isComplete && tournament.isTeamMode ? (() => {
@@ -699,16 +704,16 @@ const Schedule = {
 
     // 관리자 권한 없는 멤버: 수정 UI 숨기기 (스코어 입력만 허용)
     if (!RolesConfig.hasAdminAccess()) {
-      container.querySelectorAll('#add-match-btn, .delete-match-btn, .court-add-match-btn, #pdf-download-btn').forEach(el => el.style.display = 'none');
+      container.querySelectorAll('#add-match-btn, .delete-match-btn, .court-add-match-btn').forEach(el => el.style.display = 'none');
       const titleEl = container.querySelector('#schedule-title');
       if (titleEl) titleEl.style.cursor = 'default';
     }
 
-    // PDF 다운로드
-    const pdfBtn = container.querySelector('#pdf-download-btn');
-    if (pdfBtn) {
-      pdfBtn.onclick = () => this.exportPDF(container, tournament);
-    }
+    // [PDF 기능 비활성화]
+    // const pdfBtn = container.querySelector('#pdf-download-btn');
+    // if (pdfBtn) {
+    //   pdfBtn.onclick = () => this.exportPDF(container, tournament);
+    // }
 
     if (RolesConfig.hasAdminAccess()) {
       // 슬롯별 대진 추가 버튼 - 빈 코트 자리 (시간/코트 모드)
@@ -1143,7 +1148,7 @@ const Schedule = {
     } // end if (RolesConfig.hasAdminAccess()) - 드래그
   },
 
-  // PDF 내보내기 (타임슬롯 단위 캡처, 페이지당 4개)
+  /* [PDF 기능 비활성화]
   async exportPDF(container, tournament) {
     const btn = container.querySelector('#pdf-download-btn');
     const origText = btn.innerHTML;
@@ -1151,17 +1156,13 @@ const Schedule = {
     btn.disabled = true;
 
     try {
-      // html2canvas + jsPDF 동적 로딩 (최초 1회)
       await loadPdfLibs();
       const { jsPDF } = window.jspdf;
 
-      // ── 화면 그대로 캡처 방식 ──
-      // 1) 숨길 UI 요소
       const hideSelector = '#pdf-download-btn, #add-match-btn, .schedule-match-card p, .delete-match-btn, .court-add-match-btn';
       const hideEls = container.querySelectorAll(hideSelector);
       hideEls.forEach(el => el.style.display = 'none');
 
-      // 2) html2canvas 텍스트 클리핑 보정용 임시 스타일 주입
       const pdfFixStyle = document.createElement('style');
       pdfFixStyle.id = 'pdf-capture-fix';
       pdfFixStyle.textContent = `
@@ -1201,7 +1202,6 @@ const Schedule = {
       `;
       document.head.appendChild(pdfFixStyle);
 
-      // 3) 컨테이너를 고정 너비로 설정 (일관된 렌더링)
       const captureW = 800;
       const origWidth = container.style.width;
       const origMaxWidth = container.style.maxWidth;
@@ -1209,7 +1209,6 @@ const Schedule = {
       container.style.maxWidth = captureW + 'px';
       await new Promise(r => requestAnimationFrame(r));
 
-      // 4) 화면 DOM 그대로 캡처
       const fullCanvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
@@ -1218,13 +1217,11 @@ const Schedule = {
         windowWidth: captureW,
       });
 
-      // 5) 스타일 복원
       pdfFixStyle.remove();
       container.style.width = origWidth;
       container.style.maxWidth = origMaxWidth;
       hideEls.forEach(el => el.style.display = '');
 
-      // 5) 캔버스를 A4 페이지에 맞춰 분할
       const pdf = new jsPDF('p', 'mm', 'a4');
       const margin = 8;
       const contentW = 210 - margin * 2;
@@ -1235,7 +1232,6 @@ const Schedule = {
       const ratio = contentW / imgW;
       const totalH_mm = imgH * ratio;
 
-      // 1페이지 높이에 해당하는 픽셀 수
       const pagePixelH = pageContentH / ratio;
       let srcY = 0;
       let pageNum = 0;
@@ -1246,7 +1242,6 @@ const Schedule = {
         const sliceH = Math.min(pagePixelH, imgH - srcY);
         const sliceH_mm = sliceH * ratio;
 
-        // 캔버스에서 해당 영역만 잘라내기
         const pageCanvas = document.createElement('canvas');
         pageCanvas.width = imgW;
         pageCanvas.height = sliceH;
@@ -1268,6 +1263,7 @@ const Schedule = {
       btn.disabled = false;
     }
   },
+  */
 
   // 멤버 이름을 개별 탭 가능한 span으로 렌더링
   renderSwapPlayer(name, slotIdx, matchIdx, team, pos) {
@@ -1736,6 +1732,64 @@ const Schedule = {
         })
       : allPlayers;
     const pickerTitle = allowedTeam ? `멤버 선택 — ${Results.escapeHtml(allowedTeam)}` : '멤버 선택';
+    const isTeamMode = !!this._tournament?.isTeamMode;
+
+    // 플레이어 옵션 렌더링 헬퍼
+    const _renderOpt = (p) => {
+      const isUsed = usedNames.has(p.name);
+      const isBusy = !isUsed && busyNames.has(p.name);
+      const isDisabled = isUsed || isBusy;
+      const groupNames = (p.groups || []).map(gid => _pkGroups.find(g => g.id === gid)).filter(Boolean).map(g => g.name).join(' ');
+      return `<div class="amp-option flex items-center px-3 py-2.5 ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'} transition"
+        data-name="${Results.escapeHtml(p.name)}" data-used="${isDisabled}" data-group="${Results.escapeHtml(groupNames)}">
+        <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
+        <span class="ml-2">${genderBadge(p.gender)}</span>
+        ${!RolesConfig.hasAdminAccess() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
+        ${(p.groups || []).map(gid => _pkGroups.find(g => g.id === gid)).filter(Boolean).map(g => `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
+        ${isUsed ? '<span class="ml-auto text-xs text-gray-400">선택됨</span>' : ''}
+        ${isBusy ? '<span class="ml-auto text-xs text-gray-400">같은 시간대</span>' : ''}
+      </div>`;
+    };
+
+    // 팀 모드: 조별 그룹핑
+    let playerListHtml;
+    if (visiblePlayers.length === 0) {
+      playerListHtml = '<p class="text-sm text-gray-400 text-center py-4">등록된 멤버가 없습니다.</p>';
+    } else if (isTeamMode) {
+      const teamPlayerMap = {};
+      const noTeamPlayers = [];
+      visiblePlayers.forEach(p => {
+        const tn = _teamMap[p.name];
+        if (tn) {
+          if (!teamPlayerMap[tn]) teamPlayerMap[tn] = [];
+          teamPlayerMap[tn].push(p);
+        } else {
+          noTeamPlayers.push(p);
+        }
+      });
+      let html = '<div class="overflow-y-auto flex-1">';
+      Object.keys(teamPlayerMap).sort((a, b) => a.localeCompare(b, 'ko')).forEach(tn => {
+        html += `<div class="amp-team-group" data-team="${Results.escapeHtml(tn)}">`;
+        html += `<div class="amp-group-header sticky top-0 px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-semibold border-b border-purple-100 z-10">${Results.escapeHtml(tn)} <span class="text-purple-400">(${teamPlayerMap[tn].length}명)</span></div>`;
+        html += '<div class="divide-y divide-gray-50">';
+        teamPlayerMap[tn].forEach(p => { html += _renderOpt(p); });
+        html += '</div></div>';
+      });
+      if (noTeamPlayers.length > 0) {
+        html += '<div class="amp-team-group" data-team="">';
+        html += `<div class="amp-group-header sticky top-0 px-3 py-1.5 bg-gray-100 text-gray-500 text-xs font-semibold border-b border-gray-200 z-10">미배정 <span class="text-gray-400">(${noTeamPlayers.length}명)</span></div>`;
+        html += '<div class="divide-y divide-gray-50">';
+        noTeamPlayers.forEach(p => { html += _renderOpt(p); });
+        html += '</div></div>';
+      }
+      html += '</div>';
+      playerListHtml = html;
+    } else {
+      playerListHtml = `<div class="text-xs text-gray-400 mb-2">등록된 멤버</div>
+        <div class="overflow-y-auto flex-1 divide-y divide-gray-50">
+          ${visiblePlayers.map(p => _renderOpt(p)).join('')}
+        </div>`;
+    }
 
     const picker = document.createElement('div');
     picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4';
@@ -1746,34 +1800,13 @@ const Schedule = {
         <h3 class="text-lg font-bold text-center mb-3">${pickerTitle}</h3>
         <div class="mb-3">
           <div class="flex gap-2">
-            <input type="text" autocomplete="off" id="amp-search" placeholder="이름 검색 또는 직접 입력..."
+            <input type="text" autocomplete="off" id="amp-search" placeholder="이름 또는 조 검색..."
               class="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
             <button type="button" id="amp-custom-add"
               class="px-4 py-2 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition whitespace-nowrap">추가</button>
           </div>
         </div>
-        ${visiblePlayers.length > 0 ? `
-          <div class="text-xs text-gray-400 mb-2">등록된 멤버</div>
-          <div class="overflow-y-auto flex-1 divide-y divide-gray-50">
-            ${visiblePlayers.map(p => {
-              const isUsed = usedNames.has(p.name);
-              const isBusy = !isUsed && busyNames.has(p.name);
-              const isDisabled = isUsed || isBusy;
-              const tn = _teamMap[p.name];
-              return `
-                <div class="amp-option flex items-center px-3 py-2.5 ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'} transition"
-                  data-name="${Results.escapeHtml(p.name)}" data-used="${isDisabled}">
-                  <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
-                  <span class="ml-2">${genderBadge(p.gender)}</span>
-                  ${!RolesConfig.hasAdminAccess() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
-                  ${(p.groups || []).map(gid => _pkGroups.find(g => g.id === gid)).filter(Boolean).map(g => `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
-                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
-                  ${isUsed ? '<span class="ml-auto text-xs text-gray-400">선택됨</span>' : ''}
-                  ${isBusy ? '<span class="ml-auto text-xs text-gray-400">같은 시간대</span>' : ''}
-                </div>`;
-            }).join('')}
-          </div>
-        ` : '<p class="text-sm text-gray-400 text-center py-4">등록된 멤버가 없습니다.</p>'}
+        ${playerListHtml}
         <button type="button" class="mt-3 w-full py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition amp-cancel">취소</button>
       </div>`;
 
@@ -1816,7 +1849,14 @@ const Schedule = {
     searchInput.oninput = () => {
       const q = searchInput.value.trim();
       picker.querySelectorAll('.amp-option').forEach(opt => {
-        opt.style.display = (!q || matchesKoreanSearch(opt.dataset.name, q)) ? '' : 'none';
+        const nameMatch = !q || matchesKoreanSearch(opt.dataset.name, q);
+        const groupMatch = !q ? false : (opt.dataset.group && matchesKoreanSearch(opt.dataset.group, q));
+        opt.style.display = (nameMatch || groupMatch) ? '' : 'none';
+      });
+      // 팀 모드: 빈 그룹 헤더 숨기기
+      picker.querySelectorAll('.amp-team-group').forEach(grp => {
+        const hasVisible = Array.from(grp.querySelectorAll('.amp-option')).some(o => o.style.display !== 'none');
+        grp.style.display = hasVisible ? '' : 'none';
       });
     };
 
@@ -1888,6 +1928,63 @@ const Schedule = {
     const pickerTitle = sideTeam
       ? `멤버 교체 — ${Results.escapeHtml(oldName)} (${Results.escapeHtml(sideTeam)})`
       : `멤버 교체 — ${Results.escapeHtml(oldName)}`;
+    const isTeamMode2 = !!tournament.isTeamMode;
+
+    // 플레이어 옵션 렌더링 헬퍼
+    const _renderSwOpt = (p) => {
+      const isDup = slotBusyNames.has(p.name);
+      const isSelf = p.name === oldName;
+      const groupNames = (p.groups || []).map(gid => _swGroups.find(g => g.id === gid)).filter(Boolean).map(g => g.name).join(' ');
+      return `<div class="amp-option flex items-center px-3 py-2.5 ${isDup || isSelf ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'} transition"
+        data-name="${Results.escapeHtml(p.name)}" data-disabled="${isDup || isSelf}" data-group="${Results.escapeHtml(groupNames)}">
+        <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
+        <span class="ml-2">${genderBadge(p.gender)}</span>
+        ${!RolesConfig.hasAdminAccess() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
+        ${(p.groups || []).map(gid => _swGroups.find(g => g.id === gid)).filter(Boolean).map(g => `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
+        ${isSelf ? '<span class="ml-auto text-xs text-gray-400">현재</span>' : ''}
+        ${isDup ? `<span class="ml-auto text-xs text-gray-400">${tournament.isCustom ? '같은 경기' : '같은 시간대'}</span>` : ''}
+      </div>`;
+    };
+
+    // 팀 모드: 조별 그룹핑
+    let swPlayerListHtml;
+    if (visiblePlayers.length === 0) {
+      swPlayerListHtml = '<p class="text-sm text-gray-400 text-center py-4">등록된 멤버가 없습니다.</p>';
+    } else if (isTeamMode2) {
+      const teamPlayerMap2 = {};
+      const noTeamPlayers2 = [];
+      visiblePlayers.forEach(p => {
+        const tn = _teamMap[p.name];
+        if (tn) {
+          if (!teamPlayerMap2[tn]) teamPlayerMap2[tn] = [];
+          teamPlayerMap2[tn].push(p);
+        } else {
+          noTeamPlayers2.push(p);
+        }
+      });
+      let html = '<div class="overflow-y-auto flex-1">';
+      Object.keys(teamPlayerMap2).sort((a, b) => a.localeCompare(b, 'ko')).forEach(tn => {
+        html += `<div class="amp-team-group" data-team="${Results.escapeHtml(tn)}">`;
+        html += `<div class="amp-group-header sticky top-0 px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-semibold border-b border-purple-100 z-10">${Results.escapeHtml(tn)} <span class="text-purple-400">(${teamPlayerMap2[tn].length}명)</span></div>`;
+        html += '<div class="divide-y divide-gray-50">';
+        teamPlayerMap2[tn].forEach(p => { html += _renderSwOpt(p); });
+        html += '</div></div>';
+      });
+      if (noTeamPlayers2.length > 0) {
+        html += '<div class="amp-team-group" data-team="">';
+        html += `<div class="amp-group-header sticky top-0 px-3 py-1.5 bg-gray-100 text-gray-500 text-xs font-semibold border-b border-gray-200 z-10">미배정 <span class="text-gray-400">(${noTeamPlayers2.length}명)</span></div>`;
+        html += '<div class="divide-y divide-gray-50">';
+        noTeamPlayers2.forEach(p => { html += _renderSwOpt(p); });
+        html += '</div></div>';
+      }
+      html += '</div>';
+      swPlayerListHtml = html;
+    } else {
+      swPlayerListHtml = `<div class="text-xs text-gray-400 mb-2">등록된 멤버</div>
+        <div class="overflow-y-auto flex-1 divide-y divide-gray-50">
+          ${visiblePlayers.map(p => _renderSwOpt(p)).join('')}
+        </div>`;
+    }
 
     const picker = document.createElement('div');
     picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4';
@@ -1897,30 +1994,10 @@ const Schedule = {
         <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
         <h3 class="text-lg font-bold text-center mb-3">${pickerTitle}</h3>
         <div class="mb-3">
-          <input type="text" autocomplete="off" id="amp-search" placeholder="이름 검색..."
+          <input type="text" autocomplete="off" id="amp-search" placeholder="이름 또는 조 검색..."
             class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
         </div>
-        ${visiblePlayers.length > 0 ? `
-          <div class="text-xs text-gray-400 mb-2">등록된 멤버</div>
-          <div class="overflow-y-auto flex-1 divide-y divide-gray-50">
-            ${visiblePlayers.map(p => {
-              const isDup = slotBusyNames.has(p.name);
-              const isSelf = p.name === oldName;
-              const tn = _teamMap[p.name];
-              return `
-                <div class="amp-option flex items-center px-3 py-2.5 ${isDup || isSelf ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'} transition"
-                  data-name="${Results.escapeHtml(p.name)}" data-disabled="${isDup || isSelf}">
-                  <span class="text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
-                  <span class="ml-2">${genderBadge(p.gender)}</span>
-                  ${!RolesConfig.hasAdminAccess() ? '' : `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>`}
-                  ${(p.groups || []).map(gid => _swGroups.find(g => g.id === gid)).filter(Boolean).map(g => `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
-                  ${tn ? `<span class="ml-1 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">${Results.escapeHtml(tn)}</span>` : ''}
-                  ${isSelf ? '<span class="ml-auto text-xs text-gray-400">현재</span>' : ''}
-                  ${isDup ? `<span class="ml-auto text-xs text-gray-400">${tournament.isCustom ? '같은 경기' : '같은 시간대'}</span>` : ''}
-                </div>`;
-            }).join('')}
-          </div>
-        ` : '<p class="text-sm text-gray-400 text-center py-4">등록된 멤버가 없습니다.</p>'}
+        ${swPlayerListHtml}
         <button type="button" class="mt-3 w-full py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition amp-cancel">취소</button>
       </div>`;
 
@@ -1962,7 +2039,13 @@ const Schedule = {
     searchInput.oninput = () => {
       const q = searchInput.value.trim();
       picker.querySelectorAll('.amp-option').forEach(opt => {
-        opt.style.display = (!q || matchesKoreanSearch(opt.dataset.name, q)) ? '' : 'none';
+        const nameMatch = !q || matchesKoreanSearch(opt.dataset.name, q);
+        const groupMatch = !q ? false : (opt.dataset.group && matchesKoreanSearch(opt.dataset.group, q));
+        opt.style.display = (nameMatch || groupMatch) ? '' : 'none';
+      });
+      picker.querySelectorAll('.amp-team-group').forEach(grp => {
+        const hasVisible = Array.from(grp.querySelectorAll('.amp-option')).some(o => o.style.display !== 'none');
+        grp.style.display = hasVisible ? '' : 'none';
       });
     };
 

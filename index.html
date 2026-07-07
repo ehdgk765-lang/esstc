@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.json">
   <script>
     // 앱 버전 (수정 배포 시 이 값만 변경하면 캐시 갱신)
-    var APP_VERSION = '20260706e';
+    var APP_VERSION = '20260707g';
   </script>
   <script>
     // 페이지 렌더 전 테마 적용 (깜빡임 방지)
@@ -62,12 +62,13 @@
       return _loadedScripts[url];
     }
     function loadXLSX() { return loadScript('https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js'); }
-    function loadPdfLibs() {
-      return Promise.all([
-        loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
-        loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js')
-      ]);
-    }
+    // [PDF 기능 비활성화]
+    // function loadPdfLibs() {
+    //   return Promise.all([
+    //     loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+    //     loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js')
+    //   ]);
+    // }
   </script>
   <link rel="stylesheet" href="css/style.css" id="app-css">
   <script>document.getElementById('app-css').href = 'css/style.css?v=' + APP_VERSION;</script>

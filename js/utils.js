@@ -33,10 +33,17 @@ function matchesKoreanSearch(name, query) {
   return getChoseong(name).includes(query);
 }
 
-// ── 팀 맵 빌더 ──
+// ── 팀 맵 빌더 (조 기반) ──
 function buildTeamMap() {
   const map = {};
-  Storage.getTeams().forEach(t => (t.members || []).forEach(n => { map[n] = t.name; }));
+  const groups = Storage.getGroups();
+  Storage.getPlayers().forEach(p => {
+    const gid = (p.groups || [])[0];
+    if (gid) {
+      const g = groups.find(gr => gr.id === gid);
+      if (g) map[p.name] = g.name;
+    }
+  });
   return map;
 }
 
