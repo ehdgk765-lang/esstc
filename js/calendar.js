@@ -167,20 +167,20 @@ const Calendar = {
           if (_genderMap[participants[j]] === 'F') femaleNames.push(participants[j]);
           else maleNames.push(participants[j]);
         }
-        namesList = '<div class="mt-1.5 space-y-1">';
+        namesList = '<div class="mt-1.5" style="display:flex;flex-direction:column;gap:2px">';
         if (maleNames.length > 0) {
-          namesList += '<div class="flex flex-wrap items-center gap-1">' +
-            '<span class="text-xs font-medium text-blue-600">남' + maleNames.length + '</span>';
+          namesList += '<div style="font-size:0;line-height:0">';
+          namesList += '<span style="font-size:11px;font-weight:600;color:#3b82f6;margin-right:2px;line-height:20px;vertical-align:middle">남' + maleNames.length + '</span>';
           for (var mi = 0; mi < maleNames.length; mi++) {
-            namesList += '<span class="inline-block text-xs px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700">' + this._escapeHtml(maleNames[mi]) + '</span>';
+            namesList += '<span style="display:inline-block;font-size:11px;padding:1px 5px;border-radius:4px;margin:1px;line-height:16px" class="bg-blue-50 text-blue-700">' + this._escapeHtml(maleNames[mi]) + '</span>';
           }
           namesList += '</div>';
         }
         if (femaleNames.length > 0) {
-          namesList += '<div class="flex flex-wrap items-center gap-1">' +
-            '<span class="text-xs font-medium text-pink-600">여' + femaleNames.length + '</span>';
+          namesList += '<div style="font-size:0;line-height:0">';
+          namesList += '<span style="font-size:11px;font-weight:600;color:#ec4899;margin-right:2px;line-height:20px;vertical-align:middle">여' + femaleNames.length + '</span>';
           for (var fi = 0; fi < femaleNames.length; fi++) {
-            namesList += '<span class="inline-block text-xs px-1.5 py-0.5 rounded-md bg-pink-50 text-pink-700">' + this._escapeHtml(femaleNames[fi]) + '</span>';
+            namesList += '<span style="display:inline-block;font-size:11px;padding:1px 5px;border-radius:4px;margin:1px;line-height:16px" class="bg-pink-50 text-pink-700">' + this._escapeHtml(femaleNames[fi]) + '</span>';
           }
           namesList += '</div>';
         }
@@ -190,11 +190,12 @@ const Calendar = {
       // 대기자 이름 목록
       var waitlistHtml = '';
       if (waitlist.length > 0) {
-        waitlistHtml = '<div class="mt-1.5"><span class="text-xs text-gray-400">대기:</span> <span class="flex flex-wrap gap-1 mt-0.5 inline">';
+        waitlistHtml = '<div class="mt-1.5" style="font-size:0;line-height:0">' +
+          '<span style="font-size:11px;font-weight:600;color:#9ca3af;margin-right:2px;line-height:20px;vertical-align:middle">대기</span>';
         for (var w = 0; w < waitlist.length; w++) {
-          waitlistHtml += '<span class="inline-block text-xs px-1.5 py-0.5 rounded-md bg-yellow-50 text-yellow-700 border border-yellow-200">' + (w + 1) + '. ' + this._escapeHtml(waitlist[w]) + '</span>';
+          waitlistHtml += '<span style="display:inline-block;font-size:11px;padding:1px 5px;border-radius:4px;margin:1px;line-height:16px" class="bg-yellow-50 text-yellow-700 border border-yellow-200">' + (w + 1) + '.' + this._escapeHtml(waitlist[w]) + '</span>';
         }
-        waitlistHtml += '</span></div>';
+        waitlistHtml += '</div>';
       }
 
       // 참석/취소/대기 버튼 (클럽 사용자 + 이름 확인 완료)
@@ -228,8 +229,6 @@ const Calendar = {
                     (ev.description ? '<div class="text-xs text-gray-400 mt-1 italic">' + this._escapeHtml(ev.description) + '</div>' : '') +
                     (ev.createdBy ? '<div class="text-xs text-gray-400 mt-1">' + this._escapeHtml(ev.createdBy) + '등록</div>' : '') +
                     attendInfo +
-                    namesList +
-                    waitlistHtml +
                   '</div>' +
                   (function() {
                     var isRegular = Storage.isRegularEvent(ev);
@@ -254,6 +253,8 @@ const Calendar = {
                     '</div>';
                   })() +
                 '</div>' +
+                namesList +
+                waitlistHtml +
                 attendBtn +
                 addParticipantBtn +
               '</div>';
