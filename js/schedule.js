@@ -366,23 +366,16 @@ const Schedule = {
           winners.forEach(p => { if (stats[p]) stats[p].wins++; });
           losers.forEach(p => { if (stats[p]) stats[p].losses++; });
         }
-        // 포인트: 스코어 차이 (예: 6-4이면 승자 +2, 패자 -2)
-        if (m.scores && m.scores.length > 0) {
-          let t1Pts = 0, t2Pts = 0;
-          m.scores.forEach(([s1, s2]) => { t1Pts += s1; t2Pts += s2; });
-          var diff = t1Pts - t2Pts;
-          t1.forEach(p => { if (stats[p]) stats[p].scorePoints += diff; });
-          t2.forEach(p => { if (stats[p]) stats[p].scorePoints -= diff; });
-        }
       }
     }
 
-    // 승점 계산: 승=3, 무=1, 패=0
+    // 승점 계산: 승=3, 무=1, 패=0  /  포인트 계산: 승=+1, 무=0, 패=-1
     Object.values(stats).forEach(s => {
       s.matchPoints = s.wins * 3 + s.draws * 1;
+      s.scorePoints = s.wins - s.losses;
     });
 
-    return Object.values(stats).sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || b.wins - a.wins || b.games - a.games);
+    return Object.values(stats).sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || a.games - b.games);
   },
 
   // 팀별 통계 계산
@@ -419,21 +412,15 @@ const Schedule = {
           if (loseTeam && stats[loseTeam]) stats[loseTeam].losses++;
         }
 
-        if (m.scores && m.scores.length > 0) {
-          let t1Pts = 0, t2Pts = 0;
-          m.scores.forEach(([s1, s2]) => { t1Pts += s1; t2Pts += s2; });
-          var diff = t1Pts - t2Pts;
-          if (team1 && stats[team1]) stats[team1].scorePoints += diff;
-          if (team2 && stats[team2]) stats[team2].scorePoints -= diff;
-        }
       }
     }
 
     Object.values(stats).forEach(s => {
       s.matchPoints = s.wins * 3 + s.draws * 1;
+      s.scorePoints = s.wins - s.losses;
     });
 
-    return Object.values(stats).sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || b.wins - a.wins || b.games - a.games);
+    return Object.values(stats).sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || a.games - b.games);
   },
 
   // 대진표 렌더링
@@ -574,7 +561,7 @@ const Schedule = {
               </thead>
               <tbody>
                 ${teamStats.map((s, idx) => {
-                  const rank = teamStats.findIndex(p => p.matchPoints === s.matchPoints && p.scorePoints === s.scorePoints);
+                  const rank = teamStats.findIndex(p => p.scorePoints === s.scorePoints && p.matchPoints === s.matchPoints && p.games === s.games);
                   const medalHtml = isComplete && rank < 3 ? '<span style="display:inline-block;width:22px;height:26px;background:url(css/medal.png) no-repeat;background-size:300% auto;background-position:' + medalPos[rank] + ' center;vertical-align:middle;margin-right:2px;"></span>' : '';
                   return '<tr class="border-b border-gray-50 hover:bg-gray-50' + (isComplete && rank < 3 ? ' bg-gradient-to-r' + (rank === 0 ? ' from-yellow-50/60' : rank === 1 ? ' from-gray-50/60' : ' from-orange-50/60') + ' to-transparent' : '') + '">' +
                     '<td class="px-4 py-2 font-medium text-gray-800">' + medalHtml + Results.escapeHtml(s.name) + '</td>' +
@@ -618,7 +605,7 @@ const Schedule = {
                   const pd = allPlayersData.find(pl => pl.name === s.name);
                   const gender = pd?.gender;
                   const teamName = (() => { const teams = Storage.getTeams(); for (const t of teams) { if ((t.members || []).includes(s.name)) return t.name; } return ''; })();
-                  const rank = playerStats.findIndex(p => p.matchPoints === s.matchPoints && p.scorePoints === s.scorePoints);
+                  const rank = playerStats.findIndex(p => p.scorePoints === s.scorePoints && p.matchPoints === s.matchPoints && p.games === s.games);
                   const medalHtml = isComplete && rank < 3 ? '<span style="display:inline-block;width:22px;height:26px;background:url(\'css/medal.png\') no-repeat;background-size:300% auto;background-position:' + medalPos[rank] + ' center;vertical-align:middle;margin-right:2px;"></span>' : '';
                   return '<tr class="border-b border-gray-50 hover:bg-gray-50' + (isComplete && rank < 3 ? ' bg-gradient-to-r' + (rank === 0 ? ' from-yellow-50/60' : rank === 1 ? ' from-gray-50/60' : ' from-orange-50/60') + ' to-transparent' : '') + '">' +
                     '<td class="px-4 py-2 font-medium text-gray-800 whitespace-nowrap">' + medalHtml + Results.escapeHtml(s.name) +
@@ -674,7 +661,7 @@ const Schedule = {
                 const gender = pd?.gender;
                 const ntrp = pd?.ntrp || 2.5;
                 const medalPos = ['0%', '50%', '100%'];
-                const rank = playerStats.findIndex(p => p.matchPoints === s.matchPoints && p.scorePoints === s.scorePoints);
+                const rank = playerStats.findIndex(p => p.scorePoints === s.scorePoints && p.matchPoints === s.matchPoints && p.games === s.games);
                 const medalHtml = isComplete && rank < 3 ? '<span style="display:inline-block;width:22px;height:26px;background:url(\'css/medal.png\') no-repeat;background-size:300% auto;background-position:' + medalPos[rank] + ' center;vertical-align:middle;margin-right:2px;"></span>' : '';
                 return '<tr class="border-b border-gray-50 hover:bg-gray-50' + (isComplete && rank < 3 ? ' bg-gradient-to-r' + (rank === 0 ? ' from-yellow-50/60' : rank === 1 ? ' from-gray-50/60' : ' from-orange-50/60') + ' to-transparent' : '') + '">' +
                   '<td class="px-4 py-2 font-medium text-gray-800 whitespace-nowrap">' +

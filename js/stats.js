@@ -103,7 +103,7 @@ const Stats = {
 
       playerStats.forEach(s => {
         const rank = playerStats.findIndex(p =>
-          p.matchPoints === s.matchPoints && p.scorePoints === s.scorePoints
+          p.scorePoints === s.scorePoints && p.matchPoints === s.matchPoints && p.games === s.games
         );
         if (rank === 0) {
           ensure(s.name); medals[s.name].gold++; medals[s.name].total++;
@@ -153,7 +153,7 @@ const Stats = {
 
     const currentPlayers = new Set(Storage.getPlayers().map(p => p.name));
     return Object.values(aggregate).filter(s => currentPlayers.has(s.name)).sort((a, b) =>
-      b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || b.wins - a.wins || b.games - a.games
+      b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || a.games - b.games
     );
   },
 
@@ -383,7 +383,7 @@ const Stats = {
         agg.scorePoints += ps.scorePoints;
       });
       return agg;
-    }).sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || b.wins - a.wins);
+    }).sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || a.games - b.games);
 
     container.innerHTML = `
       <p class="text-sm text-gray-500 mb-4">완료 대진표 ${tournaments.length}개 기준 · ${groups.length}개 조</p>
@@ -446,7 +446,7 @@ const Stats = {
       const members = (groupMembers[g.id] || [])
         .map(name => ({ name, ...(playerAggregate[name] || { games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0 }) }))
         .filter(m => m.games > 0)
-        .sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || b.wins - a.wins);
+        .sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || a.games - b.games);
 
       if (members.length === 0) return '';
 

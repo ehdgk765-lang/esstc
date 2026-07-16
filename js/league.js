@@ -66,14 +66,12 @@ const League = {
           continue;
         }
 
-        // 세트/게임 통계 + 포인트(득점)
+        // 세트/게임 통계
         for (const [s1, s2] of match.scores) {
           standings[p1].gamesWon += s1;
           standings[p1].gamesLost += s2;
           standings[p2].gamesWon += s2;
           standings[p2].gamesLost += s1;
-          standings[p1].scorePoints += s1;
-          standings[p2].scorePoints += s2;
           if (s1 > s2) {
             standings[p1].setsWon++;
             standings[p2].setsLost++;
@@ -85,14 +83,17 @@ const League = {
       }
     }
 
+    // 포인트 계산: 승=+1, 무=0, 패=-1
+    Object.values(standings).forEach(s => {
+      s.scorePoints = s.wins - s.losses;
+    });
+
     return Object.values(standings).sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points;
       if (b.scorePoints !== a.scorePoints) return b.scorePoints - a.scorePoints;
-      if (b.wins !== a.wins) return b.wins - a.wins;
-      const aSetDiff = a.setsWon - a.setsLost;
-      const bSetDiff = b.setsWon - b.setsLost;
-      if (bSetDiff !== aSetDiff) return bSetDiff - aSetDiff;
-      return (b.gamesWon - b.gamesLost) - (a.gamesWon - a.gamesLost);
+      if (b.points !== a.points) return b.points - a.points;
+      const aGames = a.wins + a.draws + a.losses;
+      const bGames = b.wins + b.draws + b.losses;
+      return aGames - bGames;
     });
   },
 
