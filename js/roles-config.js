@@ -57,10 +57,13 @@ const RolesConfig = {
         // 권한 부여 멤버: 일정 보기 + 일정 관리 + 진행 중 + 통계
         return ['calendar', 'schedule', 'active', 'stats'];
       }
-      return ['calendar', 'active', 'stats'];
+      return ['calendar', 'active'];
     }
-    // admin, other 모두 전체 탭
-    return ['players', 'create', 'schedule', 'active', 'stats'];
+    if (this.isAdmin()) {
+      return ['players', 'create', 'schedule', 'active', 'stats'];
+    }
+    // other: 통계 제외
+    return ['players', 'create', 'schedule', 'active'];
   },
 
   getDefaultTab() {
