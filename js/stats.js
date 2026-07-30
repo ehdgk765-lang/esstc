@@ -352,28 +352,43 @@ const Stats = {
       });
     });
 
-    // 전체 개인 집계
-    const playerAggregate = {};
+    // 요일별 토너먼트 분류 (조의 day와 대진표의 gameDate 요일 매칭)
+    const tournamentsByDay = {};
     tournaments.forEach(t => {
-      Schedule.calcPlayerStats(t).forEach(s => {
-        if (!playerAggregate[s.name]) {
-          playerAggregate[s.name] = { games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0 };
-        }
-        playerAggregate[s.name].games += s.games;
-        playerAggregate[s.name].wins += s.wins;
-        playerAggregate[s.name].losses += s.losses;
-        playerAggregate[s.name].draws += s.draws;
-        playerAggregate[s.name].matchPoints += s.matchPoints;
-        playerAggregate[s.name].scorePoints += s.scorePoints;
-      });
+      const dateStr = t.gameDate || (t.createdAt ? t.createdAt.slice(0, 10) : '');
+      if (!dateStr) return;
+      const day = new Date(dateStr + 'T00:00:00').getDay();
+      if (!tournamentsByDay[day]) tournamentsByDay[day] = [];
+      tournamentsByDay[day].push(t);
     });
 
-    // 조별 집계
+    // 요일별 개인 집계
+    const playerAggregateByDay = {};
+    Object.entries(tournamentsByDay).forEach(([day, dayTournaments]) => {
+      const agg = {};
+      dayTournaments.forEach(t => {
+        Schedule.calcPlayerStats(t).forEach(s => {
+          if (!agg[s.name]) {
+            agg[s.name] = { games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0 };
+          }
+          agg[s.name].games += s.games;
+          agg[s.name].wins += s.wins;
+          agg[s.name].losses += s.losses;
+          agg[s.name].draws += s.draws;
+          agg[s.name].matchPoints += s.matchPoints;
+          agg[s.name].scorePoints += s.scorePoints;
+        });
+      });
+      playerAggregateByDay[day] = agg;
+    });
+
+    // 조별 집계 (조의 요일에 해당하는 대진표만 반영)
     const groupStats = groups.map(g => {
       const members = groupMembers[g.id] || [];
+      const dayAgg = playerAggregateByDay[g.day] || {};
       const agg = { name: g.name, id: g.id, memberCount: members.length, games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0 };
       members.forEach(name => {
-        const ps = playerAggregate[name];
+        const ps = dayAgg[name];
         if (!ps) return;
         agg.games += ps.games;
         agg.wins += ps.wins;
@@ -395,7 +410,7 @@ const Stats = {
     this._renderGroupRankingTable(container.querySelector('#stats-group-ranking'), groupStats);
 
     // 조별 멤버 성적
-    this._renderGroupMemberDetails(container.querySelector('#stats-group-members'), groups, groupMembers, playerAggregate);
+    this._renderGroupMemberDetails(container.querySelector('#stats-group-members'), groups, groupMembers, playerAggregateByDay);
   },
 
   _renderGroupRankingTable(container, groupStats) {
@@ -439,12 +454,13 @@ const Stats = {
       </div>`;
   },
 
-  _renderGroupMemberDetails(container, groups, groupMembers, playerAggregate) {
+  _renderGroupMemberDetails(container, groups, groupMembers, playerAggregateByDay) {
     const allPlayersData = Storage.getPlayers();
 
     container.innerHTML = groups.map(g => {
+      const dayAgg = playerAggregateByDay[g.day] || {};
       const members = (groupMembers[g.id] || [])
-        .map(name => ({ name, ...(playerAggregate[name] || { games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0 }) }))
+        .map(name => ({ name, ...(dayAgg[name] || { games: 0, wins: 0, losses: 0, draws: 0, matchPoints: 0, scorePoints: 0 }) }))
         .filter(m => m.games > 0)
         .sort((a, b) => b.scorePoints - a.scorePoints || b.matchPoints - a.matchPoints || a.games - b.games);
 
