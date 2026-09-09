@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.json">
   <script>
     // 앱 버전 (수정 배포 시 이 값만 변경하면 캐시 갱신)
-    var APP_VERSION = '20260909';
+    var APP_VERSION = '20260909-1';
   </script>
   <script>
     // 페이지 렌더 전 테마 적용 (깜빡임 방지)
@@ -335,6 +335,20 @@
     document.addEventListener('DOMContentLoaded', function() {
       Auth.init();
     });
+
+    // Service Worker 등록
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').then(function(reg) {
+        reg.addEventListener('updatefound', function() {
+          var newSW = reg.installing;
+          newSW.addEventListener('statechange', function() {
+            if (newSW.state === 'activated' && navigator.serviceWorker.controller) {
+              location.reload();
+            }
+          });
+        });
+      });
+    }
   </script>
 </body>
 </html>
