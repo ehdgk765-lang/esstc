@@ -38,10 +38,10 @@ function buildTeamMap() {
   const map = {};
   const groups = Storage.getGroups();
   Storage.getPlayers().forEach(p => {
-    const gid = (p.groups || [])[0];
-    if (gid) {
-      const g = groups.find(gr => gr.id === gid);
-      if (g) map[p.name] = g.name;
+    const pGroups = p.groups || [];
+    for (var i = 0; i < pGroups.length; i++) {
+      const g = groups.find(gr => gr.id === pGroups[i]);
+      if (g) { map[p.name] = g.name; break; }
     }
   });
   return map;
