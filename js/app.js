@@ -1776,6 +1776,12 @@ const App = {
               ${this.generateTimeOptions('09:00')}
             </select>
           </div>
+          <div class="flex gap-1.5 mt-2">
+            <button type="button" class="quick-time-btn px-3 py-1 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="06:00" data-end="08:00">6~8</button>
+            <button type="button" class="quick-time-btn px-3 py-1 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="06:00" data-end="09:00">6~9</button>
+            <button type="button" class="quick-time-btn px-3 py-1 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="06:00" data-end="10:00">6~10</button>
+            <button type="button" class="quick-time-btn px-3 py-1 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="19:00" data-end="22:00">19~22</button>
+          </div>
           <p id="time-info" class="text-xs text-gray-500 mt-1"></p>
         </div>
 
@@ -1911,6 +1917,15 @@ const App = {
 
     container.querySelector('#start-time').onchange = () => this.updateSchedulePreview(container);
     container.querySelector('#end-time').onchange = () => this.updateSchedulePreview(container);
+
+    // 빠른 시간 설정 버튼
+    container.querySelectorAll('.quick-time-btn').forEach(btn => {
+      btn.onclick = () => {
+        container.querySelector('#start-time').value = btn.dataset.start;
+        container.querySelector('#end-time').value = btn.dataset.end;
+        this.updateSchedulePreview(container);
+      };
+    });
     container.querySelectorAll('input[name="courts"]').forEach(r => {
       r.onchange = () => this.updateSchedulePreview(container);
     });
@@ -1993,6 +2008,7 @@ const App = {
         startTime,
         endTime,
         allowMixed,
+        allowXD,
         gameDate,
         males: selectedMales,
         females: selectedFemales,
