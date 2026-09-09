@@ -604,7 +604,7 @@ const Schedule = {
                 ${(() => { const allPlayersData = Storage.getPlayers(); const medalPos = ['0%', '50%', '100%']; return playerStats.map((s) => {
                   const pd = allPlayersData.find(pl => pl.name === s.name);
                   const gender = pd?.gender;
-                  const teamName = (() => { const teams = Storage.getTeams(); for (const t of teams) { if ((t.members || []).includes(s.name)) return t.name; } return ''; })();
+                  const teamName = buildTeamMap()[s.name] || '';
                   const rank = playerStats.findIndex(p => p.scorePoints === s.scorePoints && p.matchPoints === s.matchPoints && p.games === s.games);
                   const medalHtml = isComplete && rank < 3 ? '<span style="display:inline-block;width:22px;height:26px;background:url(\'css/medal.png\') no-repeat;background-size:300% auto;background-position:' + medalPos[rank] + ' center;vertical-align:middle;margin-right:2px;"></span>' : '';
                   return '<tr class="border-b border-gray-50 hover:bg-gray-50' + (isComplete && rank < 3 ? ' bg-gradient-to-r' + (rank === 0 ? ' from-yellow-50/60' : rank === 1 ? ' from-gray-50/60' : ' from-orange-50/60') + ' to-transparent' : '') + '">' +
