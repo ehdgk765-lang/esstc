@@ -1988,10 +1988,10 @@ const App = {
         return;
       }
 
-      const timeSlots = Schedule.generate(selectedMales, selectedFemales, courts, startTime, endTime, allowMixed, isSingles, allowXD);
+      const timeSlots = Schedule.generate(selectedMales, selectedFemales, courts, startTime, endTime, allowMixed, isSingles, allowXD, null, 10, 25);
 
       if (timeSlots.length === 0) {
-        alert('시간이 부족합니다. 최소 30분 이상 설정해주세요.');
+        alert('시간이 부족합니다. 시간 설정을 확인해주세요.');
         return;
       }
 
@@ -2017,6 +2017,8 @@ const App = {
         createdAt: new Date().toISOString(),
         completedAt: null,
         timeSlots,
+        warmupMinutes: 10,
+        gameMinutes: 25,
       };
 
       const tournaments = Storage.getTournaments();
@@ -2044,10 +2046,10 @@ const App = {
       return;
     }
 
-    const slots = Schedule.calculateTimeSlots(startTime, endTime);
+    const slots = Schedule.calculateTimeSlots(startTime, endTime, 10, 25);
     const totalGamesMax = slots.length * courts;
 
-    timeInfo.textContent = `${slots.length}개 타임 (30분 × ${slots.length})`;
+    timeInfo.textContent = `몸풀기 10분 + ${slots.length}게임 (25분 × ${slots.length})`;
     timeInfo.className = 'text-xs text-gray-500 mt-1';
 
     const allowMixed = container.querySelector('#allow-mixed')?.checked || false;
