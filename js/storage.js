@@ -1343,6 +1343,6 @@ const Storage = {
           App.navigate(App.currentTab);
         }
       }
-    }, 300);
+    }, 100);
   },
 };
