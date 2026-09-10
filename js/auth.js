@@ -50,17 +50,18 @@ const Auth = {
           }
         }
 
-        if (authEl._vpCleanup) authEl._vpCleanup();
-        authEl.style.display = 'none';
-        appEl.style.display = '';
+        // 컨테이너를 숨긴 채로 먼저 렌더링 (빈 화면 깜빡임 방지)
         if (!this.initialized) {
           App.init();
           this.initialized = true;
         } else {
-          // 재인증 시에도 권한 UI 반영 (hasAdminAccess 등)
           App.applyRoleUI();
           App.navigate(App.currentTab);
         }
+        // 렌더링 완료 후 전환
+        if (authEl._vpCleanup) authEl._vpCleanup();
+        authEl.style.display = 'none';
+        appEl.style.display = '';
       } else {
         // 실시간 동기화 중지
         Storage.stopRealtimeSync();
@@ -106,13 +107,12 @@ const Auth = {
       return;
     }
 
-    // 검증 통과 → 앱 전환
+    // 검증 통과 → 숨긴 채로 렌더링 후 전환
+    App.init();
+    this.initialized = true;
     if (authEl._vpCleanup) authEl._vpCleanup();
     authEl.style.display = 'none';
     appEl.style.display = '';
-    // 항상 App.init() 호출: 멤버 이름 변경 시 권한(hasAdminAccess) 반영 필요
-    App.init();
-    this.initialized = true;
   },
 
   renderLogin() {

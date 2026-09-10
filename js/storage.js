@@ -984,6 +984,7 @@ const Storage = {
         self.loadFromFirestore().then(function() {
           self.stopRealtimeSync();
           self.startRealtimeSync();
+          self._initialSyncDone = true; // 네트워크 복귀 시에는 즉시 렌더 필요
           self._onRemoteChange();
         }).catch(function() {});
       }
@@ -1220,6 +1221,10 @@ const Storage = {
     if (!base) return;
     var self = this;
 
+    // 초기 onSnapshot 콜백 억제 (loadFromFirestore에서 이미 로드한 데이터)
+    this._initialSyncDone = false;
+    setTimeout(function() { self._initialSyncDone = true; }, 800);
+
     // 페이지 복귀 시 최신 데이터 동기화
     this._setupVisibilityListener();
 
@@ -1277,6 +1282,7 @@ const Storage = {
       this._unsubGroups = null;
     }
     this._removeVisibilityListener();
+    this._initialSyncDone = true;
   },
 
   // 페이지 복귀 시 Firestore에서 최신 데이터 재로드
@@ -1292,6 +1298,7 @@ const Storage = {
       self.loadFromFirestore().then(function() {
         self.stopRealtimeSync();
         self.startRealtimeSync();
+        self._initialSyncDone = true; // 페이지 복귀 시에는 즉시 렌더 필요
         self._onRemoteChange();
       }).catch(function(err) {
         console.error('Visibility reload error:', err);
@@ -1309,6 +1316,8 @@ const Storage = {
 
   // 원격 변경 시 UI 갱신 (debounce 300ms)
   _onRemoteChange() {
+    // 초기 로드 직후: loadFromFirestore가 이미 최신 데이터를 반영했으므로 리렌더 스킵
+    if (this._initialSyncDone === false) return;
     var self = this;
     // debounce: 여러 snapshot이 연달아 오면 마지막 것만 처리
     if (this._remoteChangeTimer) clearTimeout(this._remoteChangeTimer);
