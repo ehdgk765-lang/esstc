@@ -165,6 +165,65 @@ const Schedule = {
     return remainM >= 0 && remainF >= 0 && (remainM + remainF) >= needAny;
   },
 
+  // 수동 모드: typeDistribution → 슬롯별 플랜 배분
+  distributeTypesToSlots(typeDistribution, numSlots, courts, maleCount, femaleCount) {
+    const types = Object.keys(typeDistribution).filter(t => typeDistribution[t] > 0);
+    const remaining = {};
+    types.forEach(t => { remaining[t] = typeDistribution[t]; });
+    const slotPlans = Array.from({ length: numSlots }, () => []);
+
+    const validPlansForSlot = (rem, size) => {
+      const avail = types.filter(t => rem[t] > 0);
+      if (size === 0 || avail.length === 0) return [[]];
+      const results = [];
+      const build = (combo, startIdx, used) => {
+        if (combo.length === size) {
+          if (this.isPlanValid(combo, maleCount, femaleCount)) results.push([...combo]);
+          return;
+        }
+        for (let i = startIdx; i < avail.length; i++) {
+          const t = avail[i];
+          if ((used[t] || 0) < rem[t]) {
+            combo.push(t);
+            used[t] = (used[t] || 0) + 1;
+            build(combo, i, used);
+            combo.pop();
+            used[t]--;
+          }
+        }
+      };
+      build([], 0, {});
+      return results;
+    };
+
+    const solve = (slotIdx) => {
+      const totalRem = types.reduce((s, t) => s + remaining[t], 0);
+      if (totalRem === 0) return true;
+      if (slotIdx >= numSlots) return false;
+      const size = Math.min(courts, totalRem);
+      const plans = validPlansForSlot(remaining, size);
+      for (let i = plans.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [plans[i], plans[j]] = [plans[j], plans[i]];
+      }
+      for (const plan of plans) {
+        plan.forEach(t => remaining[t]--);
+        slotPlans[slotIdx] = plan;
+        if (solve(slotIdx + 1)) return true;
+        plan.forEach(t => remaining[t]++);
+      }
+      slotPlans[slotIdx] = [];
+      return false;
+    };
+
+    if (!solve(0)) return null;
+    for (let i = slotPlans.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [slotPlans[i], slotPlans[j]] = [slotPlans[j], slotPlans[i]];
+    }
+    return slotPlans;
+  },
+
   // 플랜별 게임 수 균형 점수 계산 → 가장 균형 잡힌 플랜 선택
   selectBestPlan(plans, males, females, gameCounts) {
     const allPlayers = [...males, ...females];
@@ -212,19 +271,24 @@ const Schedule = {
   },
 
   // 한 타임슬롯의 매치 생성 (플랜 기반)
-  generateSlotMatches(males, females, courts, gameCounts, allowMixed, usedTeams, isSingles, allowXD) {
-    // 코트를 최대한 채우는 유효한 플랜 찾기
-    let validPlans = [];
-    for (let n = courts; n >= 1; n--) {
-      const plans = this.generatePlans(n, allowMixed, isSingles, allowXD);
-      validPlans = plans.filter(p => this.isPlanValid(p, males.length, females.length));
-      if (validPlans.length > 0) break;
+  generateSlotMatches(males, females, courts, gameCounts, allowMixed, usedTeams, isSingles, allowXD, forcedPlan) {
+    let plan;
+    if (forcedPlan) {
+      plan = forcedPlan;
+    } else {
+      // 코트를 최대한 채우는 유효한 플랜 찾기
+      let validPlans = [];
+      for (let n = courts; n >= 1; n--) {
+        const plans = this.generatePlans(n, allowMixed, isSingles, allowXD);
+        validPlans = plans.filter(p => this.isPlanValid(p, males.length, females.length));
+        if (validPlans.length > 0) break;
+      }
+
+      if (validPlans.length === 0) return [];
+
+      // 게임 수 균형을 고려하여 최적 플랜 선택
+      plan = this.selectBestPlan(validPlans, males, females, gameCounts);
     }
-
-    if (validPlans.length === 0) return [];
-
-    // 게임 수 균형을 고려하여 최적 플랜 선택
-    const plan = this.selectBestPlan(validPlans, males, females, gameCounts);
 
     // NTRP 맵 + 가용 멤버 정렬: 경기 수 적은 순 (동점 셔플)
     const ntrpMap = this.buildNtrpMap();
@@ -323,8 +387,8 @@ const Schedule = {
     return matches;
   },
 
-  // 대진표 생성 (lateEntries: { playerName: "HH:MM" } | null)
-  generate(males, females, courts, startTime, endTime, allowMixed, isSingles, allowXD, lateEntries, warmupMinutes, gameMinutes) {
+  // 대진표 생성 (lateEntries: { playerName: "HH:MM" } | null, typeDistribution: { MD: 3, XD: 2 } | null)
+  generate(males, females, courts, startTime, endTime, allowMixed, isSingles, allowXD, lateEntries, typeDistribution, warmupMinutes, gameMinutes) {
     const slots = this.calculateTimeSlots(startTime, endTime, warmupMinutes, gameMinutes);
     const gameCounts = {};
     [...males, ...females].forEach(p => { gameCounts[p] = 0; });
@@ -340,13 +404,32 @@ const Schedule = {
       }
     }
 
-    const timeSlots = slots.map(time => {
+    // 수동 모드: 게임 종류 분배를 슬롯별 플랜으로 변환
+    let slotPlans = null;
+    if (typeDistribution) {
+      slotPlans = this.distributeTypesToSlots(typeDistribution, slots.length, courts, males.length, females.length);
+      if (slotPlans) {
+        const planCounts = {};
+        for (const sp of slotPlans) {
+          for (const t of sp) planCounts[t] = (planCounts[t] || 0) + 1;
+        }
+        for (const [t, cnt] of Object.entries(typeDistribution)) {
+          if ((planCounts[t] || 0) !== cnt) { slotPlans = null; break; }
+        }
+      }
+      if (!slotPlans) {
+        slotPlans = this.distributeTypesToSlots(typeDistribution, slots.length, courts, males.length, females.length);
+      }
+    }
+
+    const timeSlots = slots.map((time, idx) => {
       let slotMales = males, slotFemales = females;
       if (lateEntries) {
         slotMales = males.filter(p => !lateEntries[p] || lateEntries[p] <= time);
         slotFemales = females.filter(p => !lateEntries[p] || lateEntries[p] <= time);
       }
-      const matches = this.generateSlotMatches(slotMales, slotFemales, courts, gameCounts, allowMixed, usedTeams, isSingles, allowXD);
+      const forcedPlan = slotPlans ? slotPlans[idx] : null;
+      const matches = this.generateSlotMatches(slotMales, slotFemales, courts, gameCounts, allowMixed, usedTeams, isSingles, allowXD, forcedPlan);
       return { time, matches };
     });
 
@@ -691,9 +774,9 @@ const Schedule = {
             <div class="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
               <span class="font-semibold text-gray-700 text-sm">멤버별 통계</span>
             </div>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto" style="max-height:400px;overflow-y:auto">
             <table class="w-full text-sm standings-table">
-              <thead>
+              <thead class="sticky top-0 bg-white z-10">
                 <tr class="border-b border-gray-100 text-gray-500 text-xs">
                   <th class="text-left px-4 py-2">멤버</th>
                   <th class="text-center px-2 py-2">경기</th>
@@ -746,9 +829,9 @@ const Schedule = {
           <div class="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
             <span class="font-semibold text-gray-700 text-sm">멤버별 통계</span>
           </div>
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto" style="max-height:400px;overflow-y:auto">
           <table class="w-full text-sm standings-table">
-            <thead>
+            <thead class="sticky top-0 bg-white z-10">
               <tr class="border-b border-gray-100 text-gray-500 text-xs">
                 <th class="text-left px-4 py-2">멤버</th>
                 <th class="text-center px-2 py-2">경기</th>
@@ -858,6 +941,7 @@ const Schedule = {
               tournament.startTime, tournament.endTime,
               tournament.allowMixed, tournament.isSingles, tournament.allowXD || false,
               Object.keys(lateEntries).length > 0 ? lateEntries : null,
+              tournament.typeDistribution || null,
               tournament.warmupMinutes || 10, tournament.gameMinutes || 25
             );
 

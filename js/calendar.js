@@ -1079,7 +1079,7 @@ const Calendar = {
         return;
       }
 
-      var timeSlots = Schedule.generate(males, females, courts, startTime, endTime, allowMixed, isSingles, allowXD, null, 10, 25);
+      var timeSlots = Schedule.generate(males, females, courts, startTime, endTime, allowMixed, isSingles, allowXD, null, null, 10, 25);
       if (timeSlots.length === 0) {
         alert('시간이 부족합니다. 시간 설정을 확인해주세요.');
         return;

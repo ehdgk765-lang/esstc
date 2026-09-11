@@ -1988,7 +1988,31 @@ const App = {
         return;
       }
 
-      const timeSlots = Schedule.generate(selectedMales, selectedFemales, courts, startTime, endTime, allowMixed, isSingles, allowXD, null, 10, 25);
+      // 수동 게임 종류 설정 수집
+      let typeDistribution = null;
+      const isManualMode = container.querySelector('#type-mode-manual')?.checked;
+      if (isManualMode) {
+        typeDistribution = {};
+        container.querySelectorAll('.type-count-input').forEach(el => {
+          const count = parseInt(el.textContent) || 0;
+          if (count > 0) typeDistribution[el.dataset.type] = count;
+        });
+        const total = Object.values(typeDistribution).reduce((s, v) => s + v, 0);
+        const slotsForValidation = Schedule.calculateTimeSlots(startTime, endTime, 10, 25);
+        const expectedTotal = slotsForValidation.length * courts;
+        if (total !== expectedTotal) {
+          alert(`게임 종류 합계(${total})가 총 경기수(${expectedTotal})와 일치하지 않습니다.`);
+          return;
+        }
+        // 사전 검증: 배분 가능한지 확인
+        const testResult = Schedule.distributeTypesToSlots(typeDistribution, slotsForValidation.length, courts, selectedMales.length, selectedFemales.length);
+        if (!testResult) {
+          alert('설정한 게임 종류 조합을 슬롯에 배분할 수 없습니다.\n인원 구성을 확인해주세요.');
+          return;
+        }
+      }
+
+      const timeSlots = Schedule.generate(selectedMales, selectedFemales, courts, startTime, endTime, allowMixed, isSingles, allowXD, null, typeDistribution, 10, 25);
 
       if (timeSlots.length === 0) {
         alert('시간이 부족합니다. 시간 설정을 확인해주세요.');
@@ -2017,6 +2041,7 @@ const App = {
         createdAt: new Date().toISOString(),
         completedAt: null,
         timeSlots,
+        typeDistribution,
         warmupMinutes: 10,
         gameMinutes: 25,
       };
@@ -2055,27 +2080,157 @@ const App = {
     const allowMixed = container.querySelector('#allow-mixed')?.checked || false;
     const allowXD = container.querySelector('#allow-xd')?.checked || false;
     const isSingles = container.querySelector('input[name="sch-match-type"]:checked')?.value === 'singles';
-    const possibleTypes = [];
+
+    const possibleTypeCodes = [];
     if (isSingles) {
-      if (maleCount >= 2) possibleTypes.push('남자단식');
-      if (femaleCount >= 2) possibleTypes.push('여자단식');
-      if (allowMixed && (maleCount + femaleCount) >= 2) possibleTypes.push('섞어단식');
+      if (maleCount >= 2) possibleTypeCodes.push('MS');
+      if (femaleCount >= 2) possibleTypeCodes.push('WS');
+      if (allowMixed && (maleCount + femaleCount) >= 2) possibleTypeCodes.push('FS');
     } else {
-      if (allowXD && maleCount >= 2 && femaleCount >= 2) possibleTypes.push('혼합복식');
-      if (maleCount >= 4) possibleTypes.push('남자복식');
-      if (femaleCount >= 4) possibleTypes.push('여자복식');
-      if (allowMixed && (maleCount + femaleCount) >= 4) possibleTypes.push('섞어복식');
+      if (allowXD && maleCount >= 2 && femaleCount >= 2) possibleTypeCodes.push('XD');
+      if (maleCount >= 4) possibleTypeCodes.push('MD');
+      if (femaleCount >= 4) possibleTypeCodes.push('WD');
+      if (allowMixed && (maleCount + femaleCount) >= 4) possibleTypeCodes.push('FD');
     }
+    const possibleTypes = possibleTypeCodes.map(c => SCHEDULE_GAME_TYPES[c].label);
     const minPlayers = isSingles ? 2 : 4;
 
     if (maleCount + femaleCount >= minPlayers && possibleTypes.length > 0) {
+      // 수동 설정 상태 보존
+      const prevManual = container.querySelector('#type-mode-manual')?.checked || false;
+      const prevCounts = {};
+      container.querySelectorAll('.type-count-input').forEach(el => {
+        prevCounts[el.dataset.type] = parseInt(el.textContent) || 0;
+      });
+
       preview.classList.remove('hidden');
-      preview.innerHTML = `
+
+      // 수동 설정 카운터 HTML
+      const typeRowsHTML = possibleTypeCodes.map(code => {
+        const cfg = SCHEDULE_GAME_TYPES[code];
+        const val = prevCounts[code] || 0;
+        return `<div class="flex items-center justify-between py-1">
+          <span class="text-sm flex items-center gap-1.5">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ${cfg.badgeClass}">${cfg.icon}</span>
+            <span>${cfg.label}</span>
+          </span>
+          <div class="flex items-center gap-1.5">
+            <button type="button" class="type-minus-btn w-7 h-7 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center text-base font-bold" data-type="${code}">-</button>
+            <span class="type-count-input w-8 text-center text-sm font-semibold tabular-nums" data-type="${code}">${val}</span>
+            <button type="button" class="type-plus-btn w-7 h-7 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 flex items-center justify-center text-base font-bold" data-type="${code}">+</button>
+          </div>
+        </div>`;
+      }).join('');
+
+      patchDOM(preview, `
         <div class="space-y-1">
           <p><span class="font-medium">총 경기:</span> 최대 ${totalGamesMax}경기 (${slots.length}타임 × ${courts}코트)</p>
           <p><span class="font-medium">멤버:</span> 남 ${maleCount}명, 여 ${femaleCount}명</p>
           <p><span class="font-medium">가능한 게임:</span> ${possibleTypes.join(', ')}</p>
-        </div>`;
+        </div>
+        <div class="mt-3 pt-3 border-t border-gray-200">
+          <div class="flex gap-3 mb-2">
+            <label class="flex items-center gap-1.5 cursor-pointer text-sm">
+              <input type="radio" name="type-mode" value="auto" id="type-mode-auto" ${!prevManual ? 'checked' : ''} class="accent-blue-600">
+              <span class="text-gray-700 font-medium">자동 배분</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer text-sm">
+              <input type="radio" name="type-mode" value="manual" id="type-mode-manual" ${prevManual ? 'checked' : ''} class="accent-blue-600">
+              <span class="text-gray-700 font-medium">수동 설정</span>
+            </label>
+          </div>
+          <div id="manual-type-panel" class="${prevManual ? '' : 'hidden'} space-y-1 bg-gray-50 rounded-xl p-3">
+            ${typeRowsHTML}
+            <div class="pt-2 border-t border-gray-200 flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-500">합계</span>
+              <span id="type-total" class="text-sm font-bold"></span>
+            </div>
+            <p id="type-validation-msg" class="text-xs hidden mt-1"></p>
+          </div>
+        </div>`);
+
+      // 이벤트 바인딩: 자동/수동 토글
+      const autoRadio = preview.querySelector('#type-mode-auto');
+      const manualRadio = preview.querySelector('#type-mode-manual');
+      const manualPanel = preview.querySelector('#manual-type-panel');
+
+      const togglePanel = () => {
+        manualPanel.classList.toggle('hidden', autoRadio.checked);
+      };
+      autoRadio.onchange = togglePanel;
+      manualRadio.onchange = togglePanel;
+
+      // 합계 업데이트 함수
+      const updateTotal = () => {
+        let sum = 0;
+        const dist = {};
+        preview.querySelectorAll('.type-count-input').forEach(el => {
+          const c = parseInt(el.textContent) || 0;
+          sum += c;
+          if (c > 0) dist[el.dataset.type] = c;
+        });
+        const totalEl = preview.querySelector('#type-total');
+        const msgEl = preview.querySelector('#type-validation-msg');
+        totalEl.textContent = `${sum} / ${totalGamesMax}`;
+        if (sum === totalGamesMax) {
+          totalEl.className = 'text-sm font-bold text-green-600';
+          let mSlots = 0, fSlots = 0;
+          for (const [type, cnt] of Object.entries(dist)) {
+            const cfg = SCHEDULE_GAME_TYPES[type];
+            mSlots += (cfg.needM || 0) * cnt;
+            fSlots += (cfg.needF || 0) * cnt;
+            if (cfg.needAny) { mSlots += cfg.needAny * cnt; }
+          }
+          let balanceText = '';
+          if (maleCount > 0 && fSlots > 0 && femaleCount > 0) {
+            const mAvg = mSlots / maleCount;
+            const fAvg = fSlots / femaleCount;
+            balanceText = `예상 게임수: 남 ${Math.floor(mAvg)}~${Math.ceil(mAvg)}회, 여 ${Math.floor(fAvg)}~${Math.ceil(fAvg)}회`;
+          } else if (maleCount > 0 && mSlots > 0) {
+            balanceText = `예상 게임수: ${Math.floor(mSlots/maleCount)}~${Math.ceil(mSlots/maleCount)}회`;
+          } else if (femaleCount > 0 && fSlots > 0) {
+            balanceText = `예상 게임수: ${Math.floor(fSlots/femaleCount)}~${Math.ceil(fSlots/femaleCount)}회`;
+          }
+          if (balanceText) {
+            msgEl.textContent = balanceText;
+            msgEl.className = 'text-xs text-gray-500 mt-1';
+          } else {
+            msgEl.classList.add('hidden');
+          }
+        } else if (sum > totalGamesMax) {
+          totalEl.className = 'text-sm font-bold text-red-500';
+          msgEl.textContent = `총 경기수(${totalGamesMax})를 초과했습니다.`;
+          msgEl.className = 'text-xs text-red-500 mt-1';
+        } else {
+          totalEl.className = 'text-sm font-bold text-orange-500';
+          msgEl.textContent = `${totalGamesMax - sum}경기를 더 설정해주세요.`;
+          msgEl.className = 'text-xs text-orange-500 mt-1';
+        }
+      };
+
+      // +/- 버튼 이벤트
+      preview.querySelectorAll('.type-plus-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const type = btn.dataset.type;
+          const display = preview.querySelector(`.type-count-input[data-type="${type}"]`);
+          const cur = parseInt(display.textContent) || 0;
+          display.textContent = cur + 1;
+          updateTotal();
+        };
+      });
+      preview.querySelectorAll('.type-minus-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const type = btn.dataset.type;
+          const display = preview.querySelector(`.type-count-input[data-type="${type}"]`);
+          const cur = parseInt(display.textContent) || 0;
+          if (cur > 0) display.textContent = cur - 1;
+          updateTotal();
+        };
+      });
+
+      updateTotal();
     } else {
       preview.classList.add('hidden');
     }
