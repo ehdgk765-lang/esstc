@@ -105,8 +105,8 @@ const Schedule = {
     const nf1 = ntrpMap[f1] || 2.5, nf2 = ntrpMap[f2] || 2.5;
 
     const pairings = [
-      { t1: [m1, f1], t2: [m2, f2], diff: Math.abs((nm1 + nf1) - (nm2 + nf2)) },
-      { t1: [m1, f2], t2: [m2, f1], diff: Math.abs((nm1 + nf2) - (nm2 + nf1)) },
+      { t1: [f1, m1], t2: [f2, m2], diff: Math.abs((nm1 + nf1) - (nm2 + nf2)) },
+      { t1: [f2, m1], t2: [f1, m2], diff: Math.abs((nm1 + nf2) - (nm2 + nf1)) },
     ];
 
     pairings.forEach(p => {
@@ -279,6 +279,10 @@ const Schedule = {
           if (idx >= 0) availF.splice(idx, 1);
         });
         [team1, team2] = this.balancedPair(picked, ntrpMap, usedTeams);
+        // 여자를 앞에 표시
+        const femSort = (a, b) => (males.includes(a) ? 1 : 0) - (males.includes(b) ? 1 : 0);
+        team1.sort(femSort);
+        team2.sort(femSort);
         picked.forEach(p => gameCounts[p]++);
 
         // 실제 성별 구성에 따라 표시 타입 결정
@@ -1326,13 +1330,6 @@ const Schedule = {
     FS: { label: '섞어단', bg: '#fff7ed', text: '#c2410c', border: '#fdba74' },
   },
 
-  // 플레이어별 고유 색상 팔레트
-  _playerPalette: [
-    '#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#8b5cf6','#ec4899',
-    '#f43f5e','#d946ef','#0ea5e9','#10b981','#a855f7','#6366f1','#06b6d4','#84cc16',
-    '#fb923c','#4ade80','#2dd4bf','#818cf8','#c084fc','#f472b6','#38bdf8','#facc15',
-  ],
-
   // Canvas 유틸: 둥근 사각형
   _roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
@@ -1361,17 +1358,18 @@ const Schedule = {
     const isSingles = tournament.isSingles;
     const allPlayers = tournament.players || [];
 
-    // ─ 플레이어별 색상 할당 ─
-    const pColor = {};
-    allPlayers.forEach((name, i) => {
-      pColor[name] = this._playerPalette[i % this._playerPalette.length];
-    });
-    // 파스텔 배경 헬퍼
-    const pBg = (name) => {
-      const hex = pColor[name] || '#94a3b8';
-      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-      return `rgba(${r},${g},${b},0.13)`;
-    };
+    // ─ 성별 기반 색상 ─
+    const maleSet = new Set(tournament.males || []);
+    const femaleSet = new Set(tournament.females || []);
+    const isMale = (name) => maleSet.has(name);
+    const isFemale = (name) => femaleSet.has(name);
+    // 성별 색상: 남=파랑, 여=분홍
+    const MALE_DOT = '#3b82f6';
+    const FEMALE_DOT = '#ec4899';
+    const MALE_BG = 'rgba(59,130,246,0.10)';
+    const FEMALE_BG = 'rgba(236,72,153,0.10)';
+    const pColor = (name) => isFemale(name) ? FEMALE_DOT : MALE_DOT;
+    const pBg = (name) => isFemale(name) ? FEMALE_BG : MALE_BG;
 
     // ─ 레이아웃 상수 ─
     const contentW = W - PAD * 2;
@@ -1382,16 +1380,14 @@ const Schedule = {
     const rosterH = rosterRows > 0 ? 36 + rosterRows * rosterCellH + 16 : 0;
     const warmupH = (warmupMins > 0 && tournament.startTime) ? 44 : 0;
     const tblHeaderH = 40;
-    const roundInfoW = 130;
-    const courtColW = Math.floor((contentW - roundInfoW) / courtCount);
-    // 매치 셀 높이: 단식=2명+VS, 복식=4명+VS
-    const nameCellH = 30;
-    const vsH = 24;
-    const scoreH = 22;
-    const typeBadgeH = 28;
+    const roundInfoW = 110;
+    const rightInfoW = 100;
+    const courtColW = Math.floor((contentW - roundInfoW - rightInfoW) / courtCount);
+    // 매치 셀 높이 (가로 배치: 팀1 | VS | 팀2)
+    const nameCellH = 28;
+    const scoreH = 20;
     const hasAnyScore = slots.some(s => s.matches.some(m => m.scores && m.scores.length > 0));
-    const matchCellH = nameCellH * 2 + vsH + (hasAnyScore ? scoreH : 0) + typeBadgeH + 20;
-    const rowH = matchCellH + 1;
+    const matchCellH = nameCellH * 2 + (hasAnyScore ? scoreH : 0) + 16;
 
     // 쉬는 멤버 계산
     const restingPerSlot = slots.map(slot => {
@@ -1402,10 +1398,13 @@ const Schedule = {
       });
       return allPlayers.filter(n => !busy.has(n));
     });
-    const restingRowH = 36;
-    const hasResting = restingPerSlot.some(r => r.length > 0);
 
-    const totalTableH = tblHeaderH + slots.length * rowH + (hasResting ? slots.length * restingRowH : 0);
+    // 행 높이: 매치 영역 vs 오른쪽 정보 영역 중 큰 쪽에 맞춤
+    const maxResting = Math.max(0, ...restingPerSlot.map(r => r.length));
+    const rightContentH = 10 + courtCount * 20 + (maxResting > 0 ? 14 + maxResting * 13 : 0);
+    const rowH = Math.max(matchCellH, rightContentH) + 1;
+
+    const totalTableH = tblHeaderH + slots.length * rowH;
     const footerH = 50;
     const H = PAD + headerH + 16 + rosterH + (warmupH > 0 ? warmupH + 10 : 0) + totalTableH + footerH + PAD;
 
@@ -1417,29 +1416,24 @@ const Schedule = {
     ctx.scale(DPR, DPR);
 
     // ─ 배경 ─
-    ctx.fillStyle = '#f0fdf4';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, W, H);
 
-    // ─ 헤더 (짙은 초록) ─
+    // ─ 헤더 (그라데이션) ─
     this._roundRect(ctx, PAD, PAD, contentW, headerH, 14);
-    ctx.fillStyle = '#166534';
+    const headerGrad = ctx.createLinearGradient(PAD, PAD, PAD + contentW, PAD + headerH);
+    headerGrad.addColorStop(0, '#1e40af');
+    headerGrad.addColorStop(0.5, '#2563eb');
+    headerGrad.addColorStop(1, '#3b82f6');
+    ctx.fillStyle = headerGrad;
     ctx.fill();
-
-    // 헤더: 테니스 볼 장식
-    ctx.save();
-    ctx.globalAlpha = 0.08;
-    ctx.beginPath();
-    ctx.arc(W - PAD - 60, PAD + headerH / 2, 50, 0, Math.PI * 2);
-    ctx.fillStyle = '#fde047';
-    ctx.fill();
-    ctx.restore();
 
     // 헤더 텍스트
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
 
     ctx.font = `bold 14px ${FONT}`;
-    ctx.fillStyle = '#86efac';
+    ctx.fillStyle = '#93c5fdcb';
     ctx.fillText('TENNIS MATCH', PAD + 28, PAD + 30);
 
     ctx.font = `bold 28px ${FONT}`;
@@ -1453,20 +1447,6 @@ const Schedule = {
     const metaStr = [dateStr, timeStr, `코트 ${courtCount}면`].filter(Boolean).join('  |  ');
     ctx.fillText(metaStr, PAD + 28, PAD + 94);
 
-    // 인원 뱃지 (우상단)
-    const badgeText = `${allPlayers.length}명 참여`;
-    ctx.font = `bold 13px ${FONT}`;
-    const badgeW = ctx.measureText(badgeText).width + 20;
-    const badgeX = PAD + contentW - badgeW - 20;
-    const badgeY = PAD + 20;
-    this._roundRect(ctx, badgeX, badgeY, badgeW, 28, 14);
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.fillText(badgeText, badgeX + badgeW / 2, badgeY + 14);
-    ctx.textAlign = 'left';
-
     let curY = PAD + headerH + 16;
 
     // ─ 참가자 명단 그리드 ─
@@ -1474,43 +1454,45 @@ const Schedule = {
       this._roundRect(ctx, PAD, curY, contentW, rosterH, 10);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
-      ctx.strokeStyle = '#dcfce7';
+      ctx.strokeStyle = '#dbeafe';
       ctx.lineWidth = 1;
       ctx.stroke();
 
       ctx.font = `bold 13px ${FONT}`;
-      ctx.fillStyle = '#166534';
-      ctx.fillText('참가자 명단', PAD + 16, curY + 20);
+      ctx.fillStyle = '#2563eb';
+      const mCount = allPlayers.filter(n => isMale(n)).length;
+      const fCount = allPlayers.filter(n => isFemale(n)).length;
+      const rosterTitle = `참가자 명단 (남 ${mCount} · 여 ${fCount}) — ${allPlayers.length}명`;
+      ctx.fillText(rosterTitle, PAD + 16, curY + 20);
 
       const rosterStartY = curY + 36;
       const rosterCellW = Math.floor((contentW - 32) / rosterColCount);
 
-      allPlayers.forEach((name, i) => {
+      // 여자 먼저, 남자 나중 정렬
+      const sortedPlayers = [...allPlayers].sort((a, b) => {
+        const aF = isFemale(a) ? 0 : 1;
+        const bF = isFemale(b) ? 0 : 1;
+        return aF - bF;
+      });
+      sortedPlayers.forEach((name, i) => {
         const col = i % rosterColCount;
         const row = Math.floor(i / rosterColCount);
         const cx = PAD + 16 + col * rosterCellW;
         const cy = rosterStartY + row * rosterCellH;
 
-        // 색상 원
-        const color = pColor[name] || '#94a3b8';
+        // 성별 색상 dot
+        const color = pColor(name);
         ctx.beginPath();
-        ctx.arc(cx + 12, cy + rosterCellH / 2, 10, 0, Math.PI * 2);
+        ctx.arc(cx + 10, cy + rosterCellH / 2, 6, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
 
-        // 이니셜
-        ctx.font = `bold 10px ${FONT}`;
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const initial = name.length > 0 ? name.slice(-2) : '?';
-        ctx.fillText(initial, cx + 12, cy + rosterCellH / 2);
-
         // 이름
         ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
         ctx.font = `13px ${FONT}`;
         ctx.fillStyle = '#1f2937';
-        ctx.fillText(name, cx + 28, cy + rosterCellH / 2);
+        ctx.fillText(name, cx + 22, cy + rosterCellH / 2);
       });
 
       curY += rosterH;
@@ -1519,10 +1501,10 @@ const Schedule = {
     // ─ 몸풀기 배너 ─
     if (warmupH > 0) {
       const wBannerY = curY;
-      // 시간 박스 (진녹)
+      // 시간 박스
       const timeBoxW = 120;
       this._roundRect(ctx, PAD, wBannerY, timeBoxW, warmupH, 8);
-      ctx.fillStyle = '#166534';
+      ctx.fillStyle = '#2563eb';
       ctx.fill();
       const warmupEnd = this._addMinutes(tournament.startTime, warmupMins);
       ctx.font = `bold 14px ${FONT}`;
@@ -1534,12 +1516,12 @@ const Schedule = {
       ctx.fillText(`~ ${warmupEnd}`, PAD + timeBoxW / 2, wBannerY + 30);
       ctx.textAlign = 'left';
 
-      // 내용 박스 (연한 초록)
+      // 내용 박스
       this._roundRect(ctx, PAD + timeBoxW, wBannerY, contentW - timeBoxW, warmupH, 8);
-      ctx.fillStyle = '#dcfce7';
+      ctx.fillStyle = '#dbeafe';
       ctx.fill();
       ctx.font = `bold 15px ${FONT}`;
-      ctx.fillStyle = '#166534';
+      ctx.fillStyle = '#2563eb';
       ctx.textBaseline = 'middle';
       ctx.fillText(`몸풀기 (${warmupMins}분)`, PAD + timeBoxW + 16, wBannerY + warmupH / 2);
 
@@ -1551,9 +1533,9 @@ const Schedule = {
     const tblY = curY;
     const tblW = contentW;
 
-    // 테이블 헤더
-    this._roundRect(ctx, tblX, tblY, tblW, tblHeaderH, 0);
-    ctx.fillStyle = '#166534';
+    // 테이블 헤더 (상단 라운드)
+    this._roundRect(ctx, tblX, tblY, tblW, tblHeaderH, 10);
+    ctx.fillStyle = '#2563eb';
     ctx.fill();
 
     ctx.font = `bold 13px ${FONT}`;
@@ -1565,41 +1547,54 @@ const Schedule = {
     // 코트 헤더
     for (let ci = 0; ci < courtCount; ci++) {
       const colX = tblX + roundInfoW + ci * courtColW;
-      // 세로 구분선
       ctx.beginPath();
       ctx.moveTo(colX, tblY);
       ctx.lineTo(colX, tblY + tblHeaderH);
       ctx.strokeStyle = 'rgba(255,255,255,0.3)';
       ctx.lineWidth = 1;
       ctx.stroke();
-
       ctx.font = `bold 13px ${FONT}`;
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       ctx.fillText(`코트 ${ci + 1}`, colX + courtColW / 2, tblY + tblHeaderH / 2);
     }
+    // 오른쪽 정보 열 헤더
+    const rightColX = tblX + tblW - rightInfoW;
+    ctx.beginPath();
+    ctx.moveTo(rightColX, tblY);
+    ctx.lineTo(rightColX, tblY + tblHeaderH);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.font = `bold 13px ${FONT}`;
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText('정보', rightColX + rightInfoW / 2, tblY + tblHeaderH / 2);
     ctx.textAlign = 'left';
 
     let rowY = tblY + tblHeaderH;
 
     // ─ 개별 이름 셀 그리기 헬퍼 ─
     const drawNameCell = (name, x, y, w, h) => {
-      const color = pColor[name] || '#94a3b8';
-      // 파스텔 배경
-      this._roundRect(ctx, x + 3, y + 2, w - 6, h - 4, 6);
+      const color = pColor(name);
+      // 성별 배경 (꽉 채움)
+      this._roundRect(ctx, x + 1, y + 1, w - 2, h - 2, 5);
       ctx.fillStyle = pBg(name);
       ctx.fill();
-      // 좌측 작은 색상 점
+      ctx.strokeStyle = isFemale(name) ? 'rgba(236,72,153,0.25)' : 'rgba(59,130,246,0.25)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      // 좌측 색상 dot
       ctx.beginPath();
-      ctx.arc(x + 14, y + h / 2, 5, 0, Math.PI * 2);
+      ctx.arc(x + 12, y + h / 2, 4, 0, Math.PI * 2);
       ctx.fillStyle = color;
       ctx.fill();
       // 이름 텍스트
-      ctx.font = `bold 13px ${FONT}`;
+      ctx.font = `bold 12px ${FONT}`;
       ctx.fillStyle = '#1f2937';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(name, x + 24, y + h / 2);
+      ctx.fillText(name, x + 20, y + h / 2);
     };
 
     // ─ 라운드 행 그리기 ─
@@ -1607,7 +1602,7 @@ const Schedule = {
       const isEven = si % 2 === 0;
 
       // 행 배경
-      ctx.fillStyle = isEven ? '#ffffff' : '#f0fdf4';
+      ctx.fillStyle = isEven ? '#ffffff' : '#f8fafc';
       ctx.fillRect(tblX, rowY, tblW, rowH);
 
       // 행 하단 구분선
@@ -1623,17 +1618,17 @@ const Schedule = {
       const roundLabelW = roundInfoW;
 
       // 라운드 번호
-      ctx.font = `bold 16px ${FONT}`;
-      ctx.fillStyle = '#166534';
+      ctx.font = `bold 15px ${FONT}`;
+      ctx.fillStyle = '#2563eb';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`${si + 1}R`, roundLabelX + roundLabelW / 2, rowY + rowH / 2 - 16);
+      ctx.fillText(`${si + 1}R`, roundLabelX + roundLabelW / 2, rowY + rowH / 2 - 10);
 
       // 시간
       const timeLabel = gameMins > 0
         ? `${slot.time} ~ ${this._addMinutes(slot.time, gameMins)}`
         : slot.time;
-      ctx.font = `12px ${FONT}`;
+      ctx.font = `11px ${FONT}`;
       ctx.fillStyle = '#6b7280';
       ctx.fillText(timeLabel, roundLabelX + roundLabelW / 2, rowY + rowH / 2 + 8);
       ctx.textAlign = 'left';
@@ -1670,7 +1665,6 @@ const Schedule = {
 
         const match = courtMap[c][0];
         if (!match) {
-          // 빈 코트
           ctx.font = `13px ${FONT}`;
           ctx.fillStyle = '#d1d5db';
           ctx.textAlign = 'center';
@@ -1680,166 +1674,127 @@ const Schedule = {
           continue;
         }
 
-        const cellPad = 8;
-        const halfW = (courtColW - cellPad * 2) / 2;
-
-        // 내용 실제 높이 계산 → 세로 중앙 정렬
-        const namesH = isSingles ? nameCellH * 2 : nameCellH * 2; // 팀1 + 팀2 (복식은 각 팀이 한 줄)
+        // 가로 레이아웃: [팀1] VS [팀2]
+        const cellPad = 6;
+        const vsW = 30;
+        const gapW = 3;
+        const teamW = Math.floor((courtColW - cellPad * 2 - vsW - gapW * 2) / 2);
         const actualScoreH = (hasAnyScore && match.scores && match.scores.length > 0) ? scoreH : 0;
-        const contentH = (isSingles ? nameCellH * 2 : nameCellH * 2) + vsH + actualScoreH + typeBadgeH;
-        let cellY = rowY + Math.floor((rowH - contentH) / 2);
+        const playersH = nameCellH * 2;
+        const contentH = playersH + actualScoreH;
+        const cellY = rowY + Math.floor((rowH - contentH) / 2);
+
+        const t1X = colX + cellPad;
+        const vsX = t1X + teamW + gapW;
+        const t2X = vsX + vsW + gapW;
 
         if (isSingles) {
-          // 단식: 팀1 영역 (border)
-          const t1BoxY = cellY;
-          this._roundRect(ctx, colX + cellPad, t1BoxY, courtColW - cellPad * 2, nameCellH, 8);
-          ctx.strokeStyle = '#d1d5db';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
+          const singleY = cellY + nameCellH / 2;
           const p1 = match.player1 || '?';
-          drawNameCell(p1, colX + cellPad, t1BoxY, courtColW - cellPad * 2, nameCellH);
-          cellY += nameCellH;
-
-          // VS
-          ctx.textAlign = 'center';
-          this._roundRect(ctx, colX + courtColW / 2 - 18, cellY + 2, 36, vsH - 4, 10);
-          ctx.fillStyle = '#166534';
-          ctx.fill();
-          ctx.font = `bold 11px ${FONT}`;
-          ctx.fillStyle = '#ffffff';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('VS', colX + courtColW / 2, cellY + vsH / 2);
-          ctx.textAlign = 'left';
-          cellY += vsH;
-
-          // 단식: 팀2 영역 (border)
-          const t2BoxY = cellY;
-          this._roundRect(ctx, colX + cellPad, t2BoxY, courtColW - cellPad * 2, nameCellH, 8);
-          ctx.strokeStyle = '#d1d5db';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
           const p2 = match.player2 || '?';
-          drawNameCell(p2, colX + cellPad, t2BoxY, courtColW - cellPad * 2, nameCellH);
-          cellY += nameCellH;
+          drawNameCell(p1, t1X, singleY, teamW, nameCellH);
+          drawNameCell(p2, t2X, singleY, teamW, nameCellH);
         } else {
-          // 복식: 팀1 영역 (border)
-          const t1BoxY = cellY;
-          this._roundRect(ctx, colX + cellPad, t1BoxY, courtColW - cellPad * 2, nameCellH, 8);
-          ctx.strokeStyle = '#d1d5db';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
           const t1Names = (match.player1 || '?').split(' / ');
-          drawNameCell(t1Names[0] || '?', colX + cellPad, t1BoxY, halfW, nameCellH);
-          drawNameCell(t1Names[1] || '?', colX + cellPad + halfW, t1BoxY, halfW, nameCellH);
-          cellY += nameCellH;
-
-          // VS
-          ctx.textAlign = 'center';
-          this._roundRect(ctx, colX + courtColW / 2 - 18, cellY + 2, 36, vsH - 4, 10);
-          ctx.fillStyle = '#166534';
-          ctx.fill();
-          ctx.font = `bold 11px ${FONT}`;
-          ctx.fillStyle = '#ffffff';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('VS', colX + courtColW / 2, cellY + vsH / 2);
-          ctx.textAlign = 'left';
-          cellY += vsH;
-
-          // 복식: 팀2 영역 (border)
-          const t2BoxY = cellY;
-          this._roundRect(ctx, colX + cellPad, t2BoxY, courtColW - cellPad * 2, nameCellH, 8);
-          ctx.strokeStyle = '#d1d5db';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
+          drawNameCell(t1Names[0] || '?', t1X, cellY, teamW, nameCellH);
+          drawNameCell(t1Names[1] || '?', t1X, cellY + nameCellH, teamW, nameCellH);
           const t2Names = (match.player2 || '?').split(' / ');
-          drawNameCell(t2Names[0] || '?', colX + cellPad, t2BoxY, halfW, nameCellH);
-          drawNameCell(t2Names[1] || '?', colX + cellPad + halfW, t2BoxY, halfW, nameCellH);
-          cellY += nameCellH;
+          drawNameCell(t2Names[0] || '?', t2X, cellY, teamW, nameCellH);
+          drawNameCell(t2Names[1] || '?', t2X, cellY + nameCellH, teamW, nameCellH);
         }
 
-        // 스코어
+        // VS 원형 뱃지 (중앙)
+        const vsCenterX = vsX + vsW / 2;
+        const vsCenterY = cellY + playersH / 2;
+        ctx.beginPath();
+        ctx.arc(vsCenterX, vsCenterY, 13, 0, Math.PI * 2);
+        ctx.fillStyle = '#2563eb';
+        ctx.fill();
+        ctx.font = `bold 10px ${FONT}`;
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('VS', vsCenterX, vsCenterY);
+
+        // 스코어 (팀 영역 아래)
         if (hasAnyScore && match.scores && match.scores.length > 0) {
           const scoreStr = match.scores.map(s => `${s[0]}:${s[1]}`).join('  ');
           const isWin1 = match.winner === 'team1';
           const isWin2 = match.winner === 'team2';
           const isDraw = match.winner === 'draw';
-          ctx.font = `bold 12px ${FONT}`;
+          ctx.font = `bold 11px ${FONT}`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillStyle = '#b45309';
           const prefix = isDraw ? '무 ' : isWin1 ? '▲ ' : isWin2 ? '▼ ' : '';
-          ctx.fillText(prefix + scoreStr, colX + courtColW / 2, cellY + scoreH / 2 + 2);
+          ctx.fillText(prefix + scoreStr, colX + courtColW / 2, cellY + playersH + scoreH / 2);
           ctx.textAlign = 'left';
-          cellY += scoreH;
         }
+      }
 
-        // 게임 타입 뱃지 (매치 하단, 타입별 색상)
-        const tc = this._typeColors[match.gameType] || { label: '?', bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
-        const badgeLabel = tc.label;
-        ctx.font = `bold 13px ${FONT}`;
-        const blw = ctx.measureText(badgeLabel).width + 20;
-        const blx = colX + courtColW / 2 - blw / 2;
-        this._roundRect(ctx, blx, cellY + 2, blw, typeBadgeH - 4, 10);
+      // ─ 오른쪽 정보 열: 게임 타입 + 쉬는 멤버 ─
+      const riX = rightColX;
+      ctx.beginPath();
+      ctx.moveTo(riX, rowY);
+      ctx.lineTo(riX, rowY + rowH);
+      ctx.strokeStyle = '#d1d5db';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      let riY = rowY + 6;
+      const tbW = rightInfoW - 16;
+      for (let ci = 0; ci < courtCount; ci++) {
+        const m = courtMap[ci + 1] && courtMap[ci + 1][0];
+        if (!m) continue;
+        const tc = this._typeColors[m.gameType] || { label: '?', bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
+        const label = courtCount > 1 ? `C${ci + 1} ${tc.label}` : tc.label;
+        this._roundRect(ctx, riX + 8, riY, tbW, 18, 4);
         ctx.fillStyle = tc.bg;
         ctx.fill();
         ctx.strokeStyle = tc.border;
         ctx.lineWidth = 1;
         ctx.stroke();
+        ctx.font = `bold 10px ${FONT}`;
         ctx.fillStyle = tc.text;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(badgeLabel, colX + courtColW / 2, cellY + typeBadgeH / 2);
-        ctx.textAlign = 'left';
+        ctx.fillText(label, riX + 8 + tbW / 2, riY + 9);
+        riY += 20;
       }
+
+      const resting = restingPerSlot[si];
+      if (resting.length > 0) {
+        riY += 2;
+        ctx.font = `bold 9px ${FONT}`;
+        ctx.fillStyle = '#92400e';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('쉬는 멤버', riX + 8, riY + 5);
+        riY += 12;
+        resting.forEach(name => {
+          if (riY + 10 > rowY + rowH - 2) return;
+          const color = pColor(name);
+          ctx.beginPath();
+          ctx.arc(riX + 13, riY + 5, 3, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.font = `10px ${FONT}`;
+          ctx.fillStyle = '#4b5563';
+          ctx.textAlign = 'left';
+          ctx.fillText(name, riX + 20, riY + 5);
+          riY += 13;
+        });
+      }
+      ctx.textAlign = 'left';
 
       rowY += rowH;
-
-      // 쉬는 멤버 행
-      const resting = restingPerSlot[si];
-      if (hasResting) {
-        ctx.fillStyle = isEven ? '#fefce8' : '#fef9c3';
-        ctx.fillRect(tblX, rowY, tblW, restingRowH);
-        ctx.beginPath();
-        ctx.moveTo(tblX, rowY + restingRowH);
-        ctx.lineTo(tblX + tblW, rowY + restingRowH);
-        ctx.strokeStyle = '#e5e7eb';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.font = `bold 12px ${FONT}`;
-        ctx.fillStyle = '#92400e';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('쉬는 멤버', tblX + 12, rowY + restingRowH / 2);
-
-        if (resting.length > 0) {
-          // 쉬는 멤버 이름 나열 (색상 점 포함)
-          let nameX = tblX + roundInfoW + 10;
-          resting.forEach(name => {
-            const color = pColor[name] || '#94a3b8';
-            ctx.beginPath();
-            ctx.arc(nameX + 5, rowY + restingRowH / 2, 4, 0, Math.PI * 2);
-            ctx.fillStyle = color;
-            ctx.fill();
-            ctx.font = `12px ${FONT}`;
-            ctx.fillStyle = '#78350f';
-            ctx.textAlign = 'left';
-            const tw = ctx.measureText(name).width;
-            ctx.fillText(name, nameX + 13, rowY + restingRowH / 2);
-            nameX += tw + 24;
-          });
-        } else {
-          ctx.font = `12px ${FONT}`;
-          ctx.fillStyle = '#a3a3a3';
-          ctx.fillText('없음', tblX + roundInfoW + 10, rowY + restingRowH / 2);
-        }
-        rowY += restingRowH;
-      }
     });
 
-    // 테이블 외곽선
-    ctx.strokeStyle = '#166534';
+    // 테이블 외곽선 (라운드)
+    ctx.strokeStyle = '#2563eb';
     ctx.lineWidth = 2;
-    ctx.strokeRect(tblX, tblY, tblW, rowY - tblY);
+    this._roundRect(ctx, tblX, tblY, tblW, rowY - tblY, 10);
+    ctx.stroke();
 
     // ─ 푸터 ─
     const fY = rowY + 16;
