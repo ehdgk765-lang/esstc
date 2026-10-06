@@ -675,7 +675,7 @@ const Schedule = {
                   if (resting.length === 0) return '';
                   return `<div class="resting-players mt-2 text-xs text-gray-400 flex items-center flex-wrap gap-1">
                     <span class="font-medium text-gray-500 flex-shrink-0">쉬는 멤버:</span>
-                    ${resting.map(n => `<span class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">${Results.escapeHtml(n)}</span>`).join('')}
+                    ${resting.map(n => `<span class="resting-swap inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full cursor-pointer hover:bg-blue-100 hover:text-blue-700 transition" data-name="${Results.escapeHtml(n)}" data-slot-idx="${si}">${Results.escapeHtml(n)}</span>`).join('')}
                   </div>`;
                 })()}
               </div>`;
@@ -1156,23 +1156,21 @@ const Schedule = {
             tgtMatch[tgtKey] = tgtTeam.join(' / ');
           }
 
-          // 커스텀 대진표: 교환 후 gameType 자동 재감지
-          if (tournament.isCustom) {
-            const allP = Storage.getPlayers();
-            const getG = (n) => { const p = allP.find(pl => pl.name === n); return p ? p.gender : null; };
-            [srcMatch, tgtMatch].forEach(mm => {
-              const p1s = mm.player1.split(' / '), p2s = mm.player2.split(' / ');
-              if (p1s.length === 1 && p2s.length === 1) {
-                const g1 = getG(p1s[0]), g2 = getG(p2s[0]);
-                mm.gameType = (g1 === 'M' && g2 === 'M') ? 'MS' : (g1 === 'F' && g2 === 'F') ? 'WS' : 'FS';
-              } else {
-                const gs = [p1s[0], p1s[1], p2s[0], p2s[1]].map(getG);
-                mm.gameType = gs.every(g => g === 'M') ? 'MD'
-                  : gs.every(g => g === 'F') ? 'WD'
-                  : ((gs[0] !== gs[1]) && (gs[2] !== gs[3]) && gs.filter(g => g === 'M').length === 2 && gs.filter(g => g === 'F').length === 2) ? 'XD' : 'FD';
-              }
-            });
-          }
+          // 교환 후 gameType 자동 재감지
+          const allP = Storage.getPlayers();
+          const getG = (n) => { const p = allP.find(pl => pl.name === n); return p ? p.gender : null; };
+          [srcMatch, tgtMatch].forEach(mm => {
+            const p1s = mm.player1.split(' / '), p2s = mm.player2.split(' / ');
+            if (p1s.length === 1 && p2s.length === 1) {
+              const g1 = getG(p1s[0]), g2 = getG(p2s[0]);
+              mm.gameType = (g1 === 'M' && g2 === 'M') ? 'MS' : (g1 === 'F' && g2 === 'F') ? 'WS' : 'FS';
+            } else {
+              const gs = [p1s[0], p1s[1] || '', p2s[0], p2s[1] || ''].map(getG);
+              mm.gameType = gs.every(g => g === 'M') ? 'MD'
+                : gs.every(g => g === 'F') ? 'WD'
+                : ((gs[0] !== gs[1]) && (gs[2] !== gs[3]) && gs.filter(g => g === 'M').length === 2 && gs.filter(g => g === 'F').length === 2) ? 'XD' : 'FD';
+            }
+          });
           const patchSrcId = srcMatch.id, patchTgtId = tgtMatch.id;
           const patchSrcP1 = srcMatch.player1, patchSrcP2 = srcMatch.player2;
           const patchTgtP1 = tgtMatch.player1, patchTgtP2 = tgtMatch.player2;
@@ -1180,8 +1178,8 @@ const Schedule = {
           await Storage.updateTournament(tournament.id, t => {
             for (const slot of t.timeSlots) {
               for (const m of slot.matches) {
-                if (m.id === patchSrcId) { m.player1 = patchSrcP1; m.player2 = patchSrcP2; if (tournament.isCustom) m.gameType = patchSrcGT; }
-                if (m.id === patchTgtId) { m.player1 = patchTgtP1; m.player2 = patchTgtP2; if (tournament.isCustom) m.gameType = patchTgtGT; }
+                if (m.id === patchSrcId) { m.player1 = patchSrcP1; m.player2 = patchSrcP2; m.gameType = patchSrcGT; }
+                if (m.id === patchTgtId) { m.player1 = patchTgtP1; m.player2 = patchTgtP2; m.gameType = patchTgtGT; }
               }
             }
           });
@@ -1227,6 +1225,47 @@ const Schedule = {
           const freshTournament = Storage.getTournamentById(tournamentId);
           this.render(container, freshTournament || tournament);
         });
+      };
+    });
+
+    // 쉬는 멤버 탭 → 선택된 선수와 교체
+    container.querySelectorAll('.resting-swap').forEach(el => {
+      if (!RolesConfig.hasAdminAccess()) return;
+      el.onclick = async (e) => {
+        e.stopPropagation();
+        if (!selectedPlayer) return;
+        const newName = el.dataset.name;
+        const { slotIdx, matchIdx, team, pos } = selectedPlayer;
+        const match = tournament.timeSlots[slotIdx]?.matches[matchIdx];
+        if (!match) return;
+        const playerKey = team === 1 ? 'player1' : 'player2';
+        const names = match[playerKey].split(' / ');
+        names[pos] = newName;
+        match[playerKey] = names.join(' / ');
+        // gameType 재계산
+        const _ap = Storage.getPlayers();
+        const _gg = (n) => { const p = _ap.find(pl => pl.name === n); return p ? p.gender : null; };
+        const _p1s = match.player1.split(' / '), _p2s = match.player2.split(' / ');
+        if (_p1s.length === 1 && _p2s.length === 1) {
+          const g1 = _gg(_p1s[0]), g2 = _gg(_p2s[0]);
+          match.gameType = (g1 === 'M' && g2 === 'M') ? 'MS' : (g1 === 'F' && g2 === 'F') ? 'WS' : 'FS';
+        } else {
+          const gs = [_p1s[0], _p1s[1] || '', _p2s[0], _p2s[1] || ''].map(_gg);
+          match.gameType = gs.every(g => g === 'M') ? 'MD'
+            : gs.every(g => g === 'F') ? 'WD'
+            : ((gs[0] !== gs[1]) && (gs[2] !== gs[3]) && gs.filter(g => g === 'M').length === 2 && gs.filter(g => g === 'F').length === 2) ? 'XD' : 'FD';
+        }
+        const pId = match.id, pKey = playerKey, pVal = match[playerKey], pGT = match.gameType;
+        await Storage.updateTournament(tournament.id, t => {
+          for (const slot of t.timeSlots) {
+            const m = slot.matches.find(x => x.id === pId);
+            if (m) { m[pKey] = pVal; m.gameType = pGT; break; }
+          }
+        });
+        selectedPlayer.el.classList.remove('bg-blue-200', 'ring-2', 'ring-blue-700', 'rounded');
+        container.querySelectorAll('.replace-player-btn').forEach(b => b.remove());
+        selectedPlayer = null;
+        this.render(container, Storage.getTournamentById(tournament.id) || tournament);
       };
     });
 
@@ -2890,31 +2929,29 @@ const Schedule = {
         const names = match[playerKey].split(' / ');
         names[pos] = newName;
         match[playerKey] = names.join(' / ');
-        // 커스텀 대진표: 멤버 교체 시 gameType 자동 재감지
+        // 멤버 교체 시 gameType 자동 재감지
+        const allPlayers2 = Storage.getPlayers();
+        const getG = (n) => { const p = allPlayers2.find(pl => pl.name === n); return p ? p.gender : null; };
+        const p1Parts = match.player1.split(' / ');
+        const p2Parts = match.player2.split(' / ');
         let newGameType = match.gameType || null;
-        if (tournament.isCustom) {
-          const allPlayers2 = Storage.getPlayers();
-          const getG = (n) => { const p = allPlayers2.find(pl => pl.name === n); return p ? p.gender : null; };
-          const p1Parts = match.player1.split(' / ');
-          const p2Parts = match.player2.split(' / ');
-          if (p1Parts.length === 1 && p2Parts.length === 1) {
-            const g1 = getG(p1Parts[0]), g2 = getG(p2Parts[0]);
-            if (g1 === 'M' && g2 === 'M') newGameType = 'MS';
-            else if (g1 === 'F' && g2 === 'F') newGameType = 'WS';
-            else newGameType = 'FS';
-          } else {
-            const genders = [p1Parts[0], p1Parts[1], p2Parts[0], p2Parts[1]].map(getG);
-            const aM = genders.every(g => g === 'M');
-            const aF = genders.every(g => g === 'F');
-            const mx = (genders[0] !== genders[1]) && (genders[2] !== genders[3])
-              && genders.filter(g => g === 'M').length === 2 && genders.filter(g => g === 'F').length === 2;
-            if (aM) newGameType = 'MD';
-            else if (aF) newGameType = 'WD';
-            else if (mx) newGameType = 'XD';
-            else newGameType = 'FD';
-          }
-          match.gameType = newGameType;
+        if (p1Parts.length === 1 && p2Parts.length === 1) {
+          const g1 = getG(p1Parts[0]), g2 = getG(p2Parts[0]);
+          if (g1 === 'M' && g2 === 'M') newGameType = 'MS';
+          else if (g1 === 'F' && g2 === 'F') newGameType = 'WS';
+          else newGameType = 'FS';
+        } else {
+          const genders = [p1Parts[0], p1Parts[1] || '', p2Parts[0], p2Parts[1] || ''].map(getG);
+          const aM = genders.every(g => g === 'M');
+          const aF = genders.every(g => g === 'F');
+          const mx = (genders[0] !== genders[1]) && (genders[2] !== genders[3])
+            && genders.filter(g => g === 'M').length === 2 && genders.filter(g => g === 'F').length === 2;
+          if (aM) newGameType = 'MD';
+          else if (aF) newGameType = 'WD';
+          else if (mx) newGameType = 'XD';
+          else newGameType = 'FD';
         }
+        match.gameType = newGameType;
         const patchMatchId = match.id;
         const patchKey = playerKey;
         const patchValue = match[playerKey];
@@ -2924,7 +2961,7 @@ const Schedule = {
             const m = slot.matches.find(x => x.id === patchMatchId);
             if (m) {
               m[patchKey] = patchValue;
-              if (tournament.isCustom) m.gameType = patchGameType;
+              m.gameType = patchGameType;
               break;
             }
           }
