@@ -2322,14 +2322,14 @@ const App = {
             ${RolesConfig.hasAdminAccess() ? `<button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>` : ''}
-            <div class="flex items-center justify-between mb-2 pr-6">
-              <h3 class="font-bold text-gray-800">${Results.escapeHtml(t.name)}</h3>
-              <div class="flex items-center gap-1.5">
+            <div class="flex items-center justify-between gap-2 mb-2 pr-6">
+              <h3 class="font-bold text-gray-800 min-w-0 truncate">${Results.escapeHtml(t.name)}</h3>
+              <div class="flex items-center gap-1 flex-shrink-0 flex-wrap justify-end">
                 ${t.status === 'completed'
-                  ? '<span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500">완료</span>'
-                  : '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">진행중</span>'}
-                ${t.isTeamMode ? '<span class="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">팀전</span>' : ''}
-                <span class="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700">대진표</span>
+                  ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 whitespace-nowrap">완료</span>'
+                  : '<span class="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">진행중</span>'}
+                ${t.isTeamMode ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">팀전</span>' : ''}
+                <span class="text-xs px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 whitespace-nowrap">대진표</span>
               </div>
             </div>
             <div class="flex items-center gap-4 text-sm text-gray-500">
@@ -2350,14 +2350,14 @@ const App = {
           ${RolesConfig.hasAdminAccess() ? `<button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>` : ''}
-          <div class="flex items-center justify-between mb-2 pr-6">
-            <h3 class="font-bold text-gray-800">${Results.escapeHtml(t.name)}</h3>
-            <div class="flex items-center gap-1.5">
+          <div class="flex items-center justify-between gap-2 mb-2 pr-6">
+            <h3 class="font-bold text-gray-800 min-w-0 truncate">${Results.escapeHtml(t.name)}</h3>
+            <div class="flex items-center gap-1 flex-shrink-0 flex-wrap justify-end">
               ${t.status === 'completed'
-                ? '<span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500">완료</span>'
-                : '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">진행중</span>'}
-              ${gameLabel ? `<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">${gameLabel}</span>` : ''}
-              <span class="text-xs px-2 py-1 rounded-full ${t.format === 'tournament' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
+                ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 whitespace-nowrap">완료</span>'
+                : '<span class="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">진행중</span>'}
+              ${gameLabel ? `<span class="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">${gameLabel}</span>` : ''}
+              <span class="text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${t.format === 'tournament' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
                 ${t.format === 'tournament' ? '토너먼트' : '리그'}
               </span>
             </div>
