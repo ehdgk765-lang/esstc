@@ -2235,6 +2235,9 @@ const Schedule = {
     const t2TextClass = isDraw ? 'text-yellow-700' : (isWin2 ? 'text-blue-700' : 'text-gray-800');
     const s1Class = isDraw ? 'text-yellow-600 bg-yellow-100' : (isWin1 ? 'text-blue-700 bg-blue-100' : 'text-gray-500 bg-gray-100');
     const s2Class = isDraw ? 'text-yellow-600 bg-yellow-100' : (isWin2 ? 'text-blue-700 bg-blue-100' : 'text-gray-500 bg-gray-100');
+    const t1Border = isDraw ? 'border-l-2 border-l-yellow-400' : (isWin1 ? 'border-l-2 border-l-blue-500' : '');
+    const t2Border = isDraw ? 'border-l-2 border-l-yellow-400' : (isWin2 ? 'border-l-2 border-l-blue-500' : '');
+    const resultLabel = isDraw ? '<span class="text-[10px] font-bold text-yellow-500">무</span>' : (isWin1 ? '<span class="text-[10px] font-bold text-blue-600">▲</span>' : (isWin2 ? '<span class="text-[10px] font-bold text-blue-600">▼</span>' : ''));
 
     const myMatchClass = isMember && isMyMatch ? 'my-match' : '';
     const myBorderColor = isMember && isMyMatch ? 'border-blue-400 ring-2 ring-blue-200' : borderColor;
@@ -2249,23 +2252,23 @@ const Schedule = {
           <span class="change-gametype-btn text-xs px-2 py-0.5 rounded-full font-medium ${cfg.badgeClass} cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-blue-400 transition" data-match-id="${match.id}">${cfg.label}</span>
         </div>` : ''}
         <div class="space-y-0.5">
-          <div class="${t1Bg} rounded-lg px-2 ${t1TeamName ? 'pt-1.5 pb-2' : 'py-2'}">
+          <div class="${t1Bg} ${t1Border} rounded-lg px-2 ${t1TeamName ? 'pt-1.5 pb-2' : 'py-2'}">
             ${t1TeamName ? `<div class="text-center mb-1"><span class="inline-block text-[10px] leading-tight px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-medium">${t1TeamName}</span></div>` : ''}
             <div class="text-sm sm:text-xs font-medium ${t1TextClass} text-center">
-              ${isWin1 ? '🏆 ' : ''}${isDraw ? '🤝 ' : ''}${t1Html}
+              ${t1Html}
             </div>
           </div>
-          ${hasResult && match.scores
-            ? `<div class="flex items-center justify-center gap-1.5 py-0.5">
-                <span class="match-score text-sm font-bold ${s1Class} px-2 py-0.5 rounded-md min-w-[1.5rem] text-center">${match.scores[0][0]}</span>
-                <span class="text-xs text-gray-400 font-medium">:</span>
-                <span class="match-score text-sm font-bold ${s2Class} px-2 py-0.5 rounded-md min-w-[1.5rem] text-center">${match.scores[0][1]}</span>
-              </div>`
-            : `<div class="text-center text-xs text-gray-300 leading-tight">vs</div>`}
-          <div class="${t2Bg} rounded-lg px-2 ${t2TeamName ? 'pt-1.5 pb-2' : 'py-2'}">
+          <div class="flex items-center justify-center gap-1 py-0.5 min-h-[1.75rem]">
+            ${hasResult && match.scores
+              ? `${resultLabel}<span class="match-score text-sm font-bold ${s1Class} px-2 py-0.5 rounded-md min-w-[1.5rem] text-center">${match.scores[0][0]}</span>
+                 <span class="text-xs text-gray-400 font-medium">:</span>
+                 <span class="match-score text-sm font-bold ${s2Class} px-2 py-0.5 rounded-md min-w-[1.5rem] text-center">${match.scores[0][1]}</span>`
+              : `<span class="text-xs text-gray-300 font-medium">vs</span>`}
+          </div>
+          <div class="${t2Bg} ${t2Border} rounded-lg px-2 ${t2TeamName ? 'pt-1.5 pb-2' : 'py-2'}">
             ${t2TeamName ? `<div class="text-center mb-1"><span class="inline-block text-[10px] leading-tight px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-medium">${t2TeamName}</span></div>` : ''}
             <div class="text-sm sm:text-xs font-medium ${t2TextClass} text-center">
-              ${isWin2 ? '🏆 ' : ''}${isDraw ? '🤝 ' : ''}${t2Html}
+              ${t2Html}
             </div>
           </div>
         </div>
