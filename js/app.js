@@ -224,7 +224,7 @@ const App = {
 
   showHome() {
     this._viewMode = 'home';
-    var tabNav = document.querySelector('header nav');
+    var tabNav = document.getElementById('bottom-nav');
     if (tabNav) tabNav.style.display = '';
     this._updateMenuActive();
     this.navigate(this.currentTab || RolesConfig.getDefaultTab());
@@ -232,7 +232,7 @@ const App = {
 
   showCalendar() {
     this._viewMode = 'calendar';
-    var tabNav = document.querySelector('header nav');
+    var tabNav = document.getElementById('bottom-nav');
     if (tabNav) tabNav.style.display = 'none';
     // 탭 active 스타일 제거
     document.querySelectorAll('[data-tab]').forEach(function(tab) {
@@ -246,7 +246,7 @@ const App = {
 
   showMembers() {
     this._viewMode = 'members';
-    var tabNav = document.querySelector('header nav');
+    var tabNav = document.getElementById('bottom-nav');
     if (tabNav) tabNav.style.display = 'none';
     document.querySelectorAll('[data-tab]').forEach(function(tab) {
       tab.classList.remove('tab-active');
@@ -259,7 +259,7 @@ const App = {
 
   showSettings() {
     this._viewMode = 'settings';
-    var tabNav = document.querySelector('header nav');
+    var tabNav = document.getElementById('bottom-nav');
     if (tabNav) tabNav.style.display = 'none';
     document.querySelectorAll('[data-tab]').forEach(function(tab) {
       tab.classList.remove('tab-active');
@@ -286,7 +286,6 @@ const App = {
 
     patchDOM(container,
       '<div class="max-w-lg mx-auto">' +
-        '<h2 class="text-2xl font-bold text-gray-800 mb-6">설정</h2>' +
         // 정규 일정 등록
         '<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm shadow-blue-100/30 border border-white/60 mb-4">' +
           '<div class="px-4 py-3">' +
@@ -1040,7 +1039,7 @@ const App = {
       return '<div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition">' +
         '<div class="flex items-center gap-2 min-w-0">' +
           '<span class="text-gray-800 font-medium text-sm truncate">' + self._escapeHtml(p.name) + '</span>' +
-          (isOn ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-600">권한 부여됨</span>' : '') +
+          (isOn ? '<span class="text-[11px] px-1.5 py-px rounded-full bg-purple-100 text-purple-600">권한 부여됨</span>' : '') +
         '</div>' +
         '<label class="admin-access-toggle relative inline-flex items-center cursor-pointer flex-shrink-0 ml-2">' +
           '<input type="checkbox" class="sr-only peer" data-name="' + self._escapeHtml(p.name) + '"' + (isOn ? ' checked' : '') + '>' +
@@ -1112,7 +1111,7 @@ const App = {
   navigate(tabName, tournamentId) {
     // 탭 전환 시 홈 모드로 전환 + 탭 네비 보이기
     this._viewMode = 'home';
-    var tabNav = document.querySelector('header nav');
+    var tabNav = document.getElementById('bottom-nav');
     if (tabNav) tabNav.style.display = '';
     this._updateMenuActive();
 
@@ -1171,15 +1170,14 @@ const App = {
 
     patchDOM(container, `
       <div class="max-w-lg mx-auto">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">대회 만들기</h2>
-        <div class="flex gap-2 mb-6">
+        <div class="flex gap-2 mb-4">
           <button data-subtab="auto"
-            class="sub-tab flex-1 px-4 py-2 rounded-full text-sm font-semibold transition
+            class="sub-tab flex-1 px-3 py-1.5 rounded-full text-sm font-semibold transition
               ${activeSubTab === 'auto' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
             자동 대회
           </button>
           <button data-subtab="custom-bracket"
-            class="sub-tab flex-1 px-4 py-2 rounded-full text-sm font-semibold transition
+            class="sub-tab flex-1 px-3 py-1.5 rounded-full text-sm font-semibold transition
               ${activeSubTab === 'custom-bracket' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
             커스텀 대회
           </button>
@@ -1215,23 +1213,23 @@ const App = {
     }
 
     patchDOM(container, `
-      <form id="create-form" class="space-y-5">
+      <form id="create-form" class="space-y-3">
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">대회명</label>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">대회명</label>
           <input type="text" autocomplete="off" id="tournament-name" required maxlength="30"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm"
             placeholder="예: 2024년 봄 정기대회">
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">경기 종류</label>
-          <div class="grid grid-cols-3 gap-2 sm:grid-cols-5">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">경기 종류</label>
+          <div class="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
             ${Object.entries(GAME_TYPES).map(([key, cfg], i) => `
               <label class="cursor-pointer">
                 <input type="radio" name="gameType" value="${key}" ${key === 'XD' ? 'checked' : ''} class="sr-only peer">
-                <div class="border-2 border-gray-200 rounded-xl py-2.5 px-1 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
-                  <div class="text-lg">${cfg.icon}</div>
-                  <div class="text-xs font-semibold text-gray-700 mt-0.5">${cfg.label}</div>
+                <div class="border-2 border-gray-200 rounded-lg py-1.5 px-1 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
+                  <div class="text-sm">${cfg.icon}</div>
+                  <div class="text-[11px] font-semibold text-gray-700">${cfg.label}</div>
                 </div>
               </label>
             `).join('')}
@@ -1239,36 +1237,36 @@ const App = {
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">대회 형식</label>
-          <div class="grid grid-cols-2 gap-3">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">대회 형식</label>
+          <div class="grid grid-cols-2 gap-2">
             <label class="format-option relative cursor-pointer">
               <input type="radio" name="format" value="tournament" checked class="sr-only peer">
-              <div class="border-2 border-gray-200 rounded-xl p-4 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
-                <div class="text-2xl mb-1">🏆</div>
-                <div class="font-semibold text-gray-800">토너먼트</div>
-                <div class="text-xs text-gray-500 mt-1">싱글 엘리미네이션</div>
+              <div class="border-2 border-gray-200 rounded-lg px-3 py-2 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
+                <span class="text-base mr-1">🏆</span>
+                <span class="font-semibold text-gray-800 text-sm">토너먼트</span>
+                <div class="text-[11px] text-gray-500">싱글 엘리미네이션</div>
               </div>
             </label>
             <label class="format-option relative cursor-pointer">
               <input type="radio" name="format" value="league" class="sr-only peer">
-              <div class="border-2 border-gray-200 rounded-xl p-4 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
-                <div class="text-2xl mb-1">📊</div>
-                <div class="font-semibold text-gray-800">리그</div>
-                <div class="text-xs text-gray-500 mt-1">라운드 로빈</div>
+              <div class="border-2 border-gray-200 rounded-lg px-3 py-2 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
+                <span class="text-base mr-1">📊</span>
+                <span class="font-semibold text-gray-800 text-sm">리그</span>
+                <div class="text-[11px] text-gray-500">라운드 로빈</div>
               </div>
             </label>
           </div>
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">세트 수</label>
-          <div class="flex gap-3">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">세트 수</label>
+          <div class="flex gap-2">
             ${[1, 3, 5].map(n => `
               <label class="flex-1 cursor-pointer">
                 <input type="radio" name="setCount" value="${n}" ${n === 3 ? 'checked' : ''} class="sr-only peer">
-                <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
-                  <span class="font-semibold text-gray-800">${n}세트</span>
-                  <div class="text-xs text-gray-500">${Math.ceil(n / 2)}세트 선승</div>
+                <div class="border-2 border-gray-200 rounded-lg py-1.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
+                  <span class="font-semibold text-gray-800 text-sm">${n}세트</span>
+                  <span class="text-[11px] text-gray-500 ml-0.5">(${Math.ceil(n / 2)}선승)</span>
                 </div>
               </label>
             `).join('')}
@@ -1278,7 +1276,7 @@ const App = {
         <div id="participants-section"></div>
 
         <button type="submit"
-          class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-semibold text-lg shadow-md shadow-blue-200/50">
+          class="w-full py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-semibold shadow-md shadow-blue-200/50">
           대회 생성
         </button>
       </form>`);
@@ -1364,23 +1362,23 @@ const App = {
 
     patchDOM(section, `
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">참가 멤버 선택</label>
+        <label class="block text-xs font-semibold text-gray-700 mb-1">참가 멤버 선택</label>
         <input type="text" autocomplete="off" id="player-search" placeholder="이름 검색..."
-          class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-2">
-        <div class="flex justify-between items-center mb-2">
-          <span id="selected-count" class="text-sm text-gray-500">0명 선택</span>
-          <button type="button" id="select-all-btn" class="text-sm text-blue-700 font-medium hover:underline">전체 선택</button>
+          class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-1.5">
+        <div class="flex justify-between items-center mb-1.5">
+          <span id="selected-count" class="text-xs text-gray-500">0명 선택</span>
+          <button type="button" id="select-all-btn" class="text-xs text-blue-700 font-medium hover:underline">전체 선택</button>
         </div>
-        <div id="player-checkbox-list" class="bg-white/80 backdrop-blur-sm border border-white/60 rounded-xl max-h-48 overflow-y-auto divide-y divide-gray-50">
+        <div id="player-checkbox-list" class="bg-white/80 backdrop-blur-sm border border-white/60 rounded-lg max-h-48 overflow-y-auto divide-y divide-gray-50">
           ${eligible.map(p => {
             const pGroups = (p.groups || []).map(gid => groups.find(g => g.id === gid)).filter(Boolean);
             return `
-            <label class="player-item flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition" data-name="${Results.escapeHtml(p.name.toLowerCase())}">
+            <label class="player-item flex items-center px-3 py-1.5 hover:bg-gray-50 cursor-pointer transition" data-name="${Results.escapeHtml(p.name.toLowerCase())}">
               <input type="checkbox" name="players" value="${Results.escapeHtml(p.name)}" class="player-checkbox w-4 h-4 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
-              <span class="ml-3 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
-              <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-medium ${p.gender === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}">${p.gender === 'M' ? '남' : '여'}</span>
-              <span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
-              ${pGroups.map(g => `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
+              <span class="ml-2 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
+              <span class="ml-1.5 text-[11px] px-1 py-px rounded font-medium ${p.gender === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}">${p.gender === 'M' ? '남' : '여'}</span>
+              <span class="text-[11px] px-1 py-px rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
+              ${pGroups.map(g => `<span class="ml-1 text-[10px] px-1 py-px rounded-full font-medium bg-purple-100 text-purple-600">${Results.escapeHtml(g.name)}</span>`).join('')}
             </label>`;
           }).join('')}
         </div>
@@ -1434,30 +1432,30 @@ const App = {
 
     const renderList = (players, prefix, genderLabel, badgeClass) => `
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
+        <label class="block text-xs font-semibold text-gray-700 mb-1">
           ${genderLabel}자 멤버 선택
           <span id="${prefix}-count" class="text-blue-700 font-normal">(0명 선택)</span>
         </label>
         <input type="text" autocomplete="off" id="${prefix}-search" placeholder="이름 검색..."
-          class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-2">
-        <div class="flex justify-between items-center mb-2">
-          <span class="text-sm text-gray-500">${players.length}명 중 선택</span>
-          <button type="button" id="${prefix}-all-btn" class="text-sm text-blue-700 font-medium hover:underline">전체 선택</button>
+          class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-1.5">
+        <div class="flex justify-between items-center mb-1.5">
+          <span class="text-xs text-gray-500">${players.length}명 중 선택</span>
+          <button type="button" id="${prefix}-all-btn" class="text-xs text-blue-700 font-medium hover:underline">전체 선택</button>
         </div>
-        <div class="bg-white/80 backdrop-blur-sm border border-white/60 rounded-xl max-h-40 overflow-y-auto divide-y divide-gray-50">
+        <div class="bg-white/80 backdrop-blur-sm border border-white/60 rounded-lg max-h-40 overflow-y-auto divide-y divide-gray-50">
           ${players.map(p => `
-            <label class="${prefix}-item player-item flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition" data-name="${Results.escapeHtml(p.name.toLowerCase())}">
+            <label class="${prefix}-item player-item flex items-center px-3 py-1.5 hover:bg-gray-50 cursor-pointer transition" data-name="${Results.escapeHtml(p.name.toLowerCase())}">
               <input type="checkbox" name="${prefix}" value="${Results.escapeHtml(p.name)}" class="${prefix}-cb w-4 h-4 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
-              <span class="ml-3 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
-              <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-medium ${badgeClass}">${genderLabel}</span>
-              <span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
+              <span class="ml-2 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
+              <span class="ml-1.5 text-[11px] px-1 py-px rounded font-medium ${badgeClass}">${genderLabel}</span>
+              <span class="text-[11px] px-1 py-px rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
             </label>
           `).join('')}
         </div>
       </div>`;
 
     patchDOM(section, `
-      <div class="space-y-4">
+      <div class="space-y-3">
         ${renderList(males, 'xd-male', '남', 'bg-blue-100 text-blue-700')}
         ${renderList(females, 'xd-female', '여', 'bg-pink-100 text-pink-700')}
         <p class="text-xs text-gray-400">남녀 같은 수를 선택하면 자동으로 팀이 구성됩니다.</p>
@@ -1562,15 +1560,14 @@ const App = {
 
     patchDOM(container, `
       <div class="max-w-lg mx-auto">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">대진표 만들기</h2>
-        <div class="flex gap-2 mb-6">
+        <div class="flex gap-2 mb-4">
           <button data-subtab="time-court"
-            class="sub-tab flex-1 px-4 py-2 rounded-full text-sm font-semibold transition
+            class="sub-tab flex-1 px-3 py-1.5 rounded-full text-sm font-semibold transition
               ${activeSubTab === 'time-court' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
             시간/코트 대진표
           </button>
           <button data-subtab="custom-schedule"
-            class="sub-tab flex-1 px-4 py-2 rounded-full text-sm font-semibold transition
+            class="sub-tab flex-1 px-3 py-1.5 rounded-full text-sm font-semibold transition
               ${activeSubTab === 'custom-schedule' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
             커스텀 대진표
           </button>
@@ -1595,65 +1592,55 @@ const App = {
 
   _renderCustomScheduleForm(container) {
     patchDOM(container, `
-      <p class="text-xs text-gray-400 mb-4">빈 대진표를 생성한 후, 직접 매치를 추가할 수 있습니다.</p>
-      <form id="custom-schedule-form" class="space-y-5">
+      <p class="text-xs text-gray-400 mb-3">빈 대진표를 생성한 후, 직접 매치를 추가할 수 있습니다.</p>
+      <form id="custom-schedule-form" class="space-y-3">
         <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="block text-sm font-semibold text-gray-700">대진표 이름</label>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-semibold text-gray-700">대진표 이름</label>
             <label class="flex items-center gap-1.5 cursor-pointer">
               <input type="checkbox" id="cs-team-mode" class="w-3.5 h-3.5 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
               <span class="text-xs text-gray-500">팀전</span>
             </label>
           </div>
           <input type="text" autocomplete="off" id="cs-name" maxlength="30"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
             placeholder="미입력 시 게임 날짜로 자동 생성">
         </div>
 
-        <!-- 게임 날짜 -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">게임 날짜</label>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">게임 날짜</label>
           <input type="date" id="cs-date" value="${new Date().toISOString().slice(0, 10)}"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
         </div>
 
-        <!-- 단식/복식 선택 -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">경기 방식</label>
-          <div class="flex gap-3">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">경기 방식</label>
+          <div class="flex gap-2">
             <label class="flex-1 cursor-pointer">
               <input type="radio" name="cs-match-type" value="doubles" checked class="sr-only peer">
-              <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
-                <span class="font-semibold text-gray-800">복식</span>
-                <div class="text-xs text-gray-500">2 vs 2</div>
-              </div>
+              <div class="border-2 border-gray-200 rounded-lg py-1.5 text-center text-sm peer-checked:border-blue-500 peer-checked:bg-blue-50 transition font-medium text-gray-800">복식</div>
             </label>
             <label class="flex-1 cursor-pointer">
               <input type="radio" name="cs-match-type" value="singles" class="sr-only peer">
-              <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
-                <span class="font-semibold text-gray-800">단식</span>
-                <div class="text-xs text-gray-500">1 vs 1</div>
-              </div>
+              <div class="border-2 border-gray-200 rounded-lg py-1.5 text-center text-sm peer-checked:border-blue-500 peer-checked:bg-blue-50 transition font-medium text-gray-800">단식</div>
             </label>
           </div>
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">코트 수</label>
-          <div class="grid grid-cols-4 gap-2">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">코트 수</label>
+          <div class="grid grid-cols-4 gap-1.5">
             ${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `
               <label class="cursor-pointer">
                 <input type="radio" name="cs-courts" value="${n}" ${n === 2 ? 'checked' : ''} class="sr-only peer">
-                <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
-                  <span class="font-semibold text-gray-800">${n}면</span>
-                </div>
+                <div class="border-2 border-gray-200 rounded-lg py-1.5 text-center text-sm peer-checked:border-blue-500 peer-checked:bg-blue-50 transition font-medium text-gray-800">${n}면</div>
               </label>
             `).join('')}
           </div>
         </div>
 
         <button type="submit"
-          class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-semibold text-lg shadow-md shadow-blue-200/50">
+          class="w-full py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-semibold shadow-md shadow-blue-200/50">
           빈 대진표 생성
         </button>
       </form>`);
@@ -1712,154 +1699,138 @@ const App = {
     }
 
     patchDOM(container, `
-      <div class="flex items-center justify-end gap-4 mb-4">
-        <label class="flex items-center gap-1.5 cursor-pointer">
+      <div class="flex items-center justify-end gap-3 mb-3">
+        <label class="flex items-center gap-1 cursor-pointer">
           <input type="checkbox" id="sch-team-mode" class="w-3.5 h-3.5 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
           <span class="text-xs text-gray-500">팀전</span>
         </label>
-        <label class="flex items-center gap-1.5 cursor-pointer">
+        <label class="flex items-center gap-1 cursor-pointer">
           <input type="checkbox" id="allow-xd" class="w-3.5 h-3.5 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
           <span id="allow-xd-label" class="text-xs text-gray-500">혼복</span>
         </label>
-        <label class="flex items-center gap-1.5 cursor-pointer">
+        <label class="flex items-center gap-1 cursor-pointer">
           <input type="checkbox" id="allow-mixed" class="w-3.5 h-3.5 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
           <span id="allow-mixed-label" class="text-xs text-gray-500">섞어복식 허용</span>
         </label>
       </div>
 
-      <!-- 단식/복식 선택 -->
-      <div class="mb-5">
-        <label class="block text-sm font-semibold text-gray-700 mb-2">경기 방식</label>
-        <div class="flex gap-3">
+      <div class="mb-3">
+        <label class="block text-xs font-semibold text-gray-700 mb-1">경기 방식</label>
+        <div class="flex gap-2">
           <label class="flex-1 cursor-pointer">
             <input type="radio" name="sch-match-type" value="doubles" checked class="sr-only peer">
-            <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
-              <span class="font-semibold text-gray-800">복식</span>
-              <div class="text-xs text-gray-500">2 vs 2</div>
-            </div>
+            <div class="border-2 border-gray-200 rounded-lg py-1.5 text-center text-sm peer-checked:border-blue-500 peer-checked:bg-blue-50 transition font-medium text-gray-800">복식</div>
           </label>
           <label class="flex-1 cursor-pointer">
             <input type="radio" name="sch-match-type" value="singles" class="sr-only peer">
-            <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
-              <span class="font-semibold text-gray-800">단식</span>
-              <div class="text-xs text-gray-500">1 vs 1</div>
-            </div>
+            <div class="border-2 border-gray-200 rounded-lg py-1.5 text-center text-sm peer-checked:border-blue-500 peer-checked:bg-blue-50 transition font-medium text-gray-800">단식</div>
           </label>
         </div>
       </div>
 
-      <form id="schedule-form" class="space-y-5">
-        <!-- 대진표 이름 -->
+      <form id="schedule-form" class="space-y-3">
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">대진표 이름</label>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">대진표 이름</label>
           <input type="text" autocomplete="off" id="schedule-name" maxlength="30"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
             placeholder="미입력 시 게임 날짜로 자동 생성">
         </div>
 
-        <!-- 게임 날짜 -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">게임 날짜</label>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">게임 날짜</label>
           <input type="date" id="schedule-date" value="${new Date().toISOString().slice(0, 10)}"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
         </div>
 
-        <!-- 시간 설정 -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">시간 설정</label>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">시간 설정</label>
           <div class="flex items-center gap-2">
-            <select id="start-time" class="flex-1 px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 bg-white">
+            <select id="start-time" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700 bg-white">
               ${this.generateTimeOptions('06:00')}
             </select>
-            <span class="text-gray-500 font-medium">~</span>
-            <select id="end-time" class="flex-1 px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 bg-white">
+            <span class="text-gray-500 text-sm">~</span>
+            <select id="end-time" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700 bg-white">
               ${this.generateTimeOptions('09:00')}
             </select>
           </div>
-          <div class="flex gap-1.5 mt-2">
-            <button type="button" class="quick-time-btn px-3 py-1 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="06:00" data-end="08:00">6~8</button>
-            <button type="button" class="quick-time-btn px-3 py-1 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="06:00" data-end="09:00">6~9</button>
-            <button type="button" class="quick-time-btn px-3 py-1 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="06:00" data-end="10:00">6~10</button>
-            <button type="button" class="quick-time-btn px-3 py-1 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="19:00" data-end="22:00">19~22</button>
+          <div class="flex gap-1.5 mt-1.5">
+            <button type="button" class="quick-time-btn px-2.5 py-0.5 text-xs border border-gray-300 rounded text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="06:00" data-end="08:00">6~8</button>
+            <button type="button" class="quick-time-btn px-2.5 py-0.5 text-xs border border-gray-300 rounded text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="06:00" data-end="09:00">6~9</button>
+            <button type="button" class="quick-time-btn px-2.5 py-0.5 text-xs border border-gray-300 rounded text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="06:00" data-end="10:00">6~10</button>
+            <button type="button" class="quick-time-btn px-2.5 py-0.5 text-xs border border-gray-300 rounded text-gray-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition" data-start="19:00" data-end="22:00">19~22</button>
           </div>
           <p id="time-info" class="text-xs text-gray-500 mt-1"></p>
         </div>
 
-        <!-- 코트 수 -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">코트 수</label>
-          <div class="grid grid-cols-4 gap-2">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">코트 수</label>
+          <div class="grid grid-cols-4 gap-1.5">
             ${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `
               <label class="cursor-pointer">
                 <input type="radio" name="courts" value="${n}" ${n === 2 ? 'checked' : ''} class="sr-only peer">
-                <div class="border-2 border-gray-200 rounded-xl py-2.5 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition">
-                  <span class="font-semibold text-gray-800">${n}면</span>
-                </div>
+                <div class="border-2 border-gray-200 rounded-lg py-1.5 text-center text-sm peer-checked:border-blue-500 peer-checked:bg-blue-50 transition font-medium text-gray-800">${n}면</div>
               </label>
             `).join('')}
           </div>
         </div>
 
-        <!-- 남자 멤버 선택 -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">
             남자 멤버 <span id="male-count" class="text-blue-700 font-normal">(0/${males.length}명 선택)</span>
           </label>
-          ${males.length === 0 ? '<p class="text-sm text-gray-400">등록된 남자 멤버가 없습니다.</p>' : `
+          ${males.length === 0 ? '<p class="text-xs text-gray-400">등록된 남자 멤버가 없습니다.</p>' : `
           <input type="text" autocomplete="off" id="sch-male-search" placeholder="이름 검색..."
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-2">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-sm text-gray-500">${males.length}명 중 선택</span>
-            <button type="button" id="sch-male-all-btn" class="text-sm text-blue-700 font-medium hover:underline">전체 선택</button>
+            class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-1.5">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs text-gray-500">${males.length}명 중 선택</span>
+            <button type="button" id="sch-male-all-btn" class="text-xs text-blue-700 font-medium hover:underline">전체 선택</button>
           </div>
-          <div class="bg-white/80 backdrop-blur-sm border border-white/60 rounded-xl max-h-40 overflow-y-auto divide-y divide-gray-50">
+          <div class="bg-white/80 backdrop-blur-sm border border-white/60 rounded-lg max-h-36 overflow-y-auto divide-y divide-gray-50">
             ${males.map(p => {
               const tn = _teamMap[p.name];
               return `
-              <label class="sch-male-item flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition" data-name="${Results.escapeHtml(p.name.toLowerCase())}">
+              <label class="sch-male-item flex items-center px-3 py-1.5 hover:bg-gray-50 cursor-pointer transition" data-name="${Results.escapeHtml(p.name.toLowerCase())}">
                 <input type="checkbox" name="males" value="${Results.escapeHtml(p.name)}" class="male-cb w-4 h-4 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
-                <span class="ml-3 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
-                <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-700">남</span>
-                <span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
-                ${tn ? `<span class="sch-team-badge text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200 hidden">${Results.escapeHtml(tn)}</span>` : ''}
+                <span class="ml-2 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
+                <span class="ml-1.5 text-[11px] px-1 py-px rounded font-medium bg-blue-100 text-blue-700">남</span>
+                <span class="text-[11px] px-1 py-px rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
+                ${tn ? `<span class="sch-team-badge text-[11px] px-1 py-px rounded font-medium bg-blue-50 text-blue-700 border border-blue-200 hidden">${Results.escapeHtml(tn)}</span>` : ''}
               </label>`;
             }).join('')}
           </div>`}
         </div>
 
-        <!-- 여자 멤버 선택 -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">
             여자 멤버 <span id="female-count" class="text-blue-700 font-normal">(0/${females.length}명 선택)</span>
           </label>
-          ${females.length === 0 ? '<p class="text-sm text-gray-400">등록된 여자 멤버가 없습니다.</p>' : `
+          ${females.length === 0 ? '<p class="text-xs text-gray-400">등록된 여자 멤버가 없습니다.</p>' : `
           <input type="text" autocomplete="off" id="sch-female-search" placeholder="이름 검색..."
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-2">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-sm text-gray-500">${females.length}명 중 선택</span>
-            <button type="button" id="sch-female-all-btn" class="text-sm text-blue-700 font-medium hover:underline">전체 선택</button>
+            class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700 text-sm mb-1.5">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs text-gray-500">${females.length}명 중 선택</span>
+            <button type="button" id="sch-female-all-btn" class="text-xs text-blue-700 font-medium hover:underline">전체 선택</button>
           </div>
-          <div class="bg-white/80 backdrop-blur-sm border border-white/60 rounded-xl max-h-40 overflow-y-auto divide-y divide-gray-50">
+          <div class="bg-white/80 backdrop-blur-sm border border-white/60 rounded-lg max-h-36 overflow-y-auto divide-y divide-gray-50">
             ${females.map(p => {
               const tn = _teamMap[p.name];
               return `
-              <label class="sch-female-item flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition" data-name="${Results.escapeHtml(p.name.toLowerCase())}">
+              <label class="sch-female-item flex items-center px-3 py-1.5 hover:bg-gray-50 cursor-pointer transition" data-name="${Results.escapeHtml(p.name.toLowerCase())}">
                 <input type="checkbox" name="females" value="${Results.escapeHtml(p.name)}" class="female-cb w-4 h-4 text-blue-700 rounded border-gray-300 focus:ring-blue-700">
-                <span class="ml-3 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
-                <span class="ml-2 text-xs px-1.5 py-0.5 rounded font-medium bg-pink-100 text-pink-700">여</span>
-                <span class="text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
-                ${tn ? `<span class="sch-team-badge text-xs px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200 hidden">${Results.escapeHtml(tn)}</span>` : ''}
+                <span class="ml-2 text-sm text-gray-800">${Results.escapeHtml(p.name)}</span>
+                <span class="ml-1.5 text-[11px] px-1 py-px rounded font-medium bg-pink-100 text-pink-700">여</span>
+                <span class="text-[11px] px-1 py-px rounded font-medium bg-yellow-100 text-yellow-700">${(p.ntrp || 2.5).toFixed(1)}</span>
+                ${tn ? `<span class="sch-team-badge text-[11px] px-1 py-px rounded font-medium bg-blue-50 text-blue-700 border border-blue-200 hidden">${Results.escapeHtml(tn)}</span>` : ''}
               </label>`;
             }).join('')}
           </div>`}
         </div>
 
-        <!-- 미리보기 정보 -->
-        <div id="preview-info" class="bg-gray-50 rounded-xl p-4 text-sm text-gray-600 hidden">
+        <div id="preview-info" class="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 hidden">
         </div>
 
         <button type="submit"
-          class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-semibold text-lg shadow-md shadow-blue-200/50">
+          class="w-full py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 active:scale-[0.98] transition-all font-semibold shadow-md shadow-blue-200/50">
           대진표 생성
         </button>
       </form>`);
@@ -2317,22 +2288,22 @@ const App = {
           if (p) { if (p.gender === 'M') mCount++; else fCount++; }
         });
         return `
-          <div class="tournament-card relative bg-white/80 backdrop-blur-sm border ${myCardClass} rounded-2xl p-4 cursor-pointer hover:shadow-lg hover:shadow-blue-100/50 hover:border-blue-200 transition-all shadow-sm shadow-blue-50/30"
+          <div class="tournament-card relative bg-white/80 backdrop-blur-sm border ${myCardClass} rounded-xl px-3 py-2 cursor-pointer hover:shadow-lg hover:shadow-blue-100/50 hover:border-blue-200 transition-all shadow-sm shadow-blue-50/30"
                data-id="${t.id}">
-            ${RolesConfig.hasAdminAccess() ? `<button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
+            ${RolesConfig.hasAdminAccess() ? `<button type="button" class="delete-tournament-btn absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>` : ''}
-            <div class="flex items-center justify-between gap-2 mb-2 pr-6">
-              <h3 class="font-bold text-gray-800 min-w-0 truncate">${Results.escapeHtml(t.name)}</h3>
+            <div class="flex items-center justify-between gap-2 mb-1 pr-6">
+              <h3 class="font-bold text-gray-800 text-sm min-w-0 truncate">${Results.escapeHtml(t.name)}</h3>
               <div class="flex items-center gap-1 flex-shrink-0 flex-wrap justify-end">
                 ${t.status === 'completed'
-                  ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 whitespace-nowrap">완료</span>'
-                  : '<span class="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">진행중</span>'}
-                ${t.isTeamMode ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">팀전</span>' : ''}
-                <span class="text-xs px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 whitespace-nowrap">대진표</span>
+                  ? '<span class="text-[11px] px-1.5 py-px rounded-full bg-gray-100 text-gray-500 whitespace-nowrap">완료</span>'
+                  : '<span class="text-[11px] px-1.5 py-px rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">진행중</span>'}
+                ${t.isTeamMode ? '<span class="text-[11px] px-1.5 py-px rounded-full bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">팀전</span>' : ''}
+                <span class="text-[11px] px-1.5 py-px rounded-full bg-orange-100 text-orange-700 whitespace-nowrap">대진표</span>
               </div>
             </div>
-            <div class="flex items-center gap-4 text-sm text-gray-500">
+            <div class="flex items-center gap-3 text-xs text-gray-500">
               <span>남${mCount} · 여${fCount}</span>
               ${t.isCustom ? `<span>코트 ${t.courts}면</span>` : `<span>${t.startTime}~${t.endTime}</span>`}
               <span>${completed}/${allMatches.length}경기</span>
@@ -2345,24 +2316,24 @@ const App = {
       const isDoubles = t.gameType ? GAME_TYPES[t.gameType]?.doubles : false;
       const countLabel = isDoubles ? `${t.players.length}팀` : `${t.players.length}명`;
       return `
-        <div class="tournament-card relative bg-white/80 backdrop-blur-sm border ${myCardClass} rounded-2xl p-4 cursor-pointer hover:shadow-lg hover:shadow-blue-100/50 hover:border-blue-200 transition-all shadow-sm shadow-blue-50/30"
+        <div class="tournament-card relative bg-white/80 backdrop-blur-sm border ${myCardClass} rounded-xl px-3 py-2 cursor-pointer hover:shadow-lg hover:shadow-blue-100/50 hover:border-blue-200 transition-all shadow-sm shadow-blue-50/30"
              data-id="${t.id}">
-          ${RolesConfig.hasAdminAccess() ? `<button type="button" class="delete-tournament-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
+          ${RolesConfig.hasAdminAccess() ? `<button type="button" class="delete-tournament-btn absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition" data-id="${t.id}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>` : ''}
-          <div class="flex items-center justify-between gap-2 mb-2 pr-6">
-            <h3 class="font-bold text-gray-800 min-w-0 truncate">${Results.escapeHtml(t.name)}</h3>
+          <div class="flex items-center justify-between gap-2 mb-1 pr-6">
+            <h3 class="font-bold text-gray-800 text-sm min-w-0 truncate">${Results.escapeHtml(t.name)}</h3>
             <div class="flex items-center gap-1 flex-shrink-0 flex-wrap justify-end">
               ${t.status === 'completed'
-                ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 whitespace-nowrap">완료</span>'
-                : '<span class="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">진행중</span>'}
-              ${gameLabel ? `<span class="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">${gameLabel}</span>` : ''}
-              <span class="text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${t.format === 'tournament' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
+                ? '<span class="text-[11px] px-1.5 py-px rounded-full bg-gray-100 text-gray-500 whitespace-nowrap">완료</span>'
+                : '<span class="text-[11px] px-1.5 py-px rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">진행중</span>'}
+              ${gameLabel ? `<span class="text-[11px] px-1.5 py-px rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">${gameLabel}</span>` : ''}
+              <span class="text-[11px] px-1.5 py-px rounded-full whitespace-nowrap ${t.format === 'tournament' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
                 ${t.format === 'tournament' ? '토너먼트' : '리그'}
               </span>
             </div>
           </div>
-          <div class="flex items-center gap-4 text-sm text-gray-500">
+          <div class="flex items-center gap-3 text-xs text-gray-500">
             <span>${countLabel}</span>
             <span>${dateStr}</span>
             ${t.status === 'completed' && t.format === 'tournament' ?
@@ -2373,8 +2344,7 @@ const App = {
 
     patchDOM(container, `
       <div class="max-w-lg mx-auto">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">대진표</h2>
-        <div class="space-y-4">
+        <div class="space-y-3">
           ${monthKeys.map(key => {
             const items = monthGroups[key];
             const collapsed = !!this._monthCollapsed[key];
@@ -2393,7 +2363,7 @@ const App = {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                   </svg>
                 </button>
-                <div class="month-content space-y-3 mt-3 ${collapsed ? 'hidden' : ''}">
+                <div class="month-content space-y-2 mt-2 ${collapsed ? 'hidden' : ''}">
                   ${items.map(t => renderCard(t)).join('')}
                 </div>
               </div>`;

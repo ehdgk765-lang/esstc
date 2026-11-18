@@ -79,8 +79,50 @@ html.dark #offline-banner {
 }
 
 html, body {
-  overflow-x: hidden;
+  height: 100%;
+  overflow: hidden;
   width: 100%;
+}
+
+#app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#main-content {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 바텀 네비게이션 */
+#bottom-nav {
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+#bottom-nav .nav-tab {
+  min-height: 52px;
+  position: relative;
+}
+
+#bottom-nav .tab-active {
+  color: #2563eb !important;
+  font-weight: 700;
+}
+
+#bottom-nav .tab-active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  background: linear-gradient(to right, #2563eb, #4f46e5);
+  border-radius: 3px;
 }
 
 /* iOS에서 input 확대 방지 (16px 이상이면 확대 안 됨) */
@@ -89,9 +131,6 @@ input, select, textarea {
 }
 
 /* safe-area 대응 (노치 폰) */
-body {
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
 
 header {
   width: 100%;
@@ -100,17 +139,7 @@ header {
   padding-right: env(safe-area-inset-right, 0);
 }
 
-/* 탭 네비게이션 */
-.tab-active {
-  color: #2563eb !important;
-  border-bottom-color: #2563eb !important;
-  font-weight: 700;
-  background: linear-gradient(to top, rgba(37, 99, 235, 0.06), transparent);
-}
-
-[data-tab] {
-  min-height: 44px; /* 최소 터치 영역 */
-}
+/* 탭 네비게이션 (바텀 내비에서 관리) */
 
 /* 사이드 메뉴 */
 #left-menu {
@@ -266,18 +295,22 @@ header {
 
 /* 스크롤바 스타일 */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: rgba(0, 0, 0, 0.25);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
 
 /* 포맷 선택 라디오 */
@@ -494,17 +527,24 @@ html.dark header h1 {
   color: transparent !important;
 }
 
-/* 탭 */
+/* 바텀 내비 다크모드 */
+html.dark #bottom-nav {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-color: rgba(51, 65, 85, 0.4) !important;
+}
 html.dark .tab-active {
   color: #60a5fa !important;
-  border-bottom-color: #60a5fa !important;
-  background: linear-gradient(to top, rgba(96, 165, 250, 0.08), transparent) !important;
+}
+html.dark .tab-active::after {
+  background: #60a5fa;
 }
 html.dark [data-tab] {
-  color: #94a3b8;
+  color: #64748b;
 }
 html.dark [data-tab]:hover {
-  color: #cbd5e1;
+  color: #94a3b8;
 }
 
 /* 배경 오버라이드 */
@@ -815,10 +855,10 @@ html.dark .bracket-scroll-hint::after {
 
 /* 스크롤바 */
 html.dark ::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: rgba(255, 255, 255, 0.15);
 }
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* 캘린더 다크모드 */
@@ -1338,4 +1378,69 @@ html.dark #auth-theme-toggle {
 }
 html.dark #auth-theme-toggle:hover {
   background-color: rgba(71, 85, 105, 0.6) !important;
+}
+
+/* ── 데스크톱 반응형: 바텀 내비 → 사이드바 ── */
+@media (min-width: 768px) {
+  #app-container {
+    display: grid !important;
+    grid-template-columns: 180px 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100%;
+  }
+  header {
+    grid-column: 1 / -1;
+  }
+  #bottom-nav {
+    grid-column: 1;
+    grid-row: 2;
+    border-top: none;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    padding-bottom: 0;
+    overflow-y: auto;
+  }
+  #bottom-nav > .flex {
+    flex-direction: column;
+    padding: 12px 8px;
+    gap: 2px;
+  }
+  #bottom-nav .nav-tab {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    min-height: auto;
+  }
+  #bottom-nav .nav-tab:hover {
+    background: rgba(37, 99, 235, 0.06);
+  }
+  #bottom-nav .tab-active {
+    background: rgba(37, 99, 235, 0.08);
+  }
+  #bottom-nav .tab-active::after {
+    display: none;
+  }
+  #main-content {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+@media (min-width: 1200px) {
+  #app-container {
+    grid-template-columns: 220px 1fr;
+  }
+}
+
+/* 데스크톱 사이드바 다크모드 */
+@media (min-width: 768px) {
+  html.dark #bottom-nav {
+    border-right-color: rgba(51, 65, 85, 0.4) !important;
+  }
+  html.dark #bottom-nav .nav-tab:hover {
+    background: rgba(96, 165, 250, 0.06);
+  }
+  html.dark #bottom-nav .tab-active {
+    background: rgba(96, 165, 250, 0.1);
+  }
 }

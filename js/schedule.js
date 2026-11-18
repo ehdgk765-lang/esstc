@@ -1055,6 +1055,17 @@ const Schedule = {
           team: +el.dataset.team, pos: +el.dataset.pos, name: el.dataset.name
         };
 
+        // 빈 슬롯 탭 → 바로 교체 피커 열기 (멤버 추가)
+        if (!data.name) {
+          if (selectedPlayer) {
+            selectedPlayer.el.classList.remove('bg-blue-200', 'ring-2', 'ring-blue-700', 'rounded');
+            container.querySelectorAll('.replace-player-btn').forEach(b => b.remove());
+            selectedPlayer = null;
+          }
+          this._showReplacePlayerPicker(container, tournament, data, () => {});
+          return;
+        }
+
         if (!selectedPlayer) {
           // 첫 번째 멤버 선택
           selectedPlayer = { el, ...data };
@@ -2145,6 +2156,11 @@ const Schedule = {
 
   // 멤버 이름을 개별 탭 가능한 span으로 렌더링
   renderSwapPlayer(name, slotIdx, matchIdx, team, pos) {
+    if (!name) {
+      return `<span class="swap-player cursor-pointer hover:bg-blue-100 rounded px-2 py-0.5 transition inline-flex items-center gap-0.5 border border-dashed border-gray-300 text-gray-300 italic text-xs"
+        data-slot-idx="${slotIdx}" data-match-idx="${matchIdx}" data-team="${team}" data-pos="${pos}"
+        data-name="">선수 선택</span>`;
+    }
     const allPlayers = Storage.getPlayers();
     const pd = allPlayers.find(p => p.name === name);
     const isCustom = this._tournament?.isCustom;
@@ -2206,7 +2222,12 @@ const Schedule = {
     const isMyMatch = this._isMyMatch(match);
     const t1Names = match.player1.split(' / ');
     const t2Names = match.player2.split(' / ');
-    const isDoubles = t1Names.length > 1;
+    const isDoubles = cfg ? !cfg.singles : t1Names.length > 1;
+    // 복식인데 이름 형식이 단일인 경우 빈 슬롯 보정
+    if (isDoubles) {
+      if (t1Names.length < 2) t1Names.push('');
+      if (t2Names.length < 2) t2Names.push('');
+    }
     const t1Html = isDoubles
       ? t1Names.map((n, p) => `<div class="text-center">${this.renderSwapPlayer(n, slotIdx, matchIdx, 1, p)}</div>`).join('')
       : this.renderSwapPlayer(t1Names[0], slotIdx, matchIdx, 1, 0);
@@ -2316,10 +2337,13 @@ const Schedule = {
       };
 
       return `
-        <div class="am-modal-inner bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full p-5 overflow-y-auto">
-          <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
-          <h3 class="text-lg font-bold text-center mb-4">대진 추가</h3>
-          <div class="space-y-4">
+        <div class="am-modal-inner bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full flex flex-col max-h-[85vh]">
+          <div class="flex-shrink-0 pt-4 px-5">
+            <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2 sm:hidden"></div>
+            <h3 class="text-lg font-bold text-center mb-3">대진 추가</h3>
+          </div>
+          <div class="overflow-y-auto flex-1 px-5">
+            <div class="space-y-4">
             ${tournament.isCustom ? '' : (presetSlot != null
               ? `<div class="flex items-center gap-2 text-sm text-gray-600">
                   <span class="font-medium bg-gray-100 px-3 py-1.5 rounded-lg">${tournament.timeSlots[selectedSlot].time}</span>
@@ -2378,10 +2402,11 @@ const Schedule = {
               </div>
             </div>
 
-            <div class="flex gap-3 pt-2">
-              <button type="button" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition am-cancel">취소</button>
-              <button type="button" class="flex-1 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition am-submit">추가</button>
             </div>
+          </div>
+          <div class="flex gap-3 px-5 py-3 border-t border-gray-100 flex-shrink-0">
+            <button type="button" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition am-cancel">취소</button>
+            <button type="button" class="flex-1 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition am-submit">추가</button>
           </div>
         </div>`;
     };
@@ -2406,31 +2431,22 @@ const Schedule = {
 
       modal.querySelector('.am-submit').onclick = async () => {
         const { t1p1, t1p2, t2p1, t2p2 } = selected;
-        if (isSingles) {
-          if (!t1p1 || !t2p1) {
-            alert('모든 선수를 선택해주세요.');
-            return;
-          }
-          if (t1p1 === t2p1) {
-            alert('같은 선수를 선택할 수 없습니다.');
-            return;
-          }
-        } else {
-          if (!t1p1 || !t1p2 || !t2p1 || !t2p2) {
-            alert('모든 멤버를 선택해주세요.');
-            return;
-          }
-          const names = [t1p1, t1p2, t2p1, t2p2];
-          if (new Set(names).size !== 4) {
-            alert('중복된 멤버가 있습니다.');
-            return;
-          }
+        // 최소 1명 이상 선택 필수
+        const selectedNames = [t1p1, t1p2, t2p1, t2p2].filter(Boolean);
+        if (selectedNames.length === 0) {
+          alert('최소 1명 이상 선택해주세요.');
+          return;
+        }
+        // 중복 검사 (선택된 멤버만)
+        if (new Set(selectedNames).size !== selectedNames.length) {
+          alert('중복된 멤버가 있습니다.');
+          return;
         }
         const slotIdx = tournament.isCustom ? 0 : parseInt(modal.querySelector('#am-slot').value);
 
         // 같은 시간대 멤버 중복 검사 (커스텀 대진표는 시간대 없으므로 제외, 완료된 매치 제외)
         if (!tournament.isCustom) {
-          const newNames = isSingles ? [t1p1, t2p1] : [t1p1, t1p2, t2p1, t2p2];
+          const newNames = (isSingles ? [t1p1, t2p1] : [t1p1, t1p2, t2p1, t2p2]).filter(Boolean);
           const slotExisting = new Set();
           (tournament.timeSlots[slotIdx]?.matches || []).forEach(m => {
             if (m.winner) return; // 완료된 매치의 멤버는 재배치 가능
@@ -2493,8 +2509,8 @@ const Schedule = {
         const newMatch = {
           id: Storage.generateId(),
           court,
-          player1: isSingles ? t1p1 : `${t1p1} / ${t1p2}`,
-          player2: isSingles ? t2p1 : `${t2p1} / ${t2p2}`,
+          player1: isSingles ? (t1p1 || '') : `${t1p1 || ''} / ${t1p2 || ''}`,
+          player2: isSingles ? (t2p1 || '') : `${t2p1 || ''} / ${t2p2 || ''}`,
           scores: null,
           winner: null,
         };
@@ -2671,19 +2687,25 @@ const Schedule = {
     picker.className = 'am-player-picker fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4';
     picker.style.backgroundColor = 'rgba(0,0,0,0.5)';
     picker.innerHTML = `
-      <div class="amp-inner bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 flex flex-col overflow-y-auto">
-        <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3 sm:hidden"></div>
-        <h3 class="text-lg font-bold text-center mb-3">${pickerTitle}</h3>
-        <div class="mb-3">
-          <div class="flex gap-2">
-            <input type="text" autocomplete="off" id="amp-search" placeholder="이름 또는 조 검색..."
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
-            <button type="button" id="amp-custom-add"
-              class="px-4 py-2 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition whitespace-nowrap">추가</button>
+      <div class="amp-inner bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full flex flex-col max-h-[85vh]">
+        <div class="flex-shrink-0 pt-4 px-4">
+          <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2 sm:hidden"></div>
+          <h3 class="text-lg font-bold text-center mb-3">${pickerTitle}</h3>
+          <div class="mb-3">
+            <div class="flex gap-2">
+              <input type="text" autocomplete="off" id="amp-search" placeholder="이름 또는 조 검색..."
+                class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-700 focus:border-blue-700">
+              <button type="button" id="amp-custom-add"
+                class="flex-shrink-0 px-3 py-2 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition">추가</button>
+            </div>
           </div>
         </div>
-        ${playerListHtml}
-        <button type="button" class="mt-3 w-full py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition amp-cancel">취소</button>
+        <div class="overflow-y-auto flex-1 px-4">
+          ${playerListHtml}
+        </div>
+        <div class="flex-shrink-0 px-4 pb-4 pt-2">
+          <button type="button" class="w-full py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition amp-cancel">취소</button>
+        </div>
       </div>`;
 
     document.body.appendChild(picker);
@@ -2775,21 +2797,21 @@ const Schedule = {
 
     const playerKey = team === 1 ? 'player1' : 'player2';
     const otherKey = team === 1 ? 'player2' : 'player1';
-    // 중복 멤버 수집 (본인 제외)
+    // 중복 멤버 수집 (본인 제외, 빈 문자열 제외)
     const slotBusyNames = new Set();
     if (tournament.isCustom) {
       // 커스텀 대진표: 같은 경기 내 멤버만 중복 방지
-      match[playerKey].split(' / ').forEach(n => slotBusyNames.add(n));
-      match[otherKey].split(' / ').forEach(n => slotBusyNames.add(n));
-      slotBusyNames.delete(oldName);
+      match[playerKey].split(' / ').forEach(n => { if (n) slotBusyNames.add(n); });
+      match[otherKey].split(' / ').forEach(n => { if (n) slotBusyNames.add(n); });
+      if (oldName) slotBusyNames.delete(oldName);
     } else {
       // 일반 대진표: 같은 시간대 전체 매치에서 사용 중인 멤버 수집 (완료된 매치 제외)
       (tournament.timeSlots[slotIdx]?.matches || []).forEach(m => {
         if (m.winner) return;
-        m.player1.split(' / ').forEach(n => slotBusyNames.add(n));
-        m.player2.split(' / ').forEach(n => slotBusyNames.add(n));
+        m.player1.split(' / ').forEach(n => { if (n) slotBusyNames.add(n); });
+        m.player2.split(' / ').forEach(n => { if (n) slotBusyNames.add(n); });
       });
-      slotBusyNames.delete(oldName);
+      if (oldName) slotBusyNames.delete(oldName);
     }
 
     const _teamMap = tournament.isTeamMode ? buildTeamMap() : {};
@@ -2801,9 +2823,9 @@ const Schedule = {
     const visiblePlayers = sideTeam
       ? allPlayers.filter(p => _teamMap[p.name] === sideTeam)
       : allPlayers;
-    const pickerTitle = sideTeam
-      ? `멤버 교체 — ${Results.escapeHtml(oldName)} (${Results.escapeHtml(sideTeam)})`
-      : `멤버 교체 — ${Results.escapeHtml(oldName)}`;
+    const pickerTitle = oldName
+      ? (sideTeam ? `멤버 교체 — ${Results.escapeHtml(oldName)} (${Results.escapeHtml(sideTeam)})` : `멤버 교체 — ${Results.escapeHtml(oldName)}`)
+      : (sideTeam ? `멤버 추가 (${Results.escapeHtml(sideTeam)})` : '멤버 추가');
     const isTeamMode2 = !!tournament.isTeamMode;
 
     // 플레이어 옵션 렌더링 헬퍼
